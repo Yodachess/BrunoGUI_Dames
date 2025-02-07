@@ -1,0 +1,219 @@
+/*
+Protocole Hub2 pour le jeu de Dames (utilisé par Scan 3.1 et 2.1)
+
+Présentation du protocole.
+
+Hub est un protocole similaire à UCI (des échecs) et Hub-1 (Scan 2.0), mais avec une syntaxe plus flexible. 
+Il est basé sur du texte (même sur des lignes) et ne spécifie pas comment les informations sont transmises. 
+Le moteur utilise des E/S standard, il appartient donc à l'interface graphique (ou à tout ce qui joue un rôle similaire) d'établir la communication.
+
+Peu de temps après la connexion entre l'interface graphique et le moteur, une phase d'initialisation a lieu. 
+Ensuite, du point de vue du moteur, une partie (ou une résolution de problème, ou une analyse) n'est qu'une séquence de recherches. 
+Une recherche est gérée de manière similaire à un appel de procédure à distance (RPC) : 
+l'interface graphique envoie les paramètres en plusieurs étapes, et le moteur commence le calcul. Ce dernier génère des informations intermédiaires 
+(algorithme à tout moment), jusqu'à ce qu'une réponse finale soit produite en raison d'une contrainte de profondeur/nœud/temps ou d'une interruption par l'interface graphique.
+
+Remarque : Scan doit être lancé en mode Hub à l'aide d'un argument de ligne de commande "hub". 
+Sur les systèmes Unix, cela serait "./scan hub". Comme le protocole utilise du texte, vous pouvez expérimenter manuellement.
+
+---
+
+syntaxe générale
+
+Toutes les lignes (depuis et vers le moteur) ont la forme :
+<commande> <arg>=<val> <arg>=<val> ...
+éventuellement avec 0 argument. Les valeurs peuvent être citées avec des guillemets doubles. 
+C'est en fait obligatoire si elles contiennent un caractère spécial (comme un espace ou '=') ou sont vides.
+
+Certains arguments agissent comme un indicateur et n'ont pas de valeur ; la partie "=val" est alors omise. Vous pouvez considérer que la valeur est la chaîne vide.
+
+Le moteur et l'interface graphique doivent tous deux ignorer les commandes et les arguments qu'ils ne comprennent pas. 
+Cela permet d'étendre le protocole ultérieurement sans casser le logiciel existant. C'est la principale raison de la syntaxe quelque peu verbeuse.
+
+---
+
+La phase d'initialisation ressemble à ceci :
+
+hub
+id name=Scan version=3.1 author="Fabien Letouzey" country=France
+param name=variant value=normal type=enum values="normal killer bt frisian losing"
+param name=book value=true type=bool
+...
+wait
+set-param name=variant value=frisian
+set-param name=book value=false
+...
+init
+(le moteur doit initialiser ses structures de données, maintenant qu'il a les valeurs)
+(il peut afficher ici des informations que l'interface graphique doit ignorer)
+ready
+
+Les réponses du moteur sont indentées à des fins d'illustration uniquement ; les espaces supplémentaires n'ont aucune signification particulière dans le protocole.
+
+La déclaration des paramètres du moteur est similaire à UCI. Les types autorisés sont :
+- type=bool
+- type=int min=... max=...
+- type=real min=... max=...
+- type=string
+- type=enum values="... ... ..."
+
+Remarque : l'interface graphique Hub ne se soucie pas du type ; à la place, elle gère tous les paramètres du moteur comme des chaînes. Il est recommandé d'indiquer le type de paramètre de toute façon au cas où un logiciel plus avancé serait développé à l'avenir.
+
+Remarque : l'interface graphique définira les paramètres du moteur avant de demander « init ». Ils peuvent affecter les opérations longues comme l'initialisation/le chargement de structures de données complexes. L'interface graphique Hub ne définit jamais les paramètres après l'initialisation.
+
+Remarque : Hub définira les paramètres uniquement si la valeur sélectionnée par l'utilisateur est différente de la valeur actuelle déclarée par le moteur.
+
+---
+
+Une recherche est lancée en 3 étapes :
+1) position
+2) profondeur/nœud/limite de temps
+3) mode de recherche, qui lance réellement la recherche
+
+exemple :
+pos pos=Wbbbbbbbbbbbbbbbbbbbbbeeeeeeeeeewwwwwwwwwwwwwwwwwwww
+level move-time=1
+go think
+
+Exemple avec quelques mouvements (pour la détection de répétition) :
+pos pos=BeeeWWeeeeeeeeeeeeeeeeeeeweeeeeeeeeewweBeeeeeeeeeBee moves="38-15 5-41 48-26"
+level moves=9 time=291.587
+go ponder
+
+1) position
+
+syntaxe :
+pos pos=<position> [moves=<moves>]
+
+Le format de position est un caractère pour le côté à déplacer ('W' ou 'B') + un caractère par case dans l'ordre standard, donc 51 au total. Pour chaque case :
+'w' : homme blanc
+'b' : homme noir
+'W' : roi blanc
+'B' : roi noir
+'e' : vide
+
+Le format de déplacement est le même que la notation standard pour les déplacements silencieux, par exemple « 32-28 ». Pour les captures, toutes les pièces capturées (mais pas les pivots) sont incluses dans n'importe quel ordre comme ceci : de x à x capturé x capturé ... sans aucun espace. Par exemple « 28x19x23 ».
+
+Remarque : l'envoi de déplacements est nécessaire pour permettre au moteur de détecter la partie nulle par répétition pendant la recherche. Hub n'envoie que les déplacements du roi, car ils sont généralement réversibles.
+
+2) profondeur/nœud/limite de temps
+
+"niveau" peut avoir l'une des formes suivantes :
+niveau profondeur=<profondeur max> (optionnel)
+niveau nœuds=<nœuds max> (optionnel)
+niveau mouvement-temps=<temps par mouvement> (optionnel)
+niveau [mouvements=<mouvements restants>] temps=<temps restant> [inc=<incrément par mouvement>]
+niveau infini (pour l'analyse, l'interface graphique enverra "stop" plus tard)
+
+Le temps est mesuré en secondes (nombre réel). Les différents champs sont les mêmes que dans UCI. Pour une gestion complexe du temps (mouvements/temps/incrément), les combinaisons significatives sont :
+- temps uniquement (mort subite)
+- mouvements + temps (contrôle du temps x/y)
+- temps + incrément (x+y aussi appelé contrôle du temps Fischer)
+
+Remarque : l'incrément est ajouté avant chaque mouvement. Bien que cela ne soit pas critique, cela est mathématiquement plus propre.
+
+3) mode recherche
+
+Une recherche est lancée avec "go" et l'un des 3 arguments : "think", "ponder" ou "analyze".
+
+"go think" est la recherche normale, le moteur réfléchit. L'interface graphique veut que le moteur produise finalement un coup à jouer.
+
+"go ponder" fonctionne comme dans UCI : le coup de l'adversaire attendu, choisi par le moteur lors de la recherche précédente, est déjà présent dans la position. L'horloge de jeu du moteur ne tourne pas à ce stade, il peut donc attendre "ponder-hit" (ou une nouvelle recherche "go think") avant de mesurer le temps.
+
+Avec "go analyze", l'interface graphique se soucie davantage des informations de recherche telles que le score et le PV. Le moteur peut supposer qu'il ne joue pas à une partie et qu'il est autorisé à se comporter différemment. Par exemple, ne pas utiliser le livre d'ouverture, passer du temps à rechercher un seul coup légal ou ne pas essayer d'éviter les nuls.
+
+Remarque : l'interface graphique ne demandera jamais au moteur de rechercher une position terminale, même pour réfléchir. Le moteur peut donc supposer qu'il y a au moins un coup légal.
+
+Remarque : contrairement à l'UCI, le moteur est autorisé à arrêter la recherche à tout moment et à produire un résultat, même en mode de réflexion et d'analyse (recherches infinies). L'interface graphique effectuera la mise en mémoire tampon si nécessaire.
+
+4) le moteur recherche
+
+Le moteur répondra (éventuellement) avec des informations de recherche progressives puis, éventuellement, son déplacement :
+info ...
+info depth=21 mean-depth=20.8 score=-0.01 nodes=31261613 time=3.906 nps=8.0 pv="32-28 17-22 28x17x22 12x21x17 33-28 7-12 39-33 19-23 28x19x23 14x23x19 44-39 9-14 50-44 4-9 34-29 23x34x29 39x30x34 21-26 44-39 11-17 31-27 6-11 37-31 26x37x31 41x32x37 20-24 30x19x24 13x24x19"
+done move=32-28 ponder=17-22
+
+Les "infos" de Scan contiennent :
+- profondeur
+- profondeur moyenne des feuilles (nombre réel)
+- score en "men" (nombre réel)
+- nombre de nœuds (entier 64 bits)
+- temps en secondes (nombre réel)
+- vitesse en MNPS (nombre réel)
+- PV (entre guillemets car les coups sont séparés par des espaces)
+D'autres moteurs peuvent utiliser n'importe quel sous-ensemble, ou même ajouter leurs propres champs (mais sans garantie qu'une interface graphique tierce les affichera).
+
+"done" contient :
+- le coup du moteur
+- éventuellement, la réponse attendue de l'adversaire (utilisée pour réfléchir mais sûre à afficher quoi qu'il en soit)
+
+L'interface graphique peut interrompre la recherche à tout moment avec "stop" (si l'adversaire vient de jouer un coup inattendu ou si l'utilisateur demande une opération différente). Le moteur n'est pas censé réagir instantanément, mais doit quand même produire une réponse « done ».
+
+L'interface graphique enverra « ponder-hit » pendant une recherche « go ponder » si l'adversaire a joué le coup attendu. Sinon, il enverra « stop » et lancera immédiatement une nouvelle recherche.
+
+Remarque : l'interface graphique peut également envoyer « ping » pendant la recherche. Le moteur doit répondre « pong » et continuer la recherche.
+
+Les seules commandes que le moteur peut recevoir pendant la recherche sont :
+- ping
+- ponder-hit
+- stop
+
+---
+
+Commandes supplémentaires que l'interface graphique peut envoyer :
+- new-game : indique que la prochaine recherche ne sera pas liée aux précédentes (=> clear TT)
+- ping : doit être répondu par « pong »
+- quit
+
+Réponses supplémentaires que le moteur peut envoyer :
+- error message="..."
+
+Remarque : si l'entrée standard est fermée, le moteur doit supposer que l'interface graphique a planté et, par conséquent, quitter le plus directement possible.
+
+---
+
+Résumé des commandes.
+
+Commandes GUI pour le moteur :
+- initialisation
+* hub
+* set-param name=... value=...
+* init
+- position
+* pos pos=... [moves="..."]
+- depth/node/time limit
+* level depth=...
+* level nodes=...
+* level move-time=...
+* level [moves=...] time=... [inc=...]
+* level infinite
+- search
+* go think
+* go ponder
+* go analyze
+* ponder-hit (peut se produire pendant la recherche)
+* stop (peut se produire pendant la recherche)
+- misc.
+* new-game (effacer le TT)
+* ping (peut se produire pendant la recherche)
+* quit
+
+le moteur répond à l'interface graphique :
+- init
+* id name=... version=... author="..." country=...
+* param name=... value=... type=... (+ contraintes de type)
+* wait
+* ready
+- search
+* info ...
+* done move=... [ponder=...]
+- misc.
+* pong
+* error message="..."
+
+C'est tout pour l'instant, nous sommes le 06/07/2019.
+
+Fabien Letouzey (fabien_letouzey@hotmail.com).
+
+
+*/
