@@ -868,7 +868,7 @@ namespace BrunoGUI_Dames
                         BackColor = couleur,
                         SizeMode = PictureBoxSizeMode.StretchImage,
                         Size = new Size(60, 60),    // Taille des case = 60 * 60 pixels
-                        Location = new Point(20 + (colonne * 60), 560 - (ligne * 60)),  // 58 et 663 pour ajuster les cases dans le chassis
+                        Location = new Point(20 + (colonne * 60), 560 - (ligne * 60)),  // 20 et 560 pour ajuster les cases dans le chassis
                         Visible = ligne >= 0 & ligne < 11 & colonne >= 0 & colonne < 11, // On ne rend visible que les 100 cases utiles
                         Enabled = false
                     };
@@ -1286,7 +1286,7 @@ namespace BrunoGUI_Dames
                 int nouvelIndex = nouvelleLigne * 10 + nouvelleColonne;     // Calculer le nouvel index après rotation
 
                 // Positionner graphiquement la PictureBox
-                Point nouvellePosition = new Point(58 + (nouvelleColonne * 60), 58 + (nouvelleLigne * 60));
+                Point nouvellePosition = new Point(20 + (nouvelleColonne * 60), 20 + (nouvelleLigne * 60));
                 pict.Location = nouvellePosition;
                 // Mettre à jour la liste temporaire
                 nouveauPictJeux[nouvelIndex] = pict;
