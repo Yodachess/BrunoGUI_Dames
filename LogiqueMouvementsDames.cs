@@ -1,6 +1,7 @@
 // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
@@ -46,7 +47,7 @@ namespace BrunoGUI_Dames
         //  80  81  82  83  84  85  86  87  88  89         ..  41  ..  42  ..  43  ..  44  ..  45
         //  90  91  92  93  94  95  96  97  98  99         46  ..  47  ..  48  ..  49  ..  50  ..  
 
-        // Le damier de gauche représente les indices des Picturebox affichant les cases du jeu à l'écran ( voir Pictjeux comme List(of Picturebox)) 
+        // Le damier de gauche représente les indices des Picturebox affichant les cases du jeu à l'écran ( voir CaseDamier comme List(of Picturebox)) 
         // Le damier de droite représente le damier de 100 cases avec les 50 cases réelles du jeu.
         // Les cases marquées d'un chiffre (01 à 50) sont les 50 cases actives du damier de 100 cases.
         // Les cases marquées  ".."  sur le damier de 100 cases sont les cases claires inutilisées.
@@ -74,7 +75,6 @@ namespace BrunoGUI_Dames
         {   // --- A partir d'une case Manoury, génère tous les mouvements possibles  et les retourne dans deplacementsSimples et RaflesPossibles) ---
             List<int> deplacementsSimples = new List<int>();
             BrunoInterfaceGraphiqueDames.RaflesPossibles.Clear(); // Réinitialiser les rafles
-
             int numeroCaseBox = GestionDamier.ObtenirIndicePictureBox(numeroCaseManoury);
             (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(numeroCaseBox);
 
@@ -101,7 +101,6 @@ namespace BrunoGUI_Dames
                 {
                     return (deplacementsSimples, BrunoInterfaceGraphiqueDames.RaflesPossibles);
                 }
-
                 // Déplacements simples uniquement si aucune rafle
                 if (caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.PionBlanc || caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.PionNoir)
                 {
@@ -139,7 +138,7 @@ namespace BrunoGUI_Dames
         {   // --- Génère les rafles de pions à partir de caseActuelleBox (appel récursif de la méthode) et les stocke dans RaflesPossibles ---
             bool prisePossible = false;
             bool finRafle = true; // Flag pour vérifier si la rafle est terminée
-
+            // Console.WriteLine("RechercherRaflesPion à partie de la case " + GestionDamier.ObtenirCaseManoury(caseActuelleBox));
             foreach (var direction in Directions)
             {
                 int caseCibleBox = caseActuelleBox + direction;           // On fait un pas dans la direction sélectionnée
@@ -155,7 +154,6 @@ namespace BrunoGUI_Dames
                         {
                         int caseSautBox = caseCibleBox + direction;       // On fait un 2ème pas dans la direction sélectionnée
                         (int ligneSaut, int colonneSaut) = GestionDamier.IndiceVersCoordonnees(caseSautBox);
-
                         if (GestionDamier.EstNumeroPictureBoxValide(caseSautBox) &&
                             GestionDamier.DamierContenu[ligneSaut, colonneSaut].TypePiece == LogiqueMouvementsDames.TypePiece.Vide)
                         {
@@ -166,7 +164,7 @@ namespace BrunoGUI_Dames
                                 (GestionDamier.PictureBoxVersManoury[caseCibleBox], GestionDamier.PictureBoxVersManoury[caseSautBox])
                             };
                             // Marquer la case cible comme temporairement vide pour éviter des boucles infinies
-                            var pieceTemporaire = new CaseDamier
+                            var pieceTemporaire = new ContenuCase
                             {
                                 TypePiece = GestionDamier.DamierContenu[ligneCible, colonneCible].TypePiece,
                                 CouleurPiece = GestionDamier.DamierContenu[ligneCible, colonneCible].CouleurPiece
@@ -306,13 +304,13 @@ namespace BrunoGUI_Dames
             ListePionsNoirs.Clear();
             ListeDamesBlanches.Clear();
             ListeDamesNoires.Clear();     
-            foreach (var pict in BrunoInterfaceGraphiqueDames.PictJeux)
+            foreach (var pict in BrunoInterfaceGraphiqueDames.CaseDamier)
             {
                 pict.Image = null;          // Efface l'image de chaque PictureBox
             }
             if (ajouteListeCoups)
             {
-                ListeCoupsFen.Add(fenAutiliser);    // On enregistre la position de départ
+                ListeCoupsFen.Add(fenAutiliser);    // On enregistre la position dans les listes de coups
                 ListeCoupsHub2.Add(ConvertitFenVersHub2(fenAutiliser));
                 // Note : On ne touche pas à ListeCoupsPdn car aucun n'a été joué pour l'instnat
             }
@@ -506,7 +504,7 @@ namespace BrunoGUI_Dames
                 Console.WriteLine($"Aucune liste trouvée pour le type de pièce : {pieceType}");
             }
         }
-        public static void MiseaJourPromotion (int indexPictureBox, CaseDamier pieceSource)
+        public static void MiseaJourPromotion (int indexPictureBox, ContenuCase pieceSource)
         {   // --- Met à jour la liste avec la pièce promue --- 
             int casePionSource = GestionDamier.ObtenirCaseManoury(indexPictureBox);
             string nomListe;    // Obtenir la liste correspondante et son nom

@@ -1,6 +1,7 @@
 // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
@@ -14,11 +15,11 @@ using static BrunoGUI_Dames.LogiqueMouvementsDames;
 namespace BrunoGUI_Dames
 {       // Règles du jeu de Dames : http://www.ffjd.fr/Web/index.php?page=reglesdujeu
         // Information jeu de Dames : https://fr.wikipedia.org/wiki/Dames
-    public class CaseDamier
-    {   // --- Définition de la classe CaseDamier pour contenir le type de pièce et la couleur ---
+    public class ContenuCase
+    {   // --- Définition de la classe ContenuCase pour contenir le type de pièce et la couleur ---
         public LogiqueMouvementsDames.TypePiece TypePiece { get; set; } = LogiqueMouvementsDames.TypePiece.Vide;
         public LogiqueMouvementsDames.CouleurPiece CouleurPiece { get; set; } = LogiqueMouvementsDames.CouleurPiece.Vide;
-        public CaseDamier(LogiqueMouvementsDames.TypePiece typePiece = LogiqueMouvementsDames.TypePiece.Vide,
+        public ContenuCase(LogiqueMouvementsDames.TypePiece typePiece = LogiqueMouvementsDames.TypePiece.Vide,
                           LogiqueMouvementsDames.CouleurPiece couleurPiece = LogiqueMouvementsDames.CouleurPiece.Vide)
         {
             TypePiece = typePiece;
@@ -27,10 +28,6 @@ namespace BrunoGUI_Dames
         public bool EstVide()
         {
             return TypePiece == LogiqueMouvementsDames.TypePiece.Vide;
-        }
-        public CaseDamier Clone()
-        {   // Méthode Clone (pour créer une copie indépendante de la case)
-            return new CaseDamier(this.TypePiece, this.CouleurPiece);
         }
     }
 
@@ -42,7 +39,7 @@ namespace BrunoGUI_Dames
         // Dictionnaire inverse : Indice PictureBox (0-99) -> Case Manoury (1-50)
         public static Dictionary<int, int> PictureBoxVersManoury = new Dictionary<int, int>();
 
-        public static CaseDamier[,] DamierContenu = new CaseDamier[10, 10]; // Tableau de [10*10] décrivant les contenu de chaque avec [Type de pièce, Couleur de pièce]
+        public static ContenuCase[,] DamierContenu = new ContenuCase[10, 10]; // Tableau de [10*10] décrivant les contenu de chaque avec [Type de pièce, Couleur de pièce]
 
         public static void InitialiserDamier()
         {   // --- Remplit le damier avec des pions, et met à jour le tableau DamierContenu, ainsi que les listes de pions ---
@@ -54,22 +51,22 @@ namespace BrunoGUI_Dames
                     {   // Ajouter des pions blancs ou noirs selon la logique de placement
                         if (ligne < 4)
                         {   // Pions noirs
-                            DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.PionNoir, LogiqueMouvementsDames.CouleurPiece.Noir);
+                            DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.PionNoir, LogiqueMouvementsDames.CouleurPiece.Noir);
                             LogiqueMouvementsDames.ListePionsNoirs.Add(PictureBoxVersManoury[((ligne * 10) + colonne)]);
                         }
                         else if (ligne > 5)
                         {   // Pions blancs
-                            DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.PionBlanc, LogiqueMouvementsDames.CouleurPiece.Blanc);
+                            DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.PionBlanc, LogiqueMouvementsDames.CouleurPiece.Blanc);
                             LogiqueMouvementsDames.ListePionsBlancs.Add(PictureBoxVersManoury[((ligne * 10) + colonne)]);
                         }
                         else
                         {   // Milieu du damier = cases vides
-                            DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.Vide, LogiqueMouvementsDames.CouleurPiece.Vide);
+                            DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.Vide, LogiqueMouvementsDames.CouleurPiece.Vide);
                         }
                     }
                     else
                     {   // Les cases inactives, généralement les cases sombres non jouables
-                        DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.Inactive, LogiqueMouvementsDames.CouleurPiece.Inactive);
+                        DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.Inactive, LogiqueMouvementsDames.CouleurPiece.Inactive);
                     }
                 }
             }
@@ -82,11 +79,11 @@ namespace BrunoGUI_Dames
                 {
                     if ((ligne % 2 == 0 && colonne % 2 != 0) || (ligne % 2 != 0 && colonne % 2 == 0))
                     {   // Vider les cases actives
-                        DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.Vide, LogiqueMouvementsDames.CouleurPiece.Vide);
+                        DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.Vide, LogiqueMouvementsDames.CouleurPiece.Vide);
                     }
                     else
                     {   // Les cases inactives, généralement les cases sombres non jouables
-                        DamierContenu[ligne, colonne] = new CaseDamier(LogiqueMouvementsDames.TypePiece.Inactive, LogiqueMouvementsDames.CouleurPiece.Inactive);
+                        DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.Inactive, LogiqueMouvementsDames.CouleurPiece.Inactive);
                     }
                 }
             }
@@ -108,7 +105,7 @@ namespace BrunoGUI_Dames
                     if ((ligne + colonne) % 2 != 0)           // Case foncée si (ligne + colonne) % 2 != 0
                     {
                         int indexPictureBox = ((ligne * 10) + colonne);
-                        string nomPictureBox = $"PictJeux{indexPictureBox:D2}";
+                        string nomPictureBox = $"ContenuCase{indexPictureBox:D2}";
                         PictureBox pictureBox = controls.Find(nomPictureBox, true).FirstOrDefault() as PictureBox;
                         if (pictureBox != null)
                         {
@@ -121,8 +118,8 @@ namespace BrunoGUI_Dames
                 }
             }
         }
-        public static CaseDamier CaseDamierCaseManoury(int numeroCaseManoury)
-        {   // --- Retourne la CaseDamier présente sur la case Manoury ---
+        public static ContenuCase ContenuCaseCaseManoury(int numeroCaseManoury)
+        {   // --- Retourne le ContenuCase présente sur la case Manoury ---
             (int ligne, int colonne) = IndiceVersCoordonnees(ObtenirIndicePictureBox(numeroCaseManoury));
             return (GestionDamier.DamierContenu[ligne, colonne]);
         }

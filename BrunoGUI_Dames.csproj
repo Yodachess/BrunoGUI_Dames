@@ -77,6 +77,12 @@
     <Compile Include="DonneesBrutesDames.Designer.cs">
       <DependentUpon>DonneesBrutesDames.cs</DependentUpon>
     </Compile>
+    <Compile Include="FichierPartiePdn.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FichierPartiePdn.Designer.cs">
+      <DependentUpon>FichierPartiePdn.cs</DependentUpon>
+    </Compile>
     <Compile Include="GestionDamier.cs" />
     <Compile Include="LogiqueMouvementsDames.cs" />
     <Compile Include="MoteurDamesScan.cs" />
@@ -90,6 +96,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DonneesBrutesDames.resx">
       <DependentUpon>DonneesBrutesDames.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FichierPartiePdn.resx">
+      <DependentUpon>FichierPartiePdn.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

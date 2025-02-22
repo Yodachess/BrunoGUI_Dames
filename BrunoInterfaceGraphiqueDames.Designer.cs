@@ -55,7 +55,7 @@
             this.RadioGainNoir = new System.Windows.Forms.RadioButton();
             this.RadioGainBlanc = new System.Windows.Forms.RadioButton();
             this.ChargePositionFen = new Krypton.Toolkit.KryptonButton();
-            this.PointArret = new Krypton.Toolkit.KryptonButton();
+            this.Apropos = new Krypton.Toolkit.KryptonButton();
             this.ChargerFichierFen = new System.Windows.Forms.OpenFileDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.trackBarTempsReflexion = new System.Windows.Forms.TrackBar();
@@ -63,10 +63,14 @@
             this.SauverFichierFen = new System.Windows.Forms.SaveFileDialog();
             this.SauvePositionFen = new Krypton.Toolkit.KryptonButton();
             this.groupParcoursPartie = new System.Windows.Forms.GroupBox();
+            this.BoutoonFin = new System.Windows.Forms.Button();
+            this.BoutonDebut = new System.Windows.Forms.Button();
             this.BoutonSuivant = new System.Windows.Forms.Button();
             this.BoutonPrecedent = new System.Windows.Forms.Button();
-            this.BoutonDebut = new System.Windows.Forms.Button();
-            this.BoutoonFin = new System.Windows.Forms.Button();
+            this.ChargePartiesPdn = new Krypton.Toolkit.KryptonButton();
+            this.ChargerPartiesPdn = new System.Windows.Forms.OpenFileDialog();
+            this.SauvePartiesPdn = new Krypton.Toolkit.KryptonButton();
+            this.boutonMasqueAffiche = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.Damier10x10)).BeginInit();
             this.GroupResultat.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -206,7 +210,7 @@
             // 
             // VisualisationPdn
             // 
-            this.VisualisationPdn.Location = new System.Drawing.Point(653, 204);
+            this.VisualisationPdn.Location = new System.Drawing.Point(653, 231);
             this.VisualisationPdn.Name = "VisualisationPdn";
             this.VisualisationPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.VisualisationPdn.Size = new System.Drawing.Size(110, 30);
@@ -377,7 +381,7 @@
             // 
             // ChargePositionFen
             // 
-            this.ChargePositionFen.Location = new System.Drawing.Point(653, 240);
+            this.ChargePositionFen.Location = new System.Drawing.Point(653, 483);
             this.ChargePositionFen.Name = "ChargePositionFen";
             this.ChargePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.ChargePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -388,18 +392,18 @@
             this.ChargePositionFen.Values.Text = "Charge position";
             this.ChargePositionFen.Click += new System.EventHandler(this.PositionFen_Click);
             // 
-            // PointArret
+            // Apropos
             // 
-            this.PointArret.Location = new System.Drawing.Point(653, 634);
-            this.PointArret.Name = "PointArret";
-            this.PointArret.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
-            this.PointArret.Size = new System.Drawing.Size(110, 30);
-            this.PointArret.StateCommon.Border.Rounding = 20F;
-            this.PointArret.StateCommon.Border.Width = 1;
-            this.PointArret.TabIndex = 34;
-            this.PointArret.Values.DropDownArrowColor = System.Drawing.Color.Empty;
-            this.PointArret.Values.Text = "Point Arrêt";
-            this.PointArret.Click += new System.EventHandler(this.PointArret_Click);
+            this.Apropos.Location = new System.Drawing.Point(653, 634);
+            this.Apropos.Name = "Apropos";
+            this.Apropos.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.Apropos.Size = new System.Drawing.Size(110, 30);
+            this.Apropos.StateCommon.Border.Rounding = 20F;
+            this.Apropos.StateCommon.Border.Width = 1;
+            this.Apropos.TabIndex = 34;
+            this.Apropos.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.Apropos.Values.Text = "A propos de BIG";
+            this.Apropos.Click += new System.EventHandler(this.Apropos_Click);
             // 
             // ChargerFichierFen
             // 
@@ -446,7 +450,7 @@
             // 
             // SauvePositionFen
             // 
-            this.SauvePositionFen.Location = new System.Drawing.Point(653, 276);
+            this.SauvePositionFen.Location = new System.Drawing.Point(653, 519);
             this.SauvePositionFen.Name = "SauvePositionFen";
             this.SauvePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.SauvePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -464,12 +468,34 @@
             this.groupParcoursPartie.Controls.Add(this.BoutonDebut);
             this.groupParcoursPartie.Controls.Add(this.BoutonSuivant);
             this.groupParcoursPartie.Controls.Add(this.BoutonPrecedent);
-            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 524);
+            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 267);
             this.groupParcoursPartie.Name = "groupParcoursPartie";
             this.groupParcoursPartie.Size = new System.Drawing.Size(110, 68);
             this.groupParcoursPartie.TabIndex = 37;
             this.groupParcoursPartie.TabStop = false;
             this.groupParcoursPartie.Text = "   Parcours partie   ";
+            // 
+            // BoutoonFin
+            // 
+            this.BoutoonFin.BackColor = System.Drawing.Color.Tan;
+            this.BoutoonFin.Location = new System.Drawing.Point(53, 38);
+            this.BoutoonFin.Name = "BoutoonFin";
+            this.BoutoonFin.Size = new System.Drawing.Size(51, 24);
+            this.BoutoonFin.TabIndex = 3;
+            this.BoutoonFin.Text = "Fin";
+            this.BoutoonFin.UseVisualStyleBackColor = false;
+            this.BoutoonFin.Click += new System.EventHandler(this.BoutoonFin_Click);
+            // 
+            // BoutonDebut
+            // 
+            this.BoutonDebut.BackColor = System.Drawing.Color.Tan;
+            this.BoutonDebut.Location = new System.Drawing.Point(5, 38);
+            this.BoutonDebut.Name = "BoutonDebut";
+            this.BoutonDebut.Size = new System.Drawing.Size(47, 24);
+            this.BoutonDebut.TabIndex = 2;
+            this.BoutonDebut.Text = "Début";
+            this.BoutonDebut.UseVisualStyleBackColor = false;
+            this.BoutonDebut.Click += new System.EventHandler(this.BoutonDebut_Click);
             // 
             // BoutonSuivant
             // 
@@ -493,27 +519,49 @@
             this.BoutonPrecedent.UseVisualStyleBackColor = false;
             this.BoutonPrecedent.Click += new System.EventHandler(this.BoutonPrecedent_Click);
             // 
-            // BoutonDebut
+            // ChargePartiesPdn
             // 
-            this.BoutonDebut.BackColor = System.Drawing.Color.Tan;
-            this.BoutonDebut.Location = new System.Drawing.Point(5, 38);
-            this.BoutonDebut.Name = "BoutonDebut";
-            this.BoutonDebut.Size = new System.Drawing.Size(47, 24);
-            this.BoutonDebut.TabIndex = 2;
-            this.BoutonDebut.Text = "Début";
-            this.BoutonDebut.UseVisualStyleBackColor = false;
-            this.BoutonDebut.Click += new System.EventHandler(this.BoutonDebut_Click);
+            this.ChargePartiesPdn.Location = new System.Drawing.Point(653, 375);
+            this.ChargePartiesPdn.Name = "ChargePartiesPdn";
+            this.ChargePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.ChargePartiesPdn.Size = new System.Drawing.Size(110, 30);
+            this.ChargePartiesPdn.StateCommon.Border.Rounding = 20F;
+            this.ChargePartiesPdn.StateCommon.Border.Width = 1;
+            this.ChargePartiesPdn.TabIndex = 38;
+            this.ChargePartiesPdn.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.ChargePartiesPdn.Values.Text = "Charge Parties PDN";
+            this.ChargePartiesPdn.Click += new System.EventHandler(this.ChargePartiesPdn_Click);
             // 
-            // BoutoonFin
+            // ChargerPartiesPdn
             // 
-            this.BoutoonFin.BackColor = System.Drawing.Color.Tan;
-            this.BoutoonFin.Location = new System.Drawing.Point(53, 38);
-            this.BoutoonFin.Name = "BoutoonFin";
-            this.BoutoonFin.Size = new System.Drawing.Size(51, 24);
-            this.BoutoonFin.TabIndex = 3;
-            this.BoutoonFin.Text = "Fin";
-            this.BoutoonFin.UseVisualStyleBackColor = false;
-            this.BoutoonFin.Click += new System.EventHandler(this.BoutoonFin_Click);
+            this.ChargerPartiesPdn.FileName = "openFileDialog1";
+            this.ChargerPartiesPdn.Filter = "PDN Files (*.pdn)|*.pdn|Tous les fichiers (*.*)|*.*";
+            // 
+            // SauvePartiesPdn
+            // 
+            this.SauvePartiesPdn.Location = new System.Drawing.Point(653, 447);
+            this.SauvePartiesPdn.Name = "SauvePartiesPdn";
+            this.SauvePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.SauvePartiesPdn.Size = new System.Drawing.Size(110, 30);
+            this.SauvePartiesPdn.StateCommon.Border.Rounding = 20F;
+            this.SauvePartiesPdn.StateCommon.Border.Width = 1;
+            this.SauvePartiesPdn.TabIndex = 39;
+            this.SauvePartiesPdn.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.SauvePartiesPdn.Values.Text = "Sauve Partie";
+            this.SauvePartiesPdn.Click += new System.EventHandler(this.SauvePartiesPdn_Click);
+            // 
+            // boutonMasqueAffiche
+            // 
+            this.boutonMasqueAffiche.Location = new System.Drawing.Point(653, 411);
+            this.boutonMasqueAffiche.Name = "boutonMasqueAffiche";
+            this.boutonMasqueAffiche.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.boutonMasqueAffiche.Size = new System.Drawing.Size(110, 30);
+            this.boutonMasqueAffiche.StateCommon.Border.Rounding = 20F;
+            this.boutonMasqueAffiche.StateCommon.Border.Width = 1;
+            this.boutonMasqueAffiche.TabIndex = 40;
+            this.boutonMasqueAffiche.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.boutonMasqueAffiche.Values.Text = "Masque parties";
+            this.boutonMasqueAffiche.Click += new System.EventHandler(this.boutonMasqueAffiche_Click);
             // 
             // BrunoInterfaceGraphiqueDames
             // 
@@ -521,10 +569,13 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Beige;
             this.ClientSize = new System.Drawing.Size(770, 786);
+            this.Controls.Add(this.boutonMasqueAffiche);
+            this.Controls.Add(this.SauvePartiesPdn);
+            this.Controls.Add(this.ChargePartiesPdn);
             this.Controls.Add(this.groupParcoursPartie);
             this.Controls.Add(this.SauvePositionFen);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.PointArret);
+            this.Controls.Add(this.Apropos);
             this.Controls.Add(this.ChargePositionFen);
             this.Controls.Add(this.GroupResultat);
             this.Controls.Add(this.SonEmis);
@@ -594,7 +645,7 @@
         private System.Windows.Forms.RadioButton RadioGainNoir;
         private System.Windows.Forms.RadioButton RadioGainBlanc;
         private Krypton.Toolkit.KryptonButton ChargePositionFen;
-        private Krypton.Toolkit.KryptonButton PointArret;
+        private Krypton.Toolkit.KryptonButton Apropos;
         private System.Windows.Forms.OpenFileDialog ChargerFichierFen;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TrackBar trackBarTempsReflexion;
@@ -606,6 +657,10 @@
         private System.Windows.Forms.Button BoutonSuivant;
         private System.Windows.Forms.Button BoutoonFin;
         private System.Windows.Forms.Button BoutonDebut;
+        private Krypton.Toolkit.KryptonButton ChargePartiesPdn;
+        private System.Windows.Forms.OpenFileDialog ChargerPartiesPdn;
+        private Krypton.Toolkit.KryptonButton SauvePartiesPdn;
+        private Krypton.Toolkit.KryptonButton boutonMasqueAffiche;
     }
 }
 
