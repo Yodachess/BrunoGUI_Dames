@@ -1,7 +1,8 @@
 ﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
-// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey via le protocole Hub2  █
+// █ Scan est disponible à l’adresse : github.com/rhalbersma/scan             █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
@@ -15,7 +16,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 
 namespace BrunoGUI_Dames
 {
@@ -31,6 +31,7 @@ namespace BrunoGUI_Dames
             public string Black { get; set; }
             public string Result { get; set; }
             public string PlyCount { get; set; }
+            public string FENDebut { get; set; }
             public string CoupsPartiePDN { get; set; }
         }
         public FichierPartiePdn()
@@ -40,41 +41,47 @@ namespace BrunoGUI_Dames
         public List<string> DecodeFichierPDN(string fichierpdn)
         {   // --- On découpe le fichier PDN pour obtenir la liste des parties contenues dans le fichier. ---
             List<string> listeParties = new List<string>();
-            using (StreamReader lecteur = new StreamReader(fichierpdn))
+
+            using (StreamReader lecteur = new StreamReader(fichierpdn, Encoding.UTF8))
             {   // Note : StreamReader attend le chemin d'accès au fichier, pas le contenu du fichier.
                 string ligne;
-                string partieCourante = "";
+                StringBuilder partieCourante = new StringBuilder();
+
                 while ((ligne = lecteur.ReadLine()) != null)
                 {
-                    if (ligne.StartsWith("[Event "))        // Avec un espace à la fin de Event, pour ne pas confondre avec le Tag EventDate ...
-                    {   // Commencer une nouvelle partie
-                        if (!string.IsNullOrEmpty(partieCourante))
+                    ligne = ligne.Replace("\r", "").Replace("?", "").Replace("!", "").Replace("..", "");    // Tentaive de nettoyage
+                    if (ligne.StartsWith("[Event ")) // Avec un espace à la fin de Event, pour ne pas confondre avec le Tag EventDate ...
+                    {
+                        // Commencer une nouvelle partie
+                        if (partieCourante.Length > 0)
                         {
-                            listeParties.Add(partieCourante);
+                            // Ajouter la partie précédente à la liste si elle existe
+                            listeParties.Add(partieCourante.ToString().Trim()); // Enlever l'espace final éventuel
                         }
-                        partieCourante = ligne + " ";
+                        // Réinitialiser partieCourante pour une nouvelle partie
+                        partieCourante.Clear();
                     }
-                    else
-                    {   // Ajouter les coups à la partie en cours
-                        partieCourante += ligne + " ";
-                    }
+                    // Ajouter la ligne avec un saut de ligne explicite
+                    partieCourante.AppendLine(ligne);
                 }
-                if (!string.IsNullOrEmpty(partieCourante))
-                {       // Ajouter la dernière partie à la liste des parties
-                    listeParties.Add(partieCourante);
+
+                if (partieCourante.Length > 0)
+                {
+                    // Ajouter la dernière partie à la liste des parties
+                    listeParties.Add(partieCourante.ToString().Trim());
                 }
+                // Affichage des parties pour vérification
                 foreach (var partie in listeParties)
                 {
-                    Console.WriteLine(partie);
+                    Console.WriteLine($"Partie décodée \n" + partie);
                 }
             }
             return listeParties;
         }
         public PartieDamesPdn DecodePartiePDN(string pdn)
         {   // --- On recoit UNE partie au format pdn avec balises et on remplit la structure PartieDamesPdn ---
-
-            // Normalisation des sauts de ligne
-            pdn = pdn.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n\n", "\n");
+            pdn = pdn.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n\n", "\n");  // Normalisation des sauts de ligne en cas de besoin
+            BrunoInterfaceGraphiqueDames.ExisteFENDebut = false;    // Msie à zéro du FEN de départ 
 
             List<string> balises = new List<string>();
             PartieDamesPdn PartiePDN = new PartieDamesPdn();
@@ -118,42 +125,78 @@ namespace BrunoGUI_Dames
                     case "PlyCount":   //  Balise qui m'intéresse
                         PartiePDN.PlyCount = ValeurBalise;
                         break;
+                    case "FEN":   //  Balise qui m'intéresse
+                        PartiePDN.FENDebut = ValeurBalise;
+                        PartiePDN.FENDebut = PartiePDN.FENDebut.TrimEnd('.');
+                        BrunoInterfaceGraphiqueDames.ExisteFENDebut = true;  // Indique que la FEN de départ existe
+                        break;
                     default:
                         break;
                 }   // On se limite aux balises obligatoires + nombre de coups, il en existe beaucoup d'autres
             }
 
-            // Recherche de l'index de la première ligne vide, GRAND FOUTOIR DANS LES FICHIERS AVEC LES ESPACES ET LES LIGNES VIDES
-            int indexLigneVide = pdn.IndexOf("]  1.");
-            if (indexLigneVide == -1)
-            {
-                // Si la première recherche ne réussit pas, essayez avec une autre séquence de retour à la ligne
-                indexLigneVide = pdn.IndexOf("]   1.");
-            }
-            if (indexLigneVide != -1)
-            {   // Recherche de l'index où commence "1." après la première ligne vide
-                string SectionCoupsPDN = pdn.Substring(indexLigneVide);
-                indexLigneVide = SectionCoupsPDN.IndexOf("1.");
-                SectionCoupsPDN = SectionCoupsPDN.Substring(indexLigneVide);
-                PartiePDN.CoupsPartiePDN = SectionCoupsPDN;         // PartiePDN.CoupsPartiePDN contient les coups de la partie
-                string[] coupsPartie = PartiePDN.CoupsPartiePDN.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);       // On decoupe la liste de coups recue
-                // Il faut éliminer les coups contenant $ ou ... ou ) ou (   !!!!!!!!
-                coupsPartie = coupsPartie.Where(c => !c.Contains("$") && !c.Contains("...") && !c.Contains("(") && !c.Contains(")")).ToArray();
-                PartiePDN.CoupsPartiePDN = string.Join(" ", coupsPartie);
+            // Purge des commentaires entre accolades :
+            pdn = SupprimeCommentaires(pdn, '{', '}');
+            pdn = pdn.Replace("\r", "\r\n");
+            Console.WriteLine($"PDN sans accolades :\n{pdn}");             // DEBUG 05/02
+
+            // Expression régulière pour supprimer toutes les balises avant les coups
+            string pattern = @"\[.*?\]"; // Recherche tout ce qui est entre crochets []
+            string contenuNettoye = Regex.Replace(pdn, pattern, string.Empty).Trim();
+
+            // Maintenant on cherche à partir de "1." dans le texte nettoyé
+            int indexDebut = contenuNettoye.IndexOf("1.");
+
+            if (indexDebut != -1)
+            {   // Extraire la partie du texte à partir de "1."
+                string sectionCoupsPDN = contenuNettoye.Substring(indexDebut).Trim();
+                sectionCoupsPDN = SupprimeCommentaires(sectionCoupsPDN, '(', ')');      // Purge des commentaires entre parenthèses
+                // sectionCoupsPDN = Regex.Replace(sectionCoupsPDN, @"(\r|\n)+", "");      // Purge des \r et \n
+                sectionCoupsPDN = Regex.Replace(sectionCoupsPDN, @"[?!]+|\.{3}|!!|\.{2}", string.Empty);     // Purge des signes de notation
+                sectionCoupsPDN = sectionCoupsPDN.Replace("\\r", "");       // En fait, \r est présent comme 2 caractères le \ et le r !!???
+                PartiePDN.CoupsPartiePDN = sectionCoupsPDN;
             }
             else
             {
-                Console.WriteLine("La première ligne vide n'a pas été trouvée dans le fichier PDN.");
+                PartiePDN.CoupsPartiePDN = string.Empty; // Si "1." n'est pas trouvé
             }
             Console.WriteLine($"Partie {PartiePDN.White} vs {PartiePDN.Black} - PDN nettoyé = {PartiePDN.CoupsPartiePDN}");
             return PartiePDN;
         }
+        public static string SupprimeCommentaires(string chaine, char accoladeOuvrante, char accoladeFermante)
+        {   /* Lorsqu'une accolade ouvrante est rencontrée, le niveau d'imbrication est augmenté de 1.
+            Lorsqu'une accolade fermante est rencontrée et que le niveau d'imbrication est supérieur à 0, 
+            cela signifie qu'elle correspond à une paire d'accolades imbriquées, donc le niveau d'imbrication est décrémenté de 1.
+            Si une accolade fermante est rencontrée et que le niveau d'imbrication est déjà à 0, 
+            cela signifie qu'elle est en dehors de toute paire d'accolades imbriquées, donc elle est conservée dans le résultat final.
+            Les caractères qui ne sont pas situés entre des accolades imbriquées sont ajoutés au résultat final. */
+
+            StringBuilder resultat = new StringBuilder();
+            int niveauAccolade = 0;
+            foreach (char caractere in chaine)
+            {
+                if (caractere == accoladeOuvrante)
+                {
+                    niveauAccolade++;
+                }
+                else if (caractere == accoladeFermante && niveauAccolade > 0)
+                {
+                    niveauAccolade--;
+                }
+                else if (niveauAccolade == 0)
+                {
+                    resultat.Append(caractere);
+                }
+            }
+            return resultat.ToString();
+        }
+
         private void TableauPartiesPdn_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {   // Utilise 'Tag' pour récupérer l'objet complet
                 var partie = (PartieDamesPdn)TableauPartiesPdn.Rows[e.RowIndex].Tag;
-                if (partie != null)
+                if (partie != null && partie.CoupsPartiePDN != null)
                 {   // Récupére la fenêtre principale
                     var mainForm = (BrunoInterfaceGraphiqueDames)Application.OpenForms["BrunoInterfaceGraphiqueDames"];
                     if (mainForm != null)
@@ -167,6 +210,7 @@ namespace BrunoGUI_Dames
                 }
                 else
                 {
+                    MessageBox.Show("La partie sélectionée ne contient pas de coups", "Pas de coups dans la partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     Console.WriteLine("Erreur : La partie = null !? (sans doute vide ...)");
                 }
             }

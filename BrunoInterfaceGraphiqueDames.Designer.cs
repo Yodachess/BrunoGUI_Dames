@@ -71,6 +71,7 @@
             this.ChargerPartiesPdn = new System.Windows.Forms.OpenFileDialog();
             this.SauvePartiesPdn = new Krypton.Toolkit.KryptonButton();
             this.boutonMasqueAffiche = new Krypton.Toolkit.KryptonButton();
+            this.AnalysePosition = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.Damier10x10)).BeginInit();
             this.GroupResultat.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -210,7 +211,7 @@
             // 
             // VisualisationPdn
             // 
-            this.VisualisationPdn.Location = new System.Drawing.Point(653, 231);
+            this.VisualisationPdn.Location = new System.Drawing.Point(653, 240);
             this.VisualisationPdn.Name = "VisualisationPdn";
             this.VisualisationPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.VisualisationPdn.Size = new System.Drawing.Size(110, 30);
@@ -288,6 +289,7 @@
             this.BoxNomJoueurNoir.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BoxNomJoueurNoir.ForeColor = System.Drawing.Color.White;
             this.BoxNomJoueurNoir.Location = new System.Drawing.Point(495, 5);
+            this.BoxNomJoueurNoir.Multiline = false;
             this.BoxNomJoueurNoir.Name = "BoxNomJoueurNoir";
             this.BoxNomJoueurNoir.Size = new System.Drawing.Size(152, 25);
             this.BoxNomJoueurNoir.TabIndex = 28;
@@ -300,6 +302,7 @@
             this.BoxNomJoueurBlanc.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BoxNomJoueurBlanc.ForeColor = System.Drawing.Color.Black;
             this.BoxNomJoueurBlanc.Location = new System.Drawing.Point(7, 5);
+            this.BoxNomJoueurBlanc.Multiline = false;
             this.BoxNomJoueurBlanc.Name = "BoxNomJoueurBlanc";
             this.BoxNomJoueurBlanc.Size = new System.Drawing.Size(130, 25);
             this.BoxNomJoueurBlanc.TabIndex = 29;
@@ -468,7 +471,7 @@
             this.groupParcoursPartie.Controls.Add(this.BoutonDebut);
             this.groupParcoursPartie.Controls.Add(this.BoutonSuivant);
             this.groupParcoursPartie.Controls.Add(this.BoutonPrecedent);
-            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 267);
+            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 277);
             this.groupParcoursPartie.Name = "groupParcoursPartie";
             this.groupParcoursPartie.Size = new System.Drawing.Size(110, 68);
             this.groupParcoursPartie.TabIndex = 37;
@@ -529,7 +532,7 @@
             this.ChargePartiesPdn.StateCommon.Border.Width = 1;
             this.ChargePartiesPdn.TabIndex = 38;
             this.ChargePartiesPdn.Values.DropDownArrowColor = System.Drawing.Color.Empty;
-            this.ChargePartiesPdn.Values.Text = "Charge Parties PDN";
+            this.ChargePartiesPdn.Values.Text = "Charge Parties";
             this.ChargePartiesPdn.Click += new System.EventHandler(this.ChargePartiesPdn_Click);
             // 
             // ChargerPartiesPdn
@@ -563,12 +566,26 @@
             this.boutonMasqueAffiche.Values.Text = "Masque parties";
             this.boutonMasqueAffiche.Click += new System.EventHandler(this.boutonMasqueAffiche_Click);
             // 
+            // AnalysePosition
+            // 
+            this.AnalysePosition.Location = new System.Drawing.Point(653, 204);
+            this.AnalysePosition.Name = "AnalysePosition";
+            this.AnalysePosition.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.AnalysePosition.Size = new System.Drawing.Size(110, 30);
+            this.AnalysePosition.StateCommon.Border.Rounding = 20F;
+            this.AnalysePosition.StateCommon.Border.Width = 1;
+            this.AnalysePosition.TabIndex = 41;
+            this.AnalysePosition.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.AnalysePosition.Values.Text = "Analyse position";
+            this.AnalysePosition.Click += new System.EventHandler(this.AnalysePosition_Click);
+            // 
             // BrunoInterfaceGraphiqueDames
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Beige;
+            this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.ClientSize = new System.Drawing.Size(770, 786);
+            this.Controls.Add(this.AnalysePosition);
             this.Controls.Add(this.boutonMasqueAffiche);
             this.Controls.Add(this.SauvePartiesPdn);
             this.Controls.Add(this.ChargePartiesPdn);
@@ -661,6 +678,7 @@
         private System.Windows.Forms.OpenFileDialog ChargerPartiesPdn;
         private Krypton.Toolkit.KryptonButton SauvePartiesPdn;
         private Krypton.Toolkit.KryptonButton boutonMasqueAffiche;
+        private Krypton.Toolkit.KryptonButton AnalysePosition;
     }
 }
 

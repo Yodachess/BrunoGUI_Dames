@@ -1,7 +1,8 @@
 // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
-// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey via le protocole Hub2  █
+// █ Scan est disponible à l’adresse : github.com/rhalbersma/scan             █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;

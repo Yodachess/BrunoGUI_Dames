@@ -1,7 +1,8 @@
 // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
-// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey via le protocole Hub2  █
+// █ Scan est disponible à l’adresse : github.com/rhalbersma/scan             █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
@@ -75,6 +76,8 @@ namespace BrunoGUI_Dames
         {   // --- A partir d'une case Manoury, génère tous les mouvements possibles  et les retourne dans deplacementsSimples et RaflesPossibles) ---
             List<int> deplacementsSimples = new List<int>();
             BrunoInterfaceGraphiqueDames.RaflesPossibles.Clear(); // Réinitialiser les rafles
+            BrunoInterfaceGraphiqueDames.AucunCoupBlancPossible = true;
+            BrunoInterfaceGraphiqueDames.AucunCoupNoirPossible = true;
             int numeroCaseBox = GestionDamier.ObtenirIndicePictureBox(numeroCaseManoury);
             (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(numeroCaseBox);
 
@@ -98,7 +101,11 @@ namespace BrunoGUI_Dames
                 }
                 // Si des rafles existent, ne pas générer de déplacements simples
                 if (BrunoInterfaceGraphiqueDames.RaflesPossibles.Count > 0)
-                {
+                {   // Il y a au moins une rafle possible, donc un coup possible
+                    if (caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.PionBlanc || caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.DameBlanche)
+                        BrunoInterfaceGraphiqueDames.AucunCoupBlancPossible = false;
+                    else
+                        BrunoInterfaceGraphiqueDames.AucunCoupNoirPossible = false;
                     return (deplacementsSimples, BrunoInterfaceGraphiqueDames.RaflesPossibles);
                 }
                 // Déplacements simples uniquement si aucune rafle
@@ -128,6 +135,13 @@ namespace BrunoGUI_Dames
                 else if (caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.DameBlanche || caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.DameNoire)
                 {
                     deplacementsSimples = DeplacementsSimplesDame(numeroCaseBox);
+                }
+                if (deplacementsSimples.Count > 0)
+                {
+                    if (caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.PionBlanc || caseActuelle.TypePiece == LogiqueMouvementsDames.TypePiece.DameBlanche)
+                        BrunoInterfaceGraphiqueDames.AucunCoupBlancPossible = false;
+                    else
+                        BrunoInterfaceGraphiqueDames.AucunCoupNoirPossible = false;
                 }
             }
             return (deplacementsSimples, BrunoInterfaceGraphiqueDames.RaflesPossibles);
@@ -304,6 +318,7 @@ namespace BrunoGUI_Dames
             ListePionsNoirs.Clear();
             ListeDamesBlanches.Clear();
             ListeDamesNoires.Clear();     
+            Console.WriteLine("Mise en place de la position FEN : " + fenAutiliser);
             foreach (var pict in BrunoInterfaceGraphiqueDames.CaseDamier)
             {
                 pict.Image = null;          // Efface l'image de chaque PictureBox
@@ -460,10 +475,6 @@ namespace BrunoGUI_Dames
             DessinerPieces(ListePionsNoirs, LogiqueMouvementsDames.TypePiece.PionNoir, LogiqueMouvementsDames.CouleurPiece.Noir, brunoInterface);
             DessinerPieces(ListeDamesBlanches, LogiqueMouvementsDames.TypePiece.DameBlanche, LogiqueMouvementsDames.CouleurPiece.Blanc, brunoInterface);
             DessinerPieces(ListeDamesNoires, LogiqueMouvementsDames.TypePiece.DameNoire, LogiqueMouvementsDames.CouleurPiece.Noir, brunoInterface);
-            Console.WriteLine($"Pions Blancs : {string.Join(", ", ListePionsBlancs)}");
-            Console.WriteLine($"Pions Noirs : {string.Join(", ", ListePionsNoirs)}");
-            Console.WriteLine($"Dames Blanches : {string.Join(", ", ListeDamesBlanches)}");
-            Console.WriteLine($"Dames Noires : {string.Join(", ", ListeDamesNoires)}");
         }
         public static void DessinerPieces(List<int> listeCases, TypePiece pieceType, CouleurPiece pieceCouleur, BrunoInterfaceGraphiqueDames brunoInterface)
         {   // --- Dessine toutes les pièces de la liste listeCases ---

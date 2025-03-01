@@ -1,7 +1,8 @@
 ﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames est développé par Bruno COURTOIS.  Copyright © 2024/2025  █  
 // █ BrunoGUI_Dames est gratuit, sauf s'il est utilisé commercialement        █
-// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey                        █
+// █ Utilisation du moteur SCAN 3.1 de Fabien Letouzey via le protocole Hub2  █
+// █ Scan est disponible à l’adresse : github.com/rhalbersma/scan             █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
@@ -31,26 +32,30 @@ namespace BrunoGUI_Dames
         }
         public string GenerationPdn()
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
-            if (LogiqueMouvementsDames.ListeCoupsPdn.Count == 0)    // Vérifier si aucun coup n'a été joué pour éviter une erreur
+            string contenuPdn = "[Event \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Event + "\"]\n" + 
+                                    "[Site \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Site + "\"]\n" +
+                                        "[Date \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Date + "\"]\n" +
+                                            "[Round \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Round + "\"]\n" +
+                                                "[White \"" + BrunoInterfaceGraphiqueDames.PartieCourante.White + "\"]\n" +
+                                                    "[Black \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Black + "\"]\n";
+
+            // Ajout du résultat de la partie s'il existe
+            if (LogiqueMouvementsDames.ListeCoupsPdn.Count != 0)    // Si aucun coup n'a été joué, pas de résultat...
             {
-                return "[Event \"Entrainement\"]\n[Site \"Maison\"]\n[Date \"" + DateTime.Now.ToString("yyyy.MM.dd") +
-                       "\"]\n[Round \"1\"]\n[White \"" + BrunoInterfaceGraphiqueDames.NomJoueurBlanc +
-                       "\"]\n[Black \"" + BrunoInterfaceGraphiqueDames.NomJoueurNoir + "\"]\n[Result \"*\"]\n\n";
+                if (string.IsNullOrEmpty(BrunoInterfaceGraphiqueDames.PartieCourante.Result) || BrunoInterfaceGraphiqueDames.PartieCourante.Result == "*")
+                {   // Si le résultat n'est pas renseigné ou est égal à "*", on le met à "*"
+                    contenuPdn = contenuPdn + "[Result \"*\"]\n";
+                    BrunoInterfaceGraphiqueDames.PartieCourante.Result = "*";   // On s'assure que le résultat indique quelque chose ...
+                }
+                else
+                {   // Sinon, on ajoute le résultat de la partie
+                    contenuPdn = contenuPdn + "[Result \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Result + "\"]\n";
+                }
             }
-            string contenuPdn = "[Event \"Entrainement\"]\n" + "[Site \"Maison\"]\n" + "[Date \"" + DateTime.Now.ToString("yyyy.MM.dd") + "\"]\n";
-            contenuPdn = contenuPdn + "[Round \"1\"]\n" + "[White \"" + BrunoInterfaceGraphiqueDames.NomJoueurBlanc + 
-                                        "\"]\n" + "[Black \"" + BrunoInterfaceGraphiqueDames.NomJoueurNoir + "\"]\n";
-            string dernierCoup = LogiqueMouvementsDames.ListeCoupsPdn[LogiqueMouvementsDames.ListeCoupsPdn.Count - 1];
-            if (dernierCoup == " 1-0" || dernierCoup == " 0-1" || dernierCoup == " 1/2-1/2" || dernierCoup == " 2-0" || dernierCoup == " 0-2" || dernierCoup == " 1-1" || dernierCoup == " *")
-            {
-                contenuPdn = contenuPdn + "[Result \"" + dernierCoup + "\"]\n\n";
-            }
-            else
-            {
-                contenuPdn = contenuPdn + "[Result \"*\"]\n";
-            }
+
             // Ajout de la balise PlyCount (nombre de demi-coups)
             contenuPdn += "[PlyCount \"" + LogiqueMouvementsDames.ListeCoupsPdn.Count + "\"]\n\n";
+
             // Fin des balises, début de la liste des coups
             int coupsParLigne = 5;      // Nombre de paires (blanc/noir) par ligne
             string ligneEnCours = "";   // Ligne temporaire pour construire la sortie
@@ -83,15 +88,14 @@ namespace BrunoGUI_Dames
             {
                 contenuPdn += ligneEnCours.TrimEnd();
             }
+            // contenuPdn += " " + BrunoInterfaceGraphiqueDames.PartieCourante.Result;  // Ajouter le résultat de la partie
+            Console.WriteLine(contenuPdn);
             return contenuPdn;
         }
         public void AffichePdnDansZone()
         {
             afficheZone.Show();
-            string contenuPdn = GenerationPdn();
-            // Afficher le résultat final (et je veux voir le contenu dans la console)
-            Console.WriteLine(contenuPdn);
-            afficheZone.ZoneAffichage.Text = contenuPdn;
+            afficheZone.ZoneAffichage.Text = GenerationPdn();
         }
         private void AffichePdnFr_Click(object sender, EventArgs e)
         {
