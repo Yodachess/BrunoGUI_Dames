@@ -65,11 +65,11 @@ namespace BrunoGUI_Dames
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
         public static bool ExisteFENDebut, VisuCoteNoir;          // True quand les Noirs sont en bas de l'écran
         public static bool AfficheNumeroBox, AfficheCaseLogique, PartieEnCours, PartieTerminee, FinPartie, EmetUnSon, AucunCoupBlancPossible, AucunCoupNoirPossible;
-        private static bool ClickCaseSource, MontreDonneesDames, JeuMoteurEnCours, AnalyseEnCours;
-        private ContenuCase PieceCouleurSource;
-        private string[] DonneesMoteurScan;        // Données en provenance du Moteur SCAN
-        private string CheminMoteur;
-        private string NomMoteur, AuteurMoteur, VersionMoteur;
+        private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
+        private ContenuCase pieceCouleurSource;
+        private string[] donneesMoteurScan;        // Données en provenance du Moteur SCAN
+        private string cheminMoteur;
+        private string nomMoteur, auteurMoteur, versionMoteur;
         private int indexFenCoupActuel = 0; // Indice du coup affiché
         // Définir les indices des dernières rangées en notation Manoury
         private static readonly int[] derniereRangeeBlanche = { 46, 47, 48, 49, 50 };
@@ -104,9 +104,9 @@ namespace BrunoGUI_Dames
             CouleurAuTrait = "Blanc";
             VisuCoteNoir = false;                       // On commence avec la vue côté Blanc
             PartieEnCours = true;
-            AfficheNumeroBox = ExisteFENDebut = AnalyseEnCours = false;
+            AfficheNumeroBox = ExisteFENDebut = analyseEnCours = false;
             boutonMasqueAffiche.Enabled = AucunCoupBlancPossible = AucunCoupNoirPossible = false;
-            AfficheCaseLogique = ClickCaseSource = true;
+            AfficheCaseLogique = clickCaseSource = true;
             DureeAnimation = 900;
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";            // Affichage 
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
@@ -132,10 +132,10 @@ namespace BrunoGUI_Dames
                 ActiveCouleurDamier("Blanc", false);
                 LabelInformationJoueur.Text = "Trait aux Noirs";
             }
-            CheminMoteur = Path.Combine(Directory.GetCurrentDirectory(), "Dames_Scan31_FabienLetouzey", "scan.exe");
+            cheminMoteur = Path.Combine(Directory.GetCurrentDirectory(), "Dames_Scan31_FabienLetouzey", "scan.exe");
             // Instanciation et démarrage du moteur
             var moteurDamesScan = new MoteurDamesScan();
-            moteurDamesScan.Start(CheminMoteur);
+            moteurDamesScan.Start(cheminMoteur);
             AnalyseCoupObligatoire(CouleurAuTrait);
         }
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
@@ -152,14 +152,14 @@ namespace BrunoGUI_Dames
                     {   // Si on regarde côté noir, il faut inverser l'index par rapport a la vue côté blanc
                         indexCase100 = IndiceVisuCoteNoir[indexCase100];    
                     }
-                    if (ClickCaseSource)     // Permet de savoir si c'est la sélection de la pièce ou le déplacement
+                    if (clickCaseSource)     // Permet de savoir si c'est la sélection de la pièce ou le déplacement
                     {   // --- Sélection d'une pièce ---
                         CouleurToutesCasesManoury(CouleurCasesombre);       // On réinitialise les couleurs des cases
                         IndexPictureBoxSource100 = indexCase100;
                         CaseSourceManoury = GestionDamier.ObtenirCaseManoury(IndexPictureBoxSource100);     // Quelle case Manoury est cliquée ?
                         (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(IndexPictureBoxSource100);
-                        PieceCouleurSource = GestionDamier.DamierContenu[ligne, colonne];                   // Quelle pièce est cliquée  ?
-                        CouleurPieceCliquee = PieceCouleurSource.CouleurPiece.ToString();                   // Quelle couleur de pièce ?
+                        pieceCouleurSource = GestionDamier.DamierContenu[ligne, colonne];                   // Quelle pièce est cliquée  ?
+                        CouleurPieceCliquee = pieceCouleurSource.CouleurPiece.ToString();                   // Quelle couleur de pièce ?
                         if (CaseDamier[indexCase100].Image != null)
                         {   // Si la case cliquée contient bien une pièce ou un pion, on va utiliser le thumbnail de la pièce comme curseur :-)
                             using (Bitmap Piece = new Bitmap(CaseDamier[indexCase100].Image))
@@ -181,7 +181,7 @@ namespace BrunoGUI_Dames
                             int elementsParRafle = RaflesPossibles.FirstOrDefault()?.Count ?? 0; // Prend la taille de la première rafle ou 0 si la liste est vide
                             // Combine toutes les chaînes en une seule avec un saut de ligne entre chaque liste
                             LabelPrisesPossibles.Text = RaflesPossibles.Count + " Rafles possibles de " + elementsParRafle + " pièces\n" + string.Join("\n", raflesText);
-                            ClickCaseSource = false;
+                            clickCaseSource = false;
                         }
                         else
                         {
@@ -222,7 +222,7 @@ namespace BrunoGUI_Dames
                                         ExecuteDeplacement(
                                             indexSourceBox: IndexPictureBoxSource100,
                                             destinationManoury: CaseDestinationManoury,
-                                            pieceSource: PieceCouleurSource,
+                                            pieceSource: pieceCouleurSource,
                                             piecePrise: false, 0
                                         );
                                         ChangerCouleurTrait();
@@ -233,7 +233,7 @@ namespace BrunoGUI_Dames
                                     }
                                     else
                                     {   // Si le coup n'est pas valide, remet la pièce sur sa case d'origine
-                                        DessinePiece(IndexPictureBoxSource100, PieceCouleurSource.TypePiece, PieceCouleurSource.CouleurPiece);
+                                        DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
                                         CaseDamier[IndexPictureBoxSource100].BackColor = CouleurTrajetSuivi;
                                         Console.WriteLine($"La case {CaseDestinationManoury} n'est pas dans les déplacements simples possibles.");
                                     }
@@ -253,20 +253,20 @@ namespace BrunoGUI_Dames
                             }
                             else
                             {   // Si le coup n'est pas valide, on remet la pièce sur sa case d'origine !
-                                DessinePiece(IndexPictureBoxSource100, PieceCouleurSource.TypePiece, PieceCouleurSource.CouleurPiece);
+                                DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
                                 CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCasesombre;
                             }
                         }
                         catch (ArgumentOutOfRangeException ex)
                         {   // Une case non-Manoury a été cliquée comme destination, on redessine la pièce sur sa case d'origine
                             Console.WriteLine($"Erreur : {ex.Message}");
-                            DessinePiece(IndexPictureBoxSource100, PieceCouleurSource.TypePiece, PieceCouleurSource.CouleurPiece);
+                            DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
                             CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCasesombre;
                         }
                         finally
                         {
                             // Cursor = Cursors.Default;       // On revient au curseur "normal"
-                            ClickCaseSource = true;
+                            clickCaseSource = true;
                             InitialiserEtatMouvement();
                             // Console.WriteLine($"Couleur au trait = {CouleurAuTrait}");
                         }
@@ -288,7 +288,7 @@ namespace BrunoGUI_Dames
         private async Task LancementReflexionMoteur(string positionHub2, int tempsReflexion)
         {   // --- Laancement du moteur SCAN pour réfléchir à un coup sur la position "positionHub2" pendant "tempsReflexion" ---
             BloqueBoutons(true);
-            JeuMoteurEnCours = true;
+            jeuMoteurEnCours = true;
             ActiveCouleurDamier(CouleurAuTrait, false);
             string couleurEnJeu = positionHub2[0] == 'W' ? "Blancs" : "Noirs";      // On récupère la couleur en jeu
             LabelInformationJoueur.Text = "Trait aux " + couleurEnJeu + ", le moteur réfléchit ...";
@@ -301,7 +301,7 @@ namespace BrunoGUI_Dames
                 await Task.Delay(100);  // Attendre un peu avant de vérifier à nouveau
             }
             CouleurToutesCasesManoury(CouleurCasesombre);
-            if (!AnalyseEnCours)    // On execute les coups si ce n'est pas une analyse
+            if (!analyseEnCours)    // On execute les coups si ce n'est pas une analyse
             {
                 LabelCoupJoue.Text = "Coup joué : " + MoteurDamesScan.CoupScan + " --  Suggéré : " + MoteurDamesScan.SuggestionScan;
                 if (EmetUnSon)
@@ -359,7 +359,7 @@ namespace BrunoGUI_Dames
                 LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
             }
             PartieEnCours = true;
-            JeuMoteurEnCours = false;
+            jeuMoteurEnCours = false;
             ActiveCouleurDamier(CouleurAuTrait, true);
             BloqueBoutons(false);
         }
@@ -517,7 +517,7 @@ namespace BrunoGUI_Dames
                 ? $"{GestionDamier.PictureBoxVersManoury[indexSourceBox]}x{destinationManoury}"
                 : $"{GestionDamier.PictureBoxVersManoury[indexSourceBox]}-{destinationManoury}";
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
-            if (!JeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
+            if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
             Console.WriteLine($"Coup joué : {coupEffectue}");
             ActiveDamier(true);         // Réactiver les interactions après le déplacement
@@ -589,7 +589,7 @@ namespace BrunoGUI_Dames
             string coupEffectue = GestionDamier.PictureBoxVersManoury[indexSourceBox] + "x"  + derniereCaseRafle;
             CaseDamier[GestionDamier.ObtenirIndicePictureBox(derniereCaseRafle)].BackColor = CouleurCaseArrivee;
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
-            if (!JeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
+            if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
             Console.WriteLine($"Coup joué : {coupEffectue}");
             ActiveDamier(true); // Réactiver les interactions après l'animation
@@ -608,10 +608,10 @@ namespace BrunoGUI_Dames
                 return; // Empêche l'exécution du reste de la méthode sur le thread d'origine
             }
             else
-                DonneesMoteurScan = MoteurDamesScan.DonneesScan.Split(' ');     // Découpage des informations du moteur SCAN
-            if (string.IsNullOrWhiteSpace(DonneesMoteurScan[0]) == false & DonneesMoteurScan.Length > 2)
+                donneesMoteurScan = MoteurDamesScan.DonneesScan.Split(' ');     // Découpage des informations du moteur SCAN
+            if (string.IsNullOrWhiteSpace(donneesMoteurScan[0]) == false & donneesMoteurScan.Length > 2)
             {   // true si la chaine est " ", "\n", null, ""
-                switch (DonneesMoteurScan[0])   // identifier le premier mot
+                switch (donneesMoteurScan[0])   // identifier le premier mot
                 {
                     case "\n":                  // Analyse réponse moteur SCAN
                     case " ":
@@ -631,25 +631,25 @@ namespace BrunoGUI_Dames
                                 if (match.Groups[4].Success) country = match.Groups[4].Value;
                             }           // Affichage des résultats
                             LabelAfficheScan.Text = "Moteur : " + name + " / Version : " + version + " / Auteur : " + author + " / Pays : " + country;
-                            NomMoteur = name;
-                            VersionMoteur = version;
-                            AuteurMoteur = author;
+                            nomMoteur = name;
+                            versionMoteur = version;
+                            auteurMoteur = author;
                         }
                         break;
                     case "info":
-                        for (int scanIndex = 1; (scanIndex < DonneesMoteurScan.Length); scanIndex++) // Recherche des informations sur la chaine DonneesMoteurScan
-                            switch (DonneesMoteurScan[scanIndex].Split('=')[0])
+                        for (int scanIndex = 1; (scanIndex < donneesMoteurScan.Length); scanIndex++) // Recherche des informations sur la chaine donneesMoteurScan
+                            switch (donneesMoteurScan[scanIndex].Split('=')[0])
                             {   // On regarde ce qu'il y a avant le signe =
                                 case "score":
                                     // Conversion en décimal avec gestion de la culture
-                                    decimal valeur = Decimal.Parse(DonneesMoteurScan[scanIndex].Split('=')[1], CultureInfo.InvariantCulture);
+                                    decimal valeur = Decimal.Parse(donneesMoteurScan[scanIndex].Split('=')[1], CultureInfo.InvariantCulture);
                                     LabelScore.Text = "Score = " + valeur.ToString("F2", CultureInfo.InvariantCulture);     // Affichage avec le format "XX.YY"
                                     break;
                                 case "pv":          // Affichage de la variation principlale
                                     int position = MoteurDamesScan.DonneesScan.IndexOf(" pv");
                                     string variationMoteur = MoteurDamesScan.DonneesScan.Substring(position + 4);   // exemple : pv="14x23x19 50-44 
                                     variationMoteur = variationMoteur.Trim('"');       // Il arrive qu'il y ait un " en début de chaine ??!
-                                    if (AnalyseEnCours)
+                                    if (analyseEnCours)
                                         {
                                         LabelPrisesPossibles.Text = "Ligne SCNA 3.1 complète : " + variationMoteur;
                                         LabelCoupJoue.Text = "Coup suggéré par l'analyse =  : " + variationMoteur.Split(' ')[0];
@@ -993,12 +993,12 @@ namespace BrunoGUI_Dames
         }
         private void InitialiserEtatMouvement()
         {   // --- Remet à zéro les paramètes utilisés pour dessiner les mouvements possibles ---
-            PieceCouleurSource = null;
+            pieceCouleurSource = null;
             CaseSourceManoury = 0;
             CaseDestinationManoury = 0;
             IndexPictureBoxSource100 = -1;
             DeplacementsSimplesPossibles.Clear();
-            ClickCaseSource = true; // Retourne à l'état de sélection de pièce
+            clickCaseSource = true; // Retourne à l'état de sélection de pièce
         }
         public void AfficheListesPieces()
         {   // --- Affiche les 4 listes de pièces, pions blancs et noirs, dames blanches et noires ---
@@ -1086,9 +1086,9 @@ namespace BrunoGUI_Dames
         }
         private void MontreDonneesScan_Click(object sender, EventArgs e)
         {   // --- Affiche ou masque les données de SCAN 3.1 à chaque clic ---
-            MontreDonneesDames = !MontreDonneesDames;       
-            MontreDonneesScan.Text = MontreDonneesDames ? "Masque protoc." : "Affiche protoc.";
-            if (MontreDonneesDames) donneesBrutesDames.Show();    // On affiche les données brutes SCAN
+            montreDonneesDames = !montreDonneesDames;       
+            MontreDonneesScan.Text = montreDonneesDames ? "Masque protoc." : "Affiche protoc.";
+            if (montreDonneesDames) donneesBrutesDames.Show();    // On affiche les données brutes SCAN
             else donneesBrutesDames.Hide();                       // On masque les données brutes SCAN
             donneesBrutesDames.DonneesBrutesVue.ScrollToCaret();      // Pour garder l'affichage dans toute la fenêtre
         }
@@ -1119,6 +1119,7 @@ namespace BrunoGUI_Dames
                 {   // Si on est au début, afficher un message spécial ou la position initiale.
                     LabelCoupJoue.Text = $"Position initiale : {ListeCoupsPdn[0]}";
                 }
+                Console.WriteLine("Précédent : indexFenCoupActuel : " + indexFenCoupActuel);
             }
             else
             {
@@ -1127,7 +1128,10 @@ namespace BrunoGUI_Dames
         }
         private void BoutonSuivant_Click(object sender, EventArgs e)
         {   // --- Bouton pour avancer d'un coup (parcours de partie) ---
-            if (indexFenCoupActuel < ListeCoupsFen.Count - 1 && indexFenCoupActuel - 1 < ListeCoupsPdn.Count) // Vérifie la synchronisation
+            Console.WriteLine("Suivant : indexFenCoupActuel : " + indexFenCoupActuel);
+            Console.WriteLine("ListeCoupsFen.Count : " + ListeCoupsFen.Count);
+            Console.WriteLine("ListeCoupsPdn.Count : " + ListeCoupsPdn.Count);
+            if (indexFenCoupActuel <= ListeCoupsFen.Count - 1 && indexFenCoupActuel <= ListeCoupsPdn.Count) // Vérifie la synchronisation
             {
                 LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 // Accède à ListeCoupsPdn en tenant compte du décalage
@@ -1146,7 +1150,8 @@ namespace BrunoGUI_Dames
             {
                 indexFenCoupActuel = 1; // Premier coup joué (position initiale est à l'index 0)
                 LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel - 1], false);
-                LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
+                LabelCoupJoue.Text = "Début de partie";
+                Console.WriteLine("Début : indexFenCoupActuel : " + indexFenCoupActuel);
             }
         }
         private void BoutoonFin_Click(object sender, EventArgs e)
@@ -1156,6 +1161,7 @@ namespace BrunoGUI_Dames
                 indexFenCoupActuel = ListeCoupsFen.Count - 1; // Dernière position
                 LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
+                Console.WriteLine("Fin : indexFenCoupActuel : " + indexFenCoupActuel);
             }
         }
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
@@ -1169,13 +1175,13 @@ namespace BrunoGUI_Dames
         private async void AnalysePosition_Click(object sender, EventArgs e)
         {
             LabelInformationJoueur.Text = "Analyse de la position en cours ... (" + TempsReflexion + ")";
-            // BloqueBoutons(true);
-            AnalyseEnCours = true;
+            BloqueBoutons(true);
+            analyseEnCours = true;
             Console.WriteLine("Analyse de la position à l'index : " + indexFenCoupActuel);
             await LancementReflexionMoteur(ListeCoupsHub2[indexFenCoupActuel], TempsReflexion);
             LabelInformationJoueur.Text = "Analyse terminée !";
-            // BloqueBoutons(false);
-            AnalyseEnCours = false;
+            BloqueBoutons(false);
+            analyseEnCours = false;
         }
 
         private void ChargePartiesPdn_Click(object sender, EventArgs e)
@@ -1373,8 +1379,8 @@ namespace BrunoGUI_Dames
         }
         private void Apropos_Click(object sender, EventArgs e)
         {   // --- Affiche une boîte de dialogue avec les informations sur l'application ---
-            string message = $"Version Interface graphique = 1.03 / Auteur : Bruno Courtois\n" +
-                                $"Moteur : {NomMoteur} / Version = {VersionMoteur} / Auteur : {AuteurMoteur}";
+            string message = $"Version Interface graphique = 1.04 / Auteur : Bruno Courtois\n" +
+                                $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}";
             MessageBox.Show(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void SauvePartiesPdn_Click(object sender, EventArgs e)
@@ -1450,10 +1456,7 @@ namespace BrunoGUI_Dames
             if (RadioGainBlanc.Checked)
             {   // 1-0 les blancs gagnent
                 LabelInformationJoueur.Text = "Gain Blanc sélectionné (Partie terminée)";
-                ListeCoupsPdn.Add(" 1-0");
-                PartieCourante.Result = "1-0";
-                GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                PartieTerminee = FinPartie = true;
+                MiseaJourFinPartie(" 1-0");
             }
         }
         private void RadioGainNoir_CheckedChanged(object sender, EventArgs e)
@@ -1461,10 +1464,7 @@ namespace BrunoGUI_Dames
             if (RadioGainNoir.Checked)
             {   // 0-1 les noirs gagnent
                 LabelInformationJoueur.Text = "Gain Noir sélectionné (Partie terminée)";
-                ListeCoupsPdn.Add(" 0-1");
-                PartieCourante.Result = "0-1";
-                GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                PartieTerminee = FinPartie = true;
+                MiseaJourFinPartie(" 0-1");
             }
         }
         private void RadioNulle_CheckedChanged(object sender, EventArgs e)
@@ -1472,11 +1472,20 @@ namespace BrunoGUI_Dames
             if (RadioNulle.Checked)
             {   // 1/2-1/2 partie nulle
                 LabelInformationJoueur.Text = "Nulle sélectionnée (Partie terminée)";
-                ListeCoupsPdn.Add(" 1/2-1/2");
-                PartieCourante.Result = "1/2-1/2";
-                GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                PartieTerminee = FinPartie = true;
+                MiseaJourFinPartie(" 1/2-1/2");
             }
+        }
+        private void MiseaJourFinPartie(string resultat)
+        {   // --- Met à jour certains éléments à la fin de la partie ---
+            ListeCoupsPdn.Add(resultat);        // Ajoute le résultat à la liste des coups
+            PartieCourante.Event = "Entrainement";
+            PartieCourante.Site = "Interface graphique";
+            PartieCourante.Date = DateTime.Now.ToString("yyyy-MM-dd");      // Stocke la date au format AAAA-MM-JJ
+            PartieCourante.White = NomJoueurBlanc;      // Mise à jour des balises de la partie
+            PartieCourante.Black = NomJoueurNoir;
+            PartieCourante.Result = resultat.Trim(); 
+            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
+            PartieTerminee = FinPartie = true;
         }
         private void BoutonRetourArriere_Click(object sender, EventArgs e)
         {   // --- Retour en arrière d'un coup en récupérant l'avant-dernier FEN et en effaçant le dernier ---

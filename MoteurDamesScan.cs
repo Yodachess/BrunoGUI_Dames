@@ -108,13 +108,13 @@ namespace BrunoGUI_Dames
             ScanVersGui = false;
         }
 
-        public static void StandardInputDataToScan(string Data)
+        public static void StandardInputDataToScan(string data)
         {   // Envoi de données de l'interface vers moteur SCAN
             // Debug.WriteLine($"[App] {Data}");
             ScanVersGui = false;
-            DonneesVersScan = Data;
+            DonneesVersScan = data;
             AfficheDonneesBrutes();
-            Proc.StandardInput.Write(Data + Environment.NewLine);
+            Proc.StandardInput.Write(data + Environment.NewLine);
         }
         public static void Quitte()
         {   // On ferme le moteur SCAN
