@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static BrunoGUI_Dames.LogiqueMouvementsDames;
 using static BrunoGUI_Dames.FichierPartiePdn;
+using MethodInvoker = System.Windows.Forms.MethodInvoker;
 
 namespace BrunoGUI_Dames
 {
