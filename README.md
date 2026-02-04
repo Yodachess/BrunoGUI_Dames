@@ -2,6 +2,7 @@ BrunoGUI_dames V1.xx Copyright 2024-2025 Bruno Courtois
 
 Ce projet est une interface graphique sous Windows permettant de jouer aux dames internationales (10x10).
 C'est une application Winforms développé en langage C# 7.3 sous .NET 4.7 avec Visual Studio 2022.
+(Mis à jour en C# 12.0 sous .NET 8.0 en 2025))
 
 Connaissant la qualité des logiciels de Fabien Letouzey (Fruit, Seipan, ...), je me suis tourné pour le 
 moteur vers son logiciel de dames SCAN dans sa version 3.1 (la dernière à ma conaissance), qui utilise 
@@ -49,6 +50,7 @@ English version :
 BrunoGUI_dames V1.xx - Copyright 2024-2025 Bruno Courtois
 This project is a Windows graphical interface for playing international draughts (10x10).
 It is a WinForms application developed in C# 7.3 under .NET 4.7 using Visual Studio 2022.
+(Updated to C# 12.0 under .NET 8.0 in 2025))
 
 Knowing the quality of Fabien Letouzey's software (Fruit, Seipan, ...), 
 I chose to use his draughts engine SCAN 3.1 (the latest version to my knowledge).
