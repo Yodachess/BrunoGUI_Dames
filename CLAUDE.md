@@ -13,14 +13,14 @@ Tout le code, les identifiants et les commentaires sont en français : garder ce
 - **.NET 10** (`net10.0-windows`) depuis le 2026-11-12 (.NET 8 n'est plus pris en charge depuis le 2026-11-10) ; compile en Debug et en Release, à zéro avertissement (l'événement `AfficheCoupMoteur`, jamais déclenché, a été supprimé avec son gestionnaire).
 - Krypton 95 (`95.25.10.293`, comme BrunoGUI_GenII) depuis le 2026-11-12. Seul `Krypton.Toolkit` est utilisé dans le code : `Docking`, `Navigator`, `Ribbon` et `Workspace` sont référencés sans usage.
 - `<Nullable>enable</Nullable>` activé le 2026-11-12, à zéro avertissement nullable (aucun `!` ajouté).
-- Pas de projet de tests, pas de CI (`.github\workflows` existe mais est vide), pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
+- Projet de tests `Tests` (règles du jeu seulement : `Position`, `ReglesDames`) ; pas de CI (`.github\workflows` existe mais est vide), pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
 - Un gros formulaire (`BrunoInterfaceGraphiqueDames.cs`, ~100 Ko) ; règles dans `LogiqueMouvementsDames.cs`, damier dans `GestionDamier.cs`, moteur dans `MoteurDamesScan.cs`.
 - `.gitattributes` impose le CRLF dans le répertoire de travail pour `*.cs`, `*.csproj`, `*.sln`, `*.resx`, `*.md`, `*.ini`, `*.yml`, `*.tsv` (le dépôt les garde en LF) ; le reste (parties PDN, FEN, fichiers du moteur Scan) reste en `text=auto`.
 - Architecture : voir la section ci-dessous (relevée par lecture du code le 2026-11-12, sans exécution ni test).
 
 ## Architecture
 
-Un seul projet WinForms (`BrunoGUI_Dames.csproj`, `WinExe`), environ 3 000 lignes de C# hors `.Designer.cs`. **Tout l'état est statique** et les règles dépendent du formulaire principal (`RaflesPossibles`, `CouleurAuTrait`, `VisuCoteNoir`… y sont déclarés) : la logique n'est pas encore séparée de l'interface.
+Un seul projet WinForms (`BrunoGUI_Dames.csproj`, `WinExe`), environ 3 000 lignes de C# hors `.Designer.cs`. **Tout l'état est statique** et les règles dépendent du formulaire principal (`RaflesPossibles`, `CouleurAuTrait`, `VisuCoteNoir`… y sont déclarés) : la logique de l'application n'est pas encore séparée de l'interface. Une couche pure existe à côté (`Position.cs`, `ReglesDames.cs`, testée) mais le formulaire ne l'utilise pas encore : il passe toujours par `LogiqueMouvementsDames`.
 
 | Fichier | Rôle |
 |---|---|
@@ -28,6 +28,9 @@ Un seul projet WinForms (`BrunoGUI_Dames.csproj`, `WinExe`), environ 3 000 ligne
 | `BrunoInterfaceGraphiqueDames.cs` (~1 600 lignes) | Formulaire principal : création des 100 `PictureBox`, clics, animation des coups, dialogue avec le moteur, boutons, parcours de partie, chargement/sauvegarde. Contient aussi les listes statiques de cases à colorier. |
 | `LogiqueMouvementsDames.cs` | Règles : génération des déplacements et des rafles, FEN ↔ Hub2, listes de pièces, listes de coups (`ListeCoupsFen/Pdn/Hub2`), énumérations `TypePiece` / `CouleurPiece`. |
 | `GestionDamier.cs` | `ContenuCase` et tables de correspondance Manoury ↔ index `PictureBox`, `DamierContenu[10,10]`. |
+| `Position.cs` | **Logique pure, sans état statique** : `Geometrie` (cases 1 à 50, voisins diagonaux), `Position` (copiable : 50 cases, trait ; FEN et Hub2 en lecture et écriture, égalité). Utilise ses propres types `Couleur` et `Piece`, pas ceux de `LogiqueMouvementsDames`. |
+| `ReglesDames.cs` | **Logique pure** : `Coup` (départ, arrivée, chemin, pièces prises ; notations Hub2 et PDN) et `ReglesDames` (`CoupsLegaux`, `Jouer`, `TrouverCoup`, `EstTerminee`). Pion qui prend en arrière, dame volante, prise obligatoire et majoritaire, pièces prises retirées seulement en fin de rafle, retour sur la case de départ permis, promotion seulement en fin de coup. Deux rafles de mêmes départ, arrivée et pièces prises ne font qu'un coup (comme dans Scan). |
+| `Tests\` | Projet de tests : `Scenario.cs` (les vérifications), `Program.cs` (console), `VerificationsTests.cs` (xUnit). |
 | `MoteurDamesScan.cs` | Processus `scan.exe hub`, lecture de sa sortie, événements statiques vers le formulaire. |
 | `FichierPartiePdn.cs` | Fenêtre « liste des parties » **et** analyseur PDN (`DecodeFichierPDN`, `DecodePartiePDN`, classe `PartieDamesPdn`). |
 | `AffichePdn.cs` | Fenêtre d'affichage des coups (PDN, FEN, Hub2) et enregistrement PDN (`GenerationPdn`). |
@@ -49,7 +52,7 @@ Un seul projet WinForms (`BrunoGUI_Dames.csproj`, `WinExe`), environ 3 000 ligne
 
 ### Points fragiles relevés à la lecture
 
-À confirmer par des tests (chantier 2) avant de toucher au code ; ce sont des constats de lecture, pas des bugs reproduits.
+À confirmer par des tests (chantier 2) avant de toucher au code ; ce sont des constats de lecture, pas des bugs reproduits. Les points 1 à 3 concernent l'ancien générateur (`LogiqueMouvementsDames` et le formulaire) : le nouveau (`ReglesDames`) ne les a pas, mais l'application utilise encore l'ancien, dont aucun test n'existe.
 
 1. `LancementReflexionMoteur` calcule `raflesFiltrees` (rafles qui finissent sur la case annoncée par le moteur) puis ne s'en sert pas : la rafle animée est la première de `RaflesMaximales`, pas forcément celle du moteur.
 2. Une rafle est identifiée par sa seule case d'arrivée finale (`FirstOrDefault`, clic humain, coup du moteur, PDN « `28x19` ») : deux rafles qui finissent au même endroit en prenant des pièces différentes sont indiscernables.
@@ -71,6 +74,19 @@ dotnet build BrunoGUI_Dames.sln
 dotnet run --project BrunoGUI_Dames.csproj
 ```
 
+```bash
+dotnet run --project Tests
+```
+
+```bash
+dotnet run --project Tests -- --complet
+```
+
+```bash
+dotnet test Tests
+```
+
+- `dotnet run --project Tests` affiche chaque vérification (code de sortie 0 si tout passe) ; `-- --complet` ajoute le perft de profondeur 7 (~5 s) ; `dotnet test Tests` en fait un test xUnit par vérification.
 - `git` n'est pas dans le PATH de PowerShell sur cette machine : utiliser celui de Visual Studio 2022 (`C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe`). Remote `origin` = https://github.com/Yodachess/BrunoGUI_Dames, branche `master`.
 
 ## Pratiques (reprises de BrunoGUI_GenII)
@@ -100,5 +116,5 @@ dotnet run --project BrunoGUI_Dames.csproj
 ## Chantiers proposés (dans l'ordre)
 
 1. ~~.NET 10, Krypton 95, `.gitattributes` en CRLF, `<Nullable>` à zéro avertissement~~ (fait le 2026-11-12).
-2. Projet `Tests` (règles des dames : prises obligatoires et majoritaires, rafles, promotion ; notation Manoury ; lecture et écriture PDN), puis CI.
-3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`).
+2. Projet `Tests` : **règles du jeu faites le 2026-11-12** (57 vérifications : FEN, Hub2, déplacements, prises obligatoires et majoritaires, rafles en boucle, dame volante, promotion, fin de partie, 28 demi-coups d'une ligne de Scan, perft 1 à 7 de la position initiale) ; restent la lecture et l'écriture PDN, puis la CI. Pas encore couverts : la prise qui repasse sur une pièce déjà prise (une dame ne peut pas la sauter deux fois), les nulles, et tout ce qui est dans le formulaire.
+3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`) : `Position` et `ReglesDames` existent et sont testées, reste à y brancher le formulaire (en retirant `LogiqueMouvementsDames` et les listes statiques), puis `Partie` et `PiloteMoteur`.
