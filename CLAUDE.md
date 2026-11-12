@@ -14,7 +14,7 @@ Tout le code, les identifiants et les commentaires sont en français : garder ce
 - Krypton 95 (`95.25.10.293`, comme BrunoGUI_GenII) depuis le 2026-11-12. Seul `Krypton.Toolkit` est utilisé dans le code : `Docking`, `Navigator`, `Ribbon` et `Workspace` sont référencés sans usage.
 - Pas de projet de tests, pas de CI (`.github\workflows` existe mais est vide), pas de `<Nullable>`, pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
 - Un gros formulaire (`BrunoInterfaceGraphiqueDames.cs`, ~100 Ko) ; règles dans `LogiqueMouvementsDames.cs`, damier dans `GestionDamier.cs`, moteur dans `MoteurDamesScan.cs`.
-- `.gitattributes` en `text=auto` (pas de CRLF imposé).
+- `.gitattributes` impose le CRLF dans le répertoire de travail pour `*.cs`, `*.csproj`, `*.sln`, `*.resx`, `*.md`, `*.ini`, `*.yml`, `*.tsv` (le dépôt les garde en LF) ; le reste (parties PDN, FEN, fichiers du moteur Scan) reste en `text=auto`.
 - Architecture : voir la section ci-dessous (relevée par lecture du code le 2026-11-12, sans exécution ni test).
 
 ## Architecture
@@ -83,7 +83,7 @@ dotnet run --project BrunoGUI_Dames.csproj
 
 **Code**
 - Zéro avertissement de compilation ; une fois activés, les types nullables restent à zéro avertissement.
-- Fichiers du projet en CRLF (à imposer par `.gitattributes`, comme dans BrunoGUI_GenII).
+- Fichiers du projet en CRLF (imposé par `.gitattributes`, comme dans BrunoGUI_GenII).
 - La logique (règles, notation, PDN, moteur) n'utilise ni Windows Forms ni Krypton : elle ne montre jamais de fenêtre ni de message, et elle est testée (projet `Tests` : une console qui affiche les vérifications et un test xUnit par vérification, perft compris pour le générateur de coups). L'interface n'a pas de tests : la vérifier à la main.
 - La position du jeu dans un objet que l'on peut copier, et les calculs « pour voir » faits sur une copie, jamais sur la partie.
 - Le thread du moteur ne modifie jamais l'état de la partie : passage au thread de l'interface par un `Invoke` protégé ; chaque demande au moteur est numérotée et toute action qui change la partie abandonne la réflexion en cours.
@@ -98,6 +98,6 @@ dotnet run --project BrunoGUI_Dames.csproj
 
 ## Chantiers proposés (dans l'ordre)
 
-1. ~~.NET 10~~ et ~~Krypton 95~~ (faits) ; reste `.gitattributes` en CRLF, `<Nullable>enable</Nullable>` à zéro avertissement.
+1. ~~.NET 10~~, ~~Krypton 95~~ et ~~`.gitattributes` en CRLF~~ (faits) ; reste `<Nullable>enable</Nullable>` à zéro avertissement.
 2. Projet `Tests` (règles des dames : prises obligatoires et majoritaires, rafles, promotion ; notation Manoury ; lecture et écriture PDN), puis CI.
 3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`).

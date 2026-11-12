@@ -3,6 +3,18 @@
 ###############################################################################
 * text=auto
 
+# Fichiers du projet : toujours en CRLF dans le répertoire de travail, quel que soit core.autocrlf
+# (le dépôt les garde en LF). Les parties PDN, les positions FEN et les fichiers du moteur Scan
+# restent sous la règle générale ci-dessus.
+*.cs      text eol=crlf
+*.csproj  text eol=crlf
+*.sln     text eol=crlf
+*.resx    text eol=crlf
+*.md      text eol=crlf
+*.ini     text eol=crlf
+*.yml     text eol=crlf
+*.tsv     text eol=crlf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
