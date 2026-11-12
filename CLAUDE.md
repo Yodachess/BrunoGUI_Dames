@@ -11,7 +11,7 @@ Tout le code, les identifiants et les commentaires sont en français : garder ce
 ## État au 2026-11-12 (avant tout travail avec Claude Code)
 
 - **.NET 10** (`net10.0-windows`) depuis le 2026-11-12 (.NET 8 n'est plus pris en charge depuis le 2026-11-10) ; compile en Debug et en Release. Un avertissement subsiste : `CS0067`, l'événement `MoteurDamesScan.AfficheCoupMoteur` n'est jamais déclenché.
-- Krypton en version 90 ; BrunoGUI_GenII utilise Krypton 95.
+- Krypton 95 (`95.25.10.293`, comme BrunoGUI_GenII) depuis le 2026-11-12. Seul `Krypton.Toolkit` est utilisé dans le code : `Docking`, `Navigator`, `Ribbon` et `Workspace` sont référencés sans usage.
 - Pas de projet de tests, pas de CI (`.github\workflows` existe mais est vide), pas de `<Nullable>`, pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
 - Un gros formulaire (`BrunoInterfaceGraphiqueDames.cs`, ~100 Ko) ; règles dans `LogiqueMouvementsDames.cs`, damier dans `GestionDamier.cs`, moteur dans `MoteurDamesScan.cs`.
 - `.gitattributes` en `text=auto` (pas de CRLF imposé).
@@ -98,6 +98,6 @@ dotnet run --project BrunoGUI_Dames.csproj
 
 ## Chantiers proposés (dans l'ordre)
 
-1. ~~.NET 10~~ (fait) ; reste Krypton 95, `.gitattributes` en CRLF, `<Nullable>enable</Nullable>` à zéro avertissement.
+1. ~~.NET 10~~ et ~~Krypton 95~~ (faits) ; reste `.gitattributes` en CRLF, `<Nullable>enable</Nullable>` à zéro avertissement.
 2. Projet `Tests` (règles des dames : prises obligatoires et majoritaires, rafles, promotion ; notation Manoury ; lecture et écriture PDN), puis CI.
 3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`).
