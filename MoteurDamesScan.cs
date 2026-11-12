@@ -16,13 +16,11 @@ using System.Linq;
 namespace BrunoGUI_Dames
 {
     public delegate void AfficheMoteurDamesScan();
-    public delegate void AfficheCoupMoteurDamesScan();
     public delegate void AfficheDonneesBrutesDamesScan();
     public class MoteurDamesScan
     {
         public static event AfficheMoteurDamesScan? AfficheScan;
         public static event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;
-        public static event AfficheCoupMoteurDamesScan? AfficheCoupMoteur;
         public static string DonneesScan { get; set; } = "";
         public static string DonneesVersScan { get; set; } = "";
         public static string CoupScan { get; set; } = "";

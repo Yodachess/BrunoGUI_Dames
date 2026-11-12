@@ -92,7 +92,6 @@ namespace BrunoGUI_Dames
         {
             // les évènements dans les classes
             MoteurDamesScan.AfficheScan += AfficheScan;
-            MoteurDamesScan.AfficheCoupMoteur += AfficheCoupMoteur;
             MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;
             // Liste des pièces du jeu
             ListeBitmapsPiece.Add(TypePiece.PionBlanc, PionBlanc);       // pion blanc
@@ -668,19 +667,6 @@ namespace BrunoGUI_Dames
                         Console.WriteLine($"ERROR MESSAGE RETOURNE PAR SCAN !");
                         break;
                 }
-            }
-        }
-        private void AfficheCoupMoteur()        // Le moteur SCAN joue son meilleur coup
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new MethodInvoker(AfficheCoupMoteur));
-                return; // Empêche l'exécution du reste de la méthode sur le thread d'origine
-            }
-            else
-            {
-                LabelInformationJoueur.Text = "A vous de jouer";
-                Console.WriteLine($"Coup retouré par Scan 3.1 : {MoteurDamesScan.CoupScan}");
             }
         }
         private void AfficheDonneesBrutes()
