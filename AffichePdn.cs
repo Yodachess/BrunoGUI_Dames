@@ -99,12 +99,12 @@ namespace BrunoGUI_Dames
             afficheZone.Show();
             afficheZone.ZoneAffichage.Text = GenerationPdn();
         }
-        private void AffichePdnFr_Click(object sender, EventArgs e)
+        private void AffichePdnFr_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
             AffichePdnDansZone();
         }
-        private void ListeFenAffichePdn_Click(object sender, EventArgs e)
+        private void ListeFenAffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
             string contenuFen = "Nombre de 1/2 coups = " + LogiqueMouvementsDames.ListeCoupsFen.Count + "\n";
@@ -114,7 +114,7 @@ namespace BrunoGUI_Dames
             }
             afficheZone.ZoneAffichage.Text = contenuFen;
         }
-        private void ListeHub2AffichePdn_Click(object sender, EventArgs e)
+        private void ListeHub2AffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
             string contenuHub2 = "Nombre de 1/2 coups = " + LogiqueMouvementsDames.ListeCoupsHub2.Count + "\n";
@@ -124,7 +124,7 @@ namespace BrunoGUI_Dames
             }
             afficheZone.ZoneAffichage.Text = contenuHub2;
         }
-        private void MasqueAffichePdn_Click(object sender, EventArgs e)
+        private void MasqueAffichePdn_Click(object? sender, EventArgs e)
         {
             this.Hide();
         }
@@ -132,7 +132,7 @@ namespace BrunoGUI_Dames
         {
             EnregistrerPdn_Click(this, EventArgs.Empty);
         }
-        private void EnregistrerPdn_Click(object sender, EventArgs e)
+        private void EnregistrerPdn_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -186,6 +186,8 @@ namespace BrunoGUI_Dames
             this.Hide();      // Masque la fenêtre au lieu de la fermer;
         }
 
+        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(ZoneAffichage), nameof(MasqueAffichePdn), nameof(AffichePdnFr), nameof(AfficheFen),
+                                                       nameof(AfficheListeHub2), nameof(EnregistrerPdn), nameof(EnregistrerFichierPdn))]
         private void InitializeComponent()
         {
             this.ZoneAffichage = new System.Windows.Forms.RichTextBox();

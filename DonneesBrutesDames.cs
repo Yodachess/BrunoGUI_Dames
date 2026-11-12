@@ -26,7 +26,7 @@ namespace BrunoGUI_Dames
             InitializeComponent();
             this.FormClosing += DonneesBrutesDames_FormClosing;      // Gestion du click sur la croix rouge en haut à droite ...
         }
-        private void DonneesBrutesDames_FormClosing(object sender, FormClosingEventArgs e)
+        private void DonneesBrutesDames_FormClosing(object? sender, FormClosingEventArgs e)
         {   // Gestion du click sur la croix rouge en haut à droite ...
             e.Cancel = true;
             this.Hide();

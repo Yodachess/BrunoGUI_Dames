@@ -109,7 +109,7 @@ namespace BrunoGUI_Dames
                     {
                         int indexPictureBox = ((ligne * 10) + colonne);
                         string nomPictureBox = $"ContenuCase{indexPictureBox:D2}";
-                        PictureBox pictureBox = controls.Find(nomPictureBox, true).FirstOrDefault() as PictureBox;
+                        PictureBox? pictureBox = controls.Find(nomPictureBox, true).FirstOrDefault() as PictureBox;
                         if (pictureBox != null)
                         {
                             BrunoInterfaceGraphiqueDames.ManouryVersPictureBoxIndicee[indexManoury] = pictureBox;

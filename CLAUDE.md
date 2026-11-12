@@ -12,7 +12,8 @@ Tout le code, les identifiants et les commentaires sont en français : garder ce
 
 - **.NET 10** (`net10.0-windows`) depuis le 2026-11-12 (.NET 8 n'est plus pris en charge depuis le 2026-11-10) ; compile en Debug et en Release. Un avertissement subsiste : `CS0067`, l'événement `MoteurDamesScan.AfficheCoupMoteur` n'est jamais déclenché.
 - Krypton 95 (`95.25.10.293`, comme BrunoGUI_GenII) depuis le 2026-11-12. Seul `Krypton.Toolkit` est utilisé dans le code : `Docking`, `Navigator`, `Ribbon` et `Workspace` sont référencés sans usage.
-- Pas de projet de tests, pas de CI (`.github\workflows` existe mais est vide), pas de `<Nullable>`, pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
+- `<Nullable>enable</Nullable>` activé le 2026-11-12, à zéro avertissement nullable (aucun `!` ajouté).
+- Pas de projet de tests, pas de CI (`.github\workflows` existe mais est vide), pas de `<Version>` (la version « 1.04 » est écrite en dur dans `Apropos_Click`).
 - Un gros formulaire (`BrunoInterfaceGraphiqueDames.cs`, ~100 Ko) ; règles dans `LogiqueMouvementsDames.cs`, damier dans `GestionDamier.cs`, moteur dans `MoteurDamesScan.cs`.
 - `.gitattributes` impose le CRLF dans le répertoire de travail pour `*.cs`, `*.csproj`, `*.sln`, `*.resx`, `*.md`, `*.ini`, `*.yml`, `*.tsv` (le dépôt les garde en LF) ; le reste (parties PDN, FEN, fichiers du moteur Scan) reste en `text=auto`.
 - Architecture : voir la section ci-dessous (relevée par lecture du code le 2026-11-12, sans exécution ni test).
@@ -98,6 +99,6 @@ dotnet run --project BrunoGUI_Dames.csproj
 
 ## Chantiers proposés (dans l'ordre)
 
-1. ~~.NET 10~~, ~~Krypton 95~~ et ~~`.gitattributes` en CRLF~~ (faits) ; reste `<Nullable>enable</Nullable>` à zéro avertissement.
+1. ~~.NET 10~~, ~~Krypton 95~~, ~~`.gitattributes` en CRLF~~ et ~~`<Nullable>`~~ (faits) ; reste l'avertissement `CS0067` (`AfficheCoupMoteur`) pour atteindre zéro avertissement.
 2. Projet `Tests` (règles des dames : prises obligatoires et majoritaires, rafles, promotion ; notation Manoury ; lecture et écriture PDN), puis CI.
 3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`).

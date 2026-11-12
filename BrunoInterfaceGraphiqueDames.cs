@@ -62,25 +62,25 @@ namespace BrunoGUI_Dames
         public static Color CouleurCasePivot = Color.DarkKhaki;
         public static Color CouleurCasePrise = Color.DarkOliveGreen;                        
         public static Color CouleurCaseArrivee = Color.OliveDrab;
-        public static string CouleurPieceCliquee, CouleurAuTrait;
+        public static string CouleurPieceCliquee = "", CouleurAuTrait = "";
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn PartieCourante = new FichierPartiePdn.PartieDamesPdn();
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
         public static bool ExisteFENDebut, VisuCoteNoir;          // True quand les Noirs sont en bas de l'écran
         public static bool AfficheNumeroBox, AfficheCaseLogique, PartieEnCours, PartieTerminee, FinPartie, EmetUnSon, AucunCoupBlancPossible, AucunCoupNoirPossible;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
-        private ContenuCase pieceCouleurSource;
-        private string[] donneesMoteurScan;        // Données en provenance du Moteur SCAN
-        private string cheminMoteur;
-        private string nomMoteur, auteurMoteur, versionMoteur;
+        private ContenuCase pieceCouleurSource = new ContenuCase();     // Pièce sélectionnée au premier clic (case vide = aucune)
+        private string[] donneesMoteurScan = Array.Empty<string>();        // Données en provenance du Moteur SCAN
+        private string cheminMoteur = "";
+        private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
         private int indexFenCoupActuel = 0; // Indice du coup affiché
         // Définir les indices des dernières rangées en notation Manoury
         private static readonly int[] derniereRangeeBlanche = { 46, 47, 48, 49, 50 };
         private static readonly int[] derniereRangeeNoire = { 1, 2, 3, 4, 5 };
         // -- les classes --
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
-        private AffichePdn affichePdn = new AffichePdn();   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
-        private FichierPartiePdn fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
+        private AffichePdn? affichePdn = new AffichePdn();   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
+        private FichierPartiePdn? fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
         // GestionDamier et ContenuCase dans GestionDamier.cs
         // LogiqueMouvementsDames dans LogiqueMouvementsDames.cs
 
@@ -144,7 +144,7 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Gestion du click de la souris
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
-        private async void CaseMouseDown(object sender, MouseEventArgs e)
+        private async void CaseMouseDown(object? sender, MouseEventArgs e)
         {   // --- Gestion de la sélection/déplacement des pièces avec retour à l'origine si mouvement incorrect ---
             try
             {   // Le joueur sélectionne la case source ou destination avec la souris
@@ -163,9 +163,10 @@ namespace BrunoGUI_Dames
                         (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(IndexPictureBoxSource100);
                         pieceCouleurSource = GestionDamier.DamierContenu[ligne, colonne];                   // Quelle pièce est cliquée  ?
                         CouleurPieceCliquee = pieceCouleurSource.CouleurPiece.ToString();                   // Quelle couleur de pièce ?
-                        if (CaseDamier[indexCase100].Image != null)
+                        Image? imageCase = CaseDamier[indexCase100].Image;
+                        if (imageCase != null)
                         {   // Si la case cliquée contient bien une pièce ou un pion, on va utiliser le thumbnail de la pièce comme curseur :-)
-                            using (Bitmap Piece = new Bitmap(CaseDamier[indexCase100].Image))
+                            using (Bitmap Piece = new Bitmap(imageCase))
                             {   // Quand on bouge la souris, on bouge le thumbnail de la pièce comme un curseur :-)
                                 Bitmap thumbnail = (Bitmap)Piece.GetThumbnailImage(150, 150, null, IntPtr.Zero);
                                 Cursor = new Cursor(thumbnail.GetHicon());
@@ -625,7 +626,7 @@ namespace BrunoGUI_Dames
                     case "id":      // sous la forme : id name=... version=... author="..." country=...
                         {   // Expression régulière pour extraire les données
                             string pattern = @"name=(\S+)|version=(\S+)|author=""([^""]+)""|country=(\S+)";     // Extraction des correspondances
-                            string name = null, version = null, author = null, country = null;
+                            string? name = null, version = null, author = null, country = null;
                             foreach (Match match in Regex.Matches(MoteurDamesScan.DonneesScan, pattern))
                             {
                                 if (match.Groups[1].Success) name = match.Groups[1].Value;
@@ -634,9 +635,9 @@ namespace BrunoGUI_Dames
                                 if (match.Groups[4].Success) country = match.Groups[4].Value;
                             }           // Affichage des résultats
                             LabelAfficheScan.Text = "Moteur : " + name + " / Version : " + version + " / Auteur : " + author + " / Pays : " + country;
-                            nomMoteur = name;
-                            versionMoteur = version;
-                            auteurMoteur = author;
+                            nomMoteur = name ?? "";
+                            versionMoteur = version ?? "";
+                            auteurMoteur = author ?? "";
                         }
                         break;
                     case "info":
@@ -755,7 +756,7 @@ namespace BrunoGUI_Dames
             CaseDamier[GestionDamier.ManouryVersIndexPictureBox[caseSourceManoury - 1]].BackColor = CouleurCaseDepart; // Colorier la case source
             var mouvements = LogiqueMouvementsDames.TrouverMouvementsPossibles(caseSourceManoury);
             // Vérifier s'il existe des rafles
-            bool existeRafles = mouvements.Rafles != null && mouvements.Rafles.Any();
+            bool existeRafles = mouvements.Rafles.Any();
             if (existeRafles)
             {   // Trouver la longueur maximale des rafles
                 int maxLongueurRafle = mouvements.Rafles.Max(rafle => rafle.Count);
@@ -996,7 +997,7 @@ namespace BrunoGUI_Dames
         }
         private void InitialiserEtatMouvement()
         {   // --- Remet à zéro les paramètes utilisés pour dessiner les mouvements possibles ---
-            pieceCouleurSource = null;
+            pieceCouleurSource = new ContenuCase();
             CaseSourceManoury = 0;
             CaseDestinationManoury = 0;
             IndexPictureBoxSource100 = -1;
@@ -1016,11 +1017,12 @@ namespace BrunoGUI_Dames
             pict.Paint += PictureBox_Paint;         // Ajouter le gestionnaire Paint à la PictureBox
             pict.Invalidate();                      // Forcer la mise à jour
         }
-        private static void PictureBox_Paint(object sender, PaintEventArgs e)        // Déclaration du gestionnaire d'événement Paint
+        private static void PictureBox_Paint(object? sender, PaintEventArgs e)       // Déclaration du gestionnaire d'événement Paint
         {   // --- Evénement Paint lié à la PictureBox ---
-            PictureBox pict = sender as PictureBox;
+            if (sender is not PictureBox pict || pict.Tag?.ToString() is not string tag)
+                return;     // Le Tag est posé par AfficheIndexBox pour chaque case
             // Récupérer les données depuis Tag et les séparer
-            string[] data = pict.Tag.ToString().Split(',');
+            string[] data = tag.Split(',');
             int index = int.Parse(data[0]);
             int caseLogique = int.Parse(data[1]);
             // Effacer le fond
@@ -1361,7 +1363,7 @@ namespace BrunoGUI_Dames
             LabelPrisesPossibles.Text = "Fin des coups de la partie";
             BloqueBoutons(false);
         }
-        public void boutonMasqueAffiche_Click(object sender, EventArgs e)
+        public void boutonMasqueAffiche_Click(object? sender, EventArgs e)
         {   // --- Masque ou affiche la fenêtre de parties PDN ---
             if (fichierPartiePdn == null || fichierPartiePdn.IsDisposed)
             {   // Vérifier si la fenêtre a été fermée
@@ -1388,7 +1390,7 @@ namespace BrunoGUI_Dames
         }
         private void SauvePartiesPdn_Click(object sender, EventArgs e)
         {   // --- Ouvre la feneêtre de sauvegarde de fichier ---
-            affichePdn.LancerEnregistrementPdn();
+            affichePdn?.LancerEnregistrementPdn();
         }
         private void PositionFen_Click(object sender, EventArgs e)
         {   // --- Charge une position au format FEN à partir d'un fichier  ---

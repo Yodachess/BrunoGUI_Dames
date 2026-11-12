@@ -20,21 +20,22 @@ namespace BrunoGUI_Dames
     public delegate void AfficheDonneesBrutesDamesScan();
     public class MoteurDamesScan
     {
-        public static event AfficheMoteurDamesScan AfficheScan;
-        public static event AfficheDonneesBrutesDamesScan AfficheDonneesBrutes;
-        public static event AfficheCoupMoteurDamesScan AfficheCoupMoteur;
-        public static string DonneesScan { get; set; }
-        public static string DonneesVersScan { get; set; }
-        public static string CoupScan { get; set; }
-        public static string SuggestionScan { get; set; }
+        public static event AfficheMoteurDamesScan? AfficheScan;
+        public static event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;
+        public static event AfficheCoupMoteurDamesScan? AfficheCoupMoteur;
+        public static string DonneesScan { get; set; } = "";
+        public static string DonneesVersScan { get; set; } = "";
+        public static string CoupScan { get; set; } = "";
+        public static string SuggestionScan { get; set; } = "";
         public static bool ScanVersGui { get; set; }
         public static bool CoupScanJoue; // Flag indiquant si le coup a été mis à jour
-        private static Process Proc;
+        private static Process? Proc;
+        private static Process ProcessusMoteur => Proc ?? throw new InvalidOperationException("Le moteur Scan n'est pas démarré.");
 
         public void Start(string fichierMoteurDames)
         {
             // Récupère le répertoire contenant le fichier moteur
-            string repertoireMoteur = Path.GetDirectoryName(fichierMoteurDames);
+            string repertoireMoteur = Path.GetDirectoryName(fichierMoteurDames) ?? string.Empty;
             Proc = new Process();
 
             // Paramétrage de Proc.StartInfo
@@ -70,10 +71,10 @@ namespace BrunoGUI_Dames
             {
                 // extraire les mots de l'instruction
                 DonneesScan = e.Data;
-                AfficheScan();
+                AfficheScan?.Invoke();
 
                 string[] DataTableau = DonneesScan.Split(' ');
-                AfficheDonneesBrutes();
+                AfficheDonneesBrutes?.Invoke();
 
                 switch (DataTableau[0])         // Analyse réponse moteur SCAN 
                 {   // identifier le premier mot 
@@ -115,13 +116,13 @@ namespace BrunoGUI_Dames
             // Debug.WriteLine($"[App] {Data}");
             ScanVersGui = false;
             DonneesVersScan = data;
-            AfficheDonneesBrutes();
-            Proc.StandardInput.Write(data + Environment.NewLine);
+            AfficheDonneesBrutes?.Invoke();
+            ProcessusMoteur.StandardInput.Write(data + Environment.NewLine);
         }
         public static void Quitte()
         {   // On ferme le moteur SCAN
             StandardInputDataToScan("quit");
-            Proc.Dispose();
+            ProcessusMoteur.Dispose();
         }
     }
 }

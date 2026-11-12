@@ -25,16 +25,16 @@ namespace BrunoGUI_Dames
     {
         public class PartieDamesPdn
         {   // --- Format de chaque partie qui se trouve dans ListeParties ---
-            public string Event { get; set; }
-            public string Site { get; set; }
-            public string Date { get; set; }
-            public string Round { get; set; }
-            public string White { get; set; }
-            public string Black { get; set; }
-            public string Result { get; set; }
-            public string PlyCount { get; set; }
-            public string FENDebut { get; set; }
-            public string CoupsPartiePDN { get; set; }
+            public string Event { get; set; } = "";
+            public string Site { get; set; } = "";
+            public string Date { get; set; } = "";
+            public string Round { get; set; } = "";
+            public string White { get; set; } = "";
+            public string Black { get; set; } = "";
+            public string Result { get; set; } = "";
+            public string PlyCount { get; set; } = "";
+            public string FENDebut { get; set; } = "";
+            public string CoupsPartiePDN { get; set; } = "";
         }
         public FichierPartiePdn()
         {
@@ -46,7 +46,7 @@ namespace BrunoGUI_Dames
 
             using (StreamReader lecteur = new StreamReader(fichierpdn, Encoding.UTF8))
             {   // Note : StreamReader attend le chemin d'accès au fichier, pas le contenu du fichier.
-                string ligne;
+                string? ligne;
                 StringBuilder partieCourante = new StringBuilder();
 
                 while ((ligne = lecteur.ReadLine()) != null)
@@ -197,10 +197,10 @@ namespace BrunoGUI_Dames
         {
             if (e.RowIndex >= 0)
             {   // Utilise 'Tag' pour récupérer l'objet complet
-                var partie = (PartieDamesPdn)TableauPartiesPdn.Rows[e.RowIndex].Tag;
+                var partie = TableauPartiesPdn.Rows[e.RowIndex].Tag as PartieDamesPdn;
                 if (partie != null && partie.CoupsPartiePDN != null)
                 {   // Récupére la fenêtre principale
-                    var mainForm = (BrunoInterfaceGraphiqueDames)Application.OpenForms["BrunoInterfaceGraphiqueDames"];
+                    var mainForm = Application.OpenForms["BrunoInterfaceGraphiqueDames"] as BrunoInterfaceGraphiqueDames;
                     if (mainForm != null)
                     {   // Charge la partie sélectionnée dans la fenêtre principale
                         Console.WriteLine($"Chargement de la partie {partie.Event} - {partie.White} vs {partie.Black}");

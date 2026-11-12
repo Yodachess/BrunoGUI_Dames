@@ -494,7 +494,7 @@ namespace BrunoGUI_Dames
         {   // --- Met à jour la liste avec la pièce située en indexPictureBox, l'ajoute si ajouterDansListe, l'enlève sinon ---
             int caseMiseaJour = GestionDamier.ObtenirCaseManoury(indexPictureBox);
             string nomListe;    // Obtenir la liste correspondante et son nom
-            List<int> listeCorrespondante = ListeCorrespondantTypePiece(pieceType, out nomListe);
+            List<int>? listeCorrespondante = ListeCorrespondantTypePiece(pieceType, out nomListe);
             if (listeCorrespondante != null)
             {   // Ajouter ou retirer la case dans la liste
                 if (ajouterDansListe)
@@ -521,7 +521,7 @@ namespace BrunoGUI_Dames
         {   // --- Met à jour la liste avec la pièce promue --- 
             int casePionSource = GestionDamier.ObtenirCaseManoury(indexPictureBox);
             string nomListe;    // Obtenir la liste correspondante et son nom
-            List<int> listeCorrespondante = ListeCorrespondantTypePiece(pieceSource.TypePiece, out nomListe);
+            List<int>? listeCorrespondante = ListeCorrespondantTypePiece(pieceSource.TypePiece, out nomListe);
             if (listeCorrespondante != null)
             {   // Ajouter ou retirer la case dans la liste
                 if (listeCorrespondante.Contains(casePionSource))
@@ -538,7 +538,7 @@ namespace BrunoGUI_Dames
                 Console.WriteLine($"Aucune liste trouvée pour le type de pièce : {pieceSource.TypePiece}");
             }
         }
-        public static List<int> ListeCorrespondantTypePiece(LogiqueMouvementsDames.TypePiece typePiece, out string nomListe)
+        public static List<int>? ListeCorrespondantTypePiece(LogiqueMouvementsDames.TypePiece typePiece, out string nomListe)
         {   // --- Le paramètre out permet de retourner à la fois la liste et son nom (string) dans une seule méthode. ---
             switch (typePiece)
             {
