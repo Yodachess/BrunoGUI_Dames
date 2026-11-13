@@ -17,11 +17,9 @@ using System.Linq;
 
 namespace BrunoGUI_Dames
 {
-    /// <summary>
-    /// Un coup légal : un déplacement simple ou une rafle (suite de prises). Pour une rafle, Chemin donne les cases où la
-    /// pièce se pose successivement (la dernière est Arrivee) et Prises les pièces prises, dans l'ordre de la rafle. La pièce
-    /// qui prend peut revenir sur sa case de départ : Depart et Arrivee sont alors égaux.
-    /// </summary>
+    // Un coup légal : un déplacement simple ou une rafle (suite de prises). Pour une rafle, Chemin donne les cases où la
+    // pièce se pose successivement (la dernière est Arrivee) et Prises les pièces prises, dans l'ordre de la rafle. La pièce
+    // qui prend peut revenir sur sa case de départ : Depart et Arrivee sont alors égaux.
     public sealed class Coup
     {
         public int Depart { get; }
@@ -38,10 +36,10 @@ namespace BrunoGUI_Dames
             Prises = prises;
         }
 
-        /// <summary>Notation du protocole Hub2 : « 32-28 », ou « 28x19x23 » (de 28 vers 19, en prenant 23) ; les pièces prises, sans les pivots.</summary>
+        // --- Notation du protocole Hub2 : « 32-28 », ou « 28x19x23 » (de 28 vers 19, en prenant 23) ; les pièces prises, sans les pivots. ---
         public string Hub2() => EstPrise ? $"{Depart}x{Arrivee}x{string.Join("x", Prises)}" : $"{Depart}-{Arrivee}";
 
-        /// <summary>Notation PDN abrégée : « 32-28 », ou « 28x19 » (case de départ et case d'arrivée seulement).</summary>
+        // --- Notation PDN abrégée : « 32-28 », ou « 28x19 » (case de départ et case d'arrivée seulement). ---
         public string Pdn() => EstPrise ? $"{Depart}x{Arrivee}" : $"{Depart}-{Arrivee}";
 
         public override string ToString() => Hub2();
@@ -49,25 +47,21 @@ namespace BrunoGUI_Dames
 
     public static class ReglesDames
     {
-        /// <summary>
-        /// Tous les coups légaux du camp au trait. Si une prise est possible elle est obligatoire (aucun déplacement simple) et
-        /// seules les rafles qui prennent le plus de pièces sont légales (prise majoritaire : une dame ne compte que pour une
-        /// pièce). Deux rafles qui partent de la même case, arrivent sur la même case et prennent les mêmes pièces ne font
-        /// qu'un seul coup, quel que soit l'ordre des prises.
-        /// </summary>
+        // Tous les coups légaux du camp au trait. Si une prise est possible elle est obligatoire (aucun déplacement simple) et
+        // seules les rafles qui prennent le plus de pièces sont légales (prise majoritaire : une dame ne compte que pour une
+        // pièce). Deux rafles qui partent de la même case, arrivent sur la même case et prennent les mêmes pièces ne font
+        // qu'un seul coup, quel que soit l'ordre des prises.
         public static List<Coup> CoupsLegaux(Position position)
         {
             List<Coup> prises = Rafles(position);
             return prises.Count > 0 ? prises : Deplacements(position);
         }
 
-        /// <summary>Le camp au trait n'a plus aucun coup (plus de pièce, ou toutes bloquées) : il a perdu.</summary>
+        // --- Le camp au trait n'a plus aucun coup (plus de pièce, ou toutes bloquées) : il a perdu. ---
         public static bool EstTerminee(Position position) => CoupsLegaux(position).Count == 0;
 
-        /// <summary>
-        /// La position obtenue en jouant ce coup, qui doit être l'un des coups légaux de la position (non vérifié). Une pièce
-        /// promue en dame l'est seulement si elle termine son coup sur la dernière rangée, jamais en la traversant.
-        /// </summary>
+        // La position obtenue en jouant ce coup, qui doit être l'un des coups légaux de la position (non vérifié). Une pièce
+        // promue en dame l'est seulement si elle termine son coup sur la dernière rangée, jamais en la traversant.
         public static Position Jouer(Position position, Coup coup)
         {
             Position resultat = position.Copie();
@@ -82,10 +76,8 @@ namespace BrunoGUI_Dames
             return resultat;
         }
 
-        /// <summary>
-        /// Le coup légal que désigne cette notation (« 32-28 », « 28x19 » ou « 28x19x23 »), ou null s'il n'y en a aucun, ou plusieurs
-        /// (une notation abrégée « 28x19 » peut être ambiguë : deux rafles de même départ et de même arrivée qui ne prennent pas les mêmes pièces).
-        /// </summary>
+        // Le coup légal que désigne cette notation (« 32-28 », « 28x19 » ou « 28x19x23 »), ou null s'il n'y en a aucun, ou plusieurs
+        // (une notation abrégée « 28x19 » peut être ambiguë : deux rafles de même départ et de même arrivée qui ne prennent pas les mêmes pièces).
         public static Coup? TrouverCoup(Position position, string notation)
         {
             string[] jetons = notation.Trim().Split('-', 'x');
@@ -104,11 +96,9 @@ namespace BrunoGUI_Dames
             return trouves.Count == 1 ? trouves[0] : null;
         }
 
-        /// <summary>
-        /// Le coup légal que désigne cette notation PDN : « 32-28 » pour un déplacement, « 28x19 » (départ et arrivée) ou « 28x19x8 »
-        /// (les cases où la pièce se pose successivement) pour une rafle ; les zéros devant les numéros sont permis (« 05 »). Null s'il
-        /// n'y en a aucun, ou plusieurs (« 28x19 » peut désigner deux rafles qui ne prennent pas les mêmes pièces).
-        /// </summary>
+        // Le coup légal que désigne cette notation PDN : « 32-28 » pour un déplacement, « 28x19 » (départ et arrivée) ou « 28x19x8 »
+        // (les cases où la pièce se pose successivement) pour une rafle ; les zéros devant les numéros sont permis (« 05 »). Null s'il
+        // n'y en a aucun, ou plusieurs (« 28x19 » peut désigner deux rafles qui ne prennent pas les mêmes pièces).
         public static Coup? TrouverCoupPdn(Position position, string notation)
         {
             string[] jetons = notation.Trim().Split('-', 'x');
@@ -213,10 +203,8 @@ namespace BrunoGUI_Dames
             return retenues;
         }
 
-        /// <summary>
-        /// Explore les prises possibles depuis la case courante et enregistre dans Resultats les rafles terminées (celles qu'on ne
-        /// peut plus prolonger). Renvoie vrai si au moins une prise est possible depuis cette case.
-        /// </summary>
+        // Explore les prises possibles depuis la case courante et enregistre dans Resultats les rafles terminées (celles qu'on ne
+        // peut plus prolonger). Renvoie vrai si au moins une prise est possible depuis cette case.
         private static bool Explorer(Exploration e, int courante)
         {
             bool prisePossible = false;

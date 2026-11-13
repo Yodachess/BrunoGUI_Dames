@@ -21,10 +21,8 @@ namespace BrunoGUI_Dames
 
     public enum Piece : byte { Vide, PionBlanc, PionNoir, DameBlanche, DameNoire }
 
-    /// <summary>
-    /// Géométrie du damier : les 50 cases jouables, numérotées de 1 à 50 (notation Manoury) en partant du haut à gauche,
-    /// vues du côté des blancs. Les noirs occupent les cases 1 à 20 au départ, les blancs les cases 31 à 50.
-    /// </summary>
+    // Géométrie du damier : les 50 cases jouables, numérotées de 1 à 50 (notation Manoury) en partant du haut à gauche,
+    // vues du côté des blancs. Les noirs occupent les cases 1 à 20 au départ, les blancs les cases 31 à 50.
     public static class Geometrie
     {
         //   Ligne 0 :   .  01  .  02  .  03  .  04  .  05      (les cases jouables sont en colonnes 1, 3, 5, 7, 9)
@@ -49,17 +47,17 @@ namespace BrunoGUI_Dames
             }
         }
 
-        /// <summary>Ligne (0 en haut) et colonne (0 à gauche) de la case Manoury c, sur le damier de 10 x 10.</summary>
+        // --- Ligne (0 en haut) et colonne (0 à gauche) de la case Manoury c, sur le damier de 10 x 10. ---
         public static (int ligne, int colonne) Coordonnees(int c)
         {
             int ligne = (c - 1) / 5;
             return (ligne, 2 * ((c - 1) % 5) + (ligne % 2 == 0 ? 1 : 0));
         }
 
-        /// <summary>Numéro Manoury de la case jouable située à (ligne, colonne).</summary>
+        // --- Numéro Manoury de la case jouable située à (ligne, colonne). ---
         public static int Numero(int ligne, int colonne) => ligne * 5 + (colonne - (ligne % 2 == 0 ? 1 : 0)) / 2 + 1;
 
-        /// <summary>Case voisine de c dans la direction donnée (NO, NE, SO, SE), ou 0 si on sort du damier.</summary>
+        // --- Case voisine de c dans la direction donnée (NO, NE, SO, SE), ou 0 si on sort du damier. ---
         public static int Voisin(int c, int direction) => voisins[c * 4 + direction];
     }
 
@@ -93,7 +91,7 @@ namespace BrunoGUI_Dames
             return copie;
         }
 
-        /// <summary>Copie du tableau des 51 cases (l'indice 0 est inutilisé), pour les calculs internes de la génération des coups.</summary>
+        // --- Copie du tableau des 51 cases (l'indice 0 est inutilisé), pour les calculs internes de la génération des coups. ---
         internal Piece[] CopieCases() => (Piece[])cases.Clone();
 
         public int Compte(Piece piece)
@@ -104,15 +102,13 @@ namespace BrunoGUI_Dames
             return nombre;
         }
 
-        /// <summary>Position de départ : 20 pions noirs sur les cases 1 à 20, 20 pions blancs sur les cases 31 à 50, trait aux blancs.</summary>
+        // --- Position de départ : 20 pions noirs sur les cases 1 à 20, 20 pions blancs sur les cases 31 à 50, trait aux blancs. ---
         public static Position Initiale() => DepuisFen("W:W31-50:B1-20");
 
         // ─── FEN (https://pdn.fmjd.org/fen.html) ────────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Lit une position FEN : « W:W31-50:B1-20 », avec ou sans l'enrobage [FEN "..."]. Les dames sont préfixées par K
-        /// (« K10 »), les suites de cases s'écrivent « 31-50 ». Lève FormatException si le texte n'est pas une position valide.
-        /// </summary>
+        // Lit une position FEN : « W:W31-50:B1-20 », avec ou sans l'enrobage [FEN "..."]. Les dames sont préfixées par K
+        // (« K10 »), les suites de cases s'écrivent « 31-50 ». Lève FormatException si le texte n'est pas une position valide.
         public static Position DepuisFen(string fen)
         {
             string texte = fen.Trim();
@@ -166,7 +162,7 @@ namespace BrunoGUI_Dames
             return c;
         }
 
-        /// <summary>La position en FEN, sans l'enrobage [FEN "..."] : « W:W31,32,...:B1,2,... », dames préfixées par K.</summary>
+        // --- La position en FEN, sans l'enrobage [FEN "..."] : « W:W31,32,...:B1,2,... », dames préfixées par K. ---
         public string VersFen()
         {
             StringBuilder texte = new StringBuilder();

@@ -30,7 +30,7 @@ namespace BrunoGUI_Dames
         private static readonly Regex CoupPdn = new Regex(@"^\d{1,2}([-x]\d{1,2})+$", RegexOptions.Compiled);
         private static readonly Regex Nombre = new Regex(@"\d+", RegexOptions.Compiled);
 
-        /// <summary>Les parties d'un fichier PDN, en UTF-8 (ou en ISO-8859-1 si le fichier n'est pas de l'UTF-8 valide).</summary>
+        // --- Les parties d'un fichier PDN, en UTF-8 (ou en ISO-8859-1 si le fichier n'est pas de l'UTF-8 valide). ---
         public static List<PartiePdn> LireFichier(string chemin)
         {
             byte[] octets = File.ReadAllBytes(chemin);
@@ -40,10 +40,8 @@ namespace BrunoGUI_Dames
             return LireTexte(texte);
         }
 
-        /// <summary>
-        /// Les parties du texte, dans l'ordre. Une partie commence à sa première balise (ou, sans balise, à son premier coup) et finit à
-        /// son marqueur de résultat ou à la balise de la partie suivante. Un texte sans partie donne une liste vide.
-        /// </summary>
+        // Les parties du texte, dans l'ordre. Une partie commence à sa première balise (ou, sans balise, à son premier coup) et finit à
+        // son marqueur de résultat ou à la balise de la partie suivante. Un texte sans partie donne une liste vide.
         public static List<PartiePdn> LireTexte(string texte)
         {
             Lecture lecture = new Lecture();
@@ -174,7 +172,7 @@ namespace BrunoGUI_Dames
 
         // ─── Caractères et parties du texte à ignorer ───────────────────────────────────────────────────────────────────
 
-        /// <summary>Longueur du blanc en position i : 1 pour un espace, une fin de ligne ou le BOM, 2 pour un « \r » écrit en toutes lettres, sinon 0.</summary>
+        // --- Longueur du blanc en position i : 1 pour un espace, une fin de ligne ou le BOM, 2 pour un « \r » écrit en toutes lettres, sinon 0. ---
         private static int LongueurBlanc(string texte, int i)
         {
             char c = texte[i];

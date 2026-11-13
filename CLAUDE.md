@@ -104,6 +104,7 @@ dotnet test Tests
 - Tenir ce fichier à jour à chaque changement d'architecture ou de convention.
 
 **Code**
+- Pas de commentaires XML (`/// <summary>`) : commenter avec des `//` simples, dans le style du projet (`// --- Description ---` au-dessus de la méthode ou de la propriété, ou plusieurs lignes `//`).
 - Zéro avertissement de compilation ; une fois activés, les types nullables restent à zéro avertissement.
 - Fichiers du projet en CRLF (imposé par `.gitattributes`, comme dans BrunoGUI_GenII).
 - La logique (règles, notation, PDN, moteur) n'utilise ni Windows Forms ni Krypton : elle ne montre jamais de fenêtre ni de message, et elle est testée (projet `Tests` : une console qui affiche les vérifications et un test xUnit par vérification, perft compris pour le générateur de coups). L'interface n'a pas de tests : la vérifier à la main.
@@ -121,5 +122,5 @@ dotnet test Tests
 ## Chantiers proposés (dans l'ordre)
 
 1. ~~.NET 10, Krypton 95, `.gitattributes` en CRLF, `<Nullable>` à zéro avertissement~~ (fait le 2026-11-12).
-2. ~~Projet `Tests`~~ (fait le 2026-11-13) : 134 vérifications : **règles du jeu faites le 2026-11-12** (FEN, Hub2, déplacements, prises obligatoires et majoritaires, rafles en boucle, dame volante, promotion, fin de partie, 28 demi-coups d'une ligne de Scan, perft 1 à 7 de la position initiale) ; **PDN fait le 2026-11-13** (lecture dans tous ses cas rencontrés, écriture avec relecture à l'identique, rejeu, et les 21 fichiers d'exemple) ; **CI faite le 2026-11-13** (mêmes étapes que BrunoGUI_GenII ; premier passage sur GitHub au vert). Pas encore couverts : la prise qui repasse sur une pièce déjà prise (une dame ne peut pas la sauter deux fois), les nulles et tout ce qui est dans le formulaire.
+2. ~~Projet `Tests`~~ (fait le 2026-11-13) : 138 vérifications : **règles du jeu faites le 2026-11-12** (FEN, Hub2, déplacements, prises obligatoires et majoritaires, rafles en boucle, dame volante, promotion, fin de partie, 28 demi-coups d'une ligne de Scan, perft 1 à 7 de la position initiale) ; **PDN fait le 2026-11-13** (lecture dans tous ses cas rencontrés, écriture avec relecture à l'identique, rejeu, et les 21 fichiers d'exemple) ; **CI faite le 2026-11-13** (mêmes étapes que BrunoGUI_GenII ; premier passage sur GitHub au vert). La règle « on repasse sur une case vide mais jamais deux fois sur la même pièce, les pièces prises ne partent qu'en fin de rafle » est testée (2026-11-13). Pas encore couverts : les nulles et tout ce qui est dans le formulaire.
 3. Séparer la logique du gros formulaire, sur le modèle de BrunoGUI_GenII (`Position`, `Regles`, `Partie`, `PiloteMoteur`) : `Position` et `ReglesDames` existent et sont testées, reste à y brancher le formulaire (en retirant `LogiqueMouvementsDames` et les listes statiques), puis `Partie` et `PiloteMoteur`.

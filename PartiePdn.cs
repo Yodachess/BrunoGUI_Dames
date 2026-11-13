@@ -16,33 +16,33 @@ using System.Text;
 
 namespace BrunoGUI_Dames
 {
-    /// <summary>Résultat du rejeu d'une partie : les positions successives, les coups joués et, si un coup n'a pas pu l'être, l'erreur.</summary>
-    /// <param name="Positions">La position de départ puis la position après chaque coup joué (une de plus que Coups).</param>
-    /// <param name="Coups">Les coups joués, jusqu'à l'éventuelle erreur.</param>
-    /// <param name="Erreur">Null si tous les coups de la partie sont légaux ; sinon la raison de l'arrêt.</param>
+    // Résultat du rejeu d'une partie : les positions successives, les coups joués et, si un coup n'a pas pu l'être, l'erreur.
+    // Positions : La position de départ puis la position après chaque coup joué (une de plus que Coups).
+    // Coups : Les coups joués, jusqu'à l'éventuelle erreur.
+    // Erreur : Null si tous les coups de la partie sont légaux ; sinon la raison de l'arrêt.
     public sealed record RejeuPdn(IReadOnlyList<Position> Positions, IReadOnlyList<Coup> Coups, string? Erreur);
 
     public sealed class PartiePdn
     {
         private readonly List<(string Nom, string Valeur)> balises = new List<(string, string)>();
 
-        /// <summary>Les balises dans l'ordre où elles ont été lues ou ajoutées.</summary>
+        // --- Les balises dans l'ordre où elles ont été lues ou ajoutées. ---
         public IReadOnlyList<(string Nom, string Valeur)> Balises => balises;
 
-        /// <summary>Les coups, un par demi-coup, en notation PDN abrégée normalisée : « 32-28 », « 28x19 » (cases sans zéro devant).</summary>
+        // --- Les coups, un par demi-coup, en notation PDN abrégée normalisée : « 32-28 », « 28x19 » (cases sans zéro devant). ---
         public List<string> Coups { get; } = new List<string>();
 
-        /// <summary>Le marqueur de fin lu après les coups (« 1-0 », « 0-1 », « 1/2-1/2 », « 2-0 », « 0-2 », « 1-1 », « * » ou « - »), ou null.</summary>
+        // --- Le marqueur de fin lu après les coups (« 1-0 », « 0-1 », « 1/2-1/2 », « 2-0 », « 0-2 », « 1-1 », « * » ou « - »), ou null. ---
         public string? Resultat { get; set; }
 
-        /// <summary>Ce que la lecture n'a pas compris et a ignoré (jeton inconnu, case invalide…) : jamais une erreur bloquante.</summary>
+        // --- Ce que la lecture n'a pas compris et a ignoré (jeton inconnu, case invalide…) : jamais une erreur bloquante. ---
         public List<string> Avertissements { get; } = new List<string>();
 
         // ─── Balises ────────────────────────────────────────────────────────────────────────────────────────────────────
 
         public void AjouterBalise(string nom, string valeur) => balises.Add((nom, valeur));
 
-        /// <summary>Donne sa valeur à la balise (la première de ce nom si plusieurs), en l'ajoutant à la fin si elle n'existe pas.</summary>
+        // --- Donne sa valeur à la balise (la première de ce nom si plusieurs), en l'ajoutant à la fin si elle n'existe pas. ---
         public void DefinirBalise(string nom, string valeur)
         {
             int indice = balises.FindIndex(b => string.Equals(b.Nom, nom, StringComparison.OrdinalIgnoreCase));
@@ -50,7 +50,7 @@ namespace BrunoGUI_Dames
             else balises.Add((nom, valeur));
         }
 
-        /// <summary>La valeur de la balise (la première de ce nom, sans tenir compte des majuscules), ou null si elle n'existe pas.</summary>
+        // --- La valeur de la balise (la première de ce nom, sans tenir compte des majuscules), ou null si elle n'existe pas. ---
         public string? Balise(string nom)
         {
             foreach ((string n, string valeur) in balises)
@@ -66,22 +66,20 @@ namespace BrunoGUI_Dames
         public string Black { get => (Balise("Black") ?? "").Trim(); set => DefinirBalise("Black", value); }
         public string Result { get => (Balise("Result") ?? "").Trim(); set => DefinirBalise("Result", value); }
 
-        /// <summary>Position de départ en FEN si la partie ne part pas de la position initiale (balise FEN), sinon null.</summary>
+        // --- Position de départ en FEN si la partie ne part pas de la position initiale (balise FEN), sinon null. ---
         public string? Fen { get => Balise("FEN")?.Trim(); set { if (value != null) DefinirBalise("FEN", value); } }
 
-        /// <summary>La position de départ : celle de la balise FEN, sinon la position initiale. Lève FormatException si la FEN est invalide.</summary>
+        // --- La position de départ : celle de la balise FEN, sinon la position initiale. Lève FormatException si la FEN est invalide. ---
         public Position PositionDepart() => string.IsNullOrWhiteSpace(Fen) ? Position.Initiale() : Position.DepuisFen(Fen);
 
         // ─── Création depuis l'historique de l'application ─────────────────────────────────────────────────────────────────
 
         private static readonly HashSet<string> marqueursDeFin = new HashSet<string> { "1-0", "0-1", "1/2-1/2", "2-0", "0-2", "1-1", "*", "-" };
 
-        /// <summary>
-        /// La partie à écrire, à partir de l'historique de l'application : les sept balises d'en-tête, puis, s'il y a des coups, Result
-        /// (la valeur donnée, sinon le marqueur de fin trouvé dans la liste, sinon « * »), la balise FEN si la partie ne part pas de la
-        /// position initiale, et PlyCount. Dans <paramref name="coups"/>, un élément qui est un marqueur de fin (« 1-0 » avec ou sans
-        /// espaces autour) devient Resultat et n'est pas compté comme un coup ; les autres sont des coups « 32-28 » ou « 28x19 ».
-        /// </summary>
+        // La partie à écrire, à partir de l'historique de l'application : les sept balises d'en-tête, puis, s'il y a des coups, Result
+        // (la valeur donnée, sinon le marqueur de fin trouvé dans la liste, sinon « * »), la balise FEN si la partie ne part pas de la
+        // position initiale, et PlyCount. Dans coups, un élément qui est un marqueur de fin (« 1-0 » avec ou sans
+        // espaces autour) devient Resultat et n'est pas compté comme un coup ; les autres sont des coups « 32-28 » ou « 28x19 ».
         public static PartiePdn Creer(string evenement, string site, string date, string tour, string blancs, string noirs,
                                       string resultat, string? fenDepart, IEnumerable<string> coups)
         {
@@ -112,10 +110,8 @@ namespace BrunoGUI_Dames
 
         // ─── Rejeu ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Rejoue les coups avec les règles du jeu depuis la position de départ. S'arrête au premier coup illégal, ou ambigu
-        /// (« 28x19 » qui désigne deux rafles différentes), en le disant dans Erreur ; rien n'est jamais modifié dans la partie.
-        /// </summary>
+        // Rejoue les coups avec les règles du jeu depuis la position de départ. S'arrête au premier coup illégal, ou ambigu
+        // (« 28x19 » qui désigne deux rafles différentes), en le disant dans Erreur ; rien n'est jamais modifié dans la partie.
         public RejeuPdn Rejouer()
         {
             Position position;
@@ -138,11 +134,9 @@ namespace BrunoGUI_Dames
 
         // ─── Écriture ───────────────────────────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// La partie au format PDN : les balises (valeurs entre guillemets, « \ » et « " » précédés d'un « \ »), une ligne vide, puis les
-        /// coups numérotés (« 1. 32-28 17-22 2. 28x17 12x21 »), à la ligne avant la largeur donnée, terminés par le résultat
-        /// (Resultat, sinon la balise Result, sinon « * »). Si les noirs jouent en premier (FEN), le premier coup est précédé de « 1... ».
-        /// </summary>
+        // La partie au format PDN : les balises (valeurs entre guillemets, « \ » et « " » précédés d'un « \ »), une ligne vide, puis les
+        // coups numérotés (« 1. 32-28 17-22 2. 28x17 12x21 »), à la ligne avant la largeur donnée, terminés par le résultat
+        // (Resultat, sinon la balise Result, sinon « * »). Si les noirs jouent en premier (FEN), le premier coup est précédé de « 1... ».
         public string VersTexte(int largeur = 78, string? finDeLigne = null)
         {
             finDeLigne ??= Environment.NewLine;

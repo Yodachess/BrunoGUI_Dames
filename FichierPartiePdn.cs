@@ -40,11 +40,9 @@ namespace BrunoGUI_Dames
         {
             InitializeComponent();
         }
-        /// <summary>
-        /// Lit un fichier PDN avec LecturePdn (qui lit tout le texte d'un seul passage : balises précédées de tabulations ou groupées sur
-        /// une ligne, commentaires, variantes, « ? » conservés dans les balises…) et renvoie ses parties dans le format de cette fenêtre :
-        /// les coups en un texte « 32-28 17-22 28x17 … » suivi du marqueur de résultat quand il existe.
-        /// </summary>
+        // Lit un fichier PDN avec LecturePdn (qui lit tout le texte d'un seul passage : balises précédées de tabulations ou groupées sur
+        // une ligne, commentaires, variantes, « ? » conservés dans les balises…) et renvoie ses parties dans le format de cette fenêtre :
+        // les coups en un texte « 32-28 17-22 28x17 … » suivi du marqueur de résultat quand il existe.
         public List<PartieDamesPdn> LireParties(string fichierpdn)
         {
             List<PartieDamesPdn> parties = new List<PartieDamesPdn>();
