@@ -278,6 +278,11 @@ namespace BrunoGUI_Dames
 
         private async Task LancementReflexionMoteur(string positionHub2, int tempsReflexion)
         {   // --- Laancement du moteur SCAN pour réfléchir à un coup sur la position "positionHub2" pendant "tempsReflexion" ---
+            if (!analyseEnCours && (PartieTerminee || ReglesDames.EstTerminee(Position.DepuisHub2(positionHub2))))
+            {   // La partie est déjà finie, ou le camp du moteur n'a plus aucun coup (il a perdu) : inutile d'interroger le moteur
+                FinPartieParBlocage(positionHub2[0] == 'W' ? "Blanc" : "Noir");      // Sans effet si la partie est déjà finie (plus de pièces)
+                return;
+            }
             BloqueBoutons(true);
             jeuMoteurEnCours = true;
             ActiveCouleurDamier(CouleurAuTrait, false);
@@ -344,13 +349,21 @@ namespace BrunoGUI_Dames
             if (nombrePieces > 0)
                 VerifierGain();             // Vérifier si la partie n'est pas finie ?
             List<Coup> prises = new List<Coup>();
+            bool aucunCoup = false;
             try
             {   // Le trait de la position est CouleurAuTrait, qui est « couleur » à tous les appels ; CoupsLegaux ne renvoie que les rafles les plus longues quand une prise existe
-                prises = ReglesDames.CoupsLegaux(Position.DepuisFen(RecupereFEN())).Where(c => c.EstPrise).ToList();
+                List<Coup> coupsLegaux = ReglesDames.CoupsLegaux(Position.DepuisFen(RecupereFEN()));
+                prises = coupsLegaux.Where(c => c.EstPrise).ToList();
+                aucunCoup = coupsLegaux.Count == 0;
             }
             catch (Exception ex)
             {
                 Journal.Ecrit($"ERREUR analyse des coups obligatoires : {ex.Message}");
+            }
+            if (aucunCoup && nombrePieces > 0 && !PartieTerminee)
+            {   // Le camp au trait a encore des pièces mais plus aucun coup : il a perdu (les cases restent désactivées)
+                FinPartieParBlocage(couleur);
+                return;
             }
             if (prises.Count == 0)              // S'il n'y a pas de rafles possibles, on réactive toutes les cases
             {
@@ -918,9 +931,26 @@ namespace BrunoGUI_Dames
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de pièces";
                 MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            // TODO : joueur qui ne peut plus bouger : ReglesDames.EstTerminee(position) le dit déjà
-            // TODO : Chercher quels sont les cas de gain de la partie ?
-            // TODO : Chercher quels sont les cas de partie nulle ?
+            // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
+            // TODO : Chercher quels sont les cas de partie nulle ? (répétition de position, règle des 25 coups de dames…)
+        }
+        private void FinPartieParBlocage(string couleurBloquee)
+        {   // --- Le camp de couleurBloquee (« Blanc » ou « Noir »), au trait, ne peut plus jouer : il perd la partie ---
+            if (PartieTerminee)
+                return;
+            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
+            if (couleurBloquee == "Blanc")
+            {
+                RadioGainNoir.Checked = PartieTerminee = FinPartie = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
+                LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de coup possible";
+                MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                RadioGainBlanc.Checked = PartieTerminee = FinPartie = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
+                LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de coup possible";
+                MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
         private bool EstCaseValide(int caseDestinationManoury)
         {   // C'est une case valide si un coup légal de la pièce sélectionnée (selon ReglesDames) y arrive
