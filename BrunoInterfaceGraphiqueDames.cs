@@ -161,6 +161,7 @@ namespace BrunoGUI_Dames
                         (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(IndexPictureBoxSource100);
                         pieceCouleurSource = GestionDamier.DamierContenu[ligne, colonne];                   // Quelle pièce est cliquée  ?
                         CouleurPieceCliquee = pieceCouleurSource.CouleurPiece.ToString();                   // Quelle couleur de pièce ?
+                        CalculeCoupsLegauxPieceSelectionnee();      // Les coups de cette pièce selon ReglesDames, avant qu'elle soit enlevée de sa case
                         Image? imageCase = CaseDamier[indexCase100].Image;
                         if (imageCase != null)
                         {   // Si la case cliquée contient bien une pièce ou un pion, on va utiliser le thumbnail de la pièce comme curseur :-)
@@ -200,7 +201,36 @@ namespace BrunoGUI_Dames
                             // Il faut que la case destination soit une case Manoury, soit valide et != de la source
                             if (GestionDamier.EstCaseManouryValide(CaseDestinationManoury) && EstCaseValide(CaseDestinationManoury) && CaseDestinationManoury != CaseSourceManoury)
                             {
-                                if (RaflesPossibles != null && RaflesPossibles.Any())   // Il y a au moins une rafle possible
+                                if (coupsLegauxPieceSelectionnee != null)
+                                {   // --- Étape 2 du branchement : c'est ReglesDames qui décide si le coup est légal et quelle rafle est jouée ---
+                                    List<Coup> candidats = coupsLegauxPieceSelectionnee.Where(c => c.Arrivee == CaseDestinationManoury).ToList();
+                                    bool ancienAccepte = RaflesPossibles.Any() ? RaflesPossibles.Any(rafle => rafle.LastOrDefault().caseArrivee == CaseDestinationManoury)
+                                                                               : DeplacementsSimplesPossibles.Contains(CaseDestinationManoury);
+                                    if ((candidats.Count > 0) != ancienAccepte)     // Les deux générateurs ne sont pas d'accord : on suit ReglesDames, on le note
+                                        EcrireJournalRegles($"DESACCORD {RecupereFEN()} : {CaseSourceManoury} vers {CaseDestinationManoury}, ReglesDames {(candidats.Count > 0 ? "accepte" : "refuse")}, ancien générateur {(ancienAccepte ? "accepte" : "refuse")}");
+                                    if (candidats.Count > 1)    // Plusieurs rafles de même départ et même arrivée qui ne prennent pas les mêmes pièces : on joue la première
+                                        EcrireJournalRegles($"AMBIGU {RecupereFEN()} : {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
+                                    Coup? coupJoue = candidats.FirstOrDefault();
+                                    if (coupJoue == null)
+                                    {   // Le coup n'est pas légal, on remet la pièce sur sa case d'origine
+                                        DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
+                                        CaseDamier[IndexPictureBoxSource100].BackColor = CouleurTrajetSuivi;
+                                    }
+                                    else if (coupJoue.EstPrise)
+                                    {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
+                                        List<(int casePrise, int caseArrivee)> rafleAJouer = coupJoue.Prises.Zip(coupJoue.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
+                                        var indexSourceBox = GestionDamier.ManouryVersIndexPictureBox[CaseSourceManoury - 1];   // Index PictureBox initial
+                                        (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexSourceBox);
+                                        await AnimerEtExecuterRafle(indexSourceBox, rafleAJouer, GestionDamier.DamierContenu[ligne, colonne]);
+                                        EnregistrePositionApresCoupHumain();
+                                    }
+                                    else
+                                    {   // Un déplacement simple
+                                        ExecuteDeplacement(indexSourceBox: IndexPictureBoxSource100, destinationManoury: CaseDestinationManoury, pieceSource: pieceCouleurSource, piecePrise: false, 0);
+                                        EnregistrePositionApresCoupHumain();
+                                    }
+                                }
+                                else if (RaflesPossibles != null && RaflesPossibles.Any())   // Il y a au moins une rafle possible (ancien générateur, si ReglesDames n'a pas pu calculer)
                                 {   // Trouver une rafle qui se termine par la CaseDestinationManoury
                                     var rafleCorrespondante = RaflesPossibles
                                         .FirstOrDefault(rafle => rafle.LastOrDefault().caseArrivee == CaseDestinationManoury);
@@ -268,6 +298,7 @@ namespace BrunoGUI_Dames
                         finally
                         {
                             // Cursor = Cursors.Default;       // On revient au curseur "normal"
+                            coupsLegauxPieceSelectionnee = null;
                             clickCaseSource = true;
                             InitialiserEtatMouvement();
                             // Console.WriteLine($"Couleur au trait = {CouleurAuTrait}");
@@ -501,19 +532,46 @@ namespace BrunoGUI_Dames
                 if (!identiques)
                 {
                     comparaisonsEcarts++;
-                    File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} ECART {fen} : {detail}{Environment.NewLine}");
+                    EcrireJournalRegles($"ECART {fen} : {detail}");
                 }
                 else if (doublons > 0)
                 {   // Même ensemble de rafles, mais l'ancien générateur en donne certaines en double : pas un écart
-                    File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} doublons ({doublons}) {fen}{Environment.NewLine}");
+                    EcrireJournalRegles($"doublons ({doublons}) {fen}");
                 }
             }
             catch (Exception ex)
             {
                 comparaisonsEcarts++;
-                try { File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} ERREUR {fen} : {ex.Message}{Environment.NewLine}"); } catch (IOException) { }
+                EcrireJournalRegles($"ERREUR {fen} : {ex.Message}");
             }
             Text = $" Bruno Interface Graphique   [règles : {comparaisonsFaites} position(s) comparée(s), {comparaisonsEcarts} écart(s)]";
+        }
+        private static void EcrireJournalRegles(string ligne)
+        {   // --- Ajoute une ligne datée à ComparaisonRegles.log, à côté de l'exe (provisoire, comme la comparaison) ---
+            try { File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {ligne}{Environment.NewLine}"); }
+            catch (IOException) { }     // Le journal est une aide : s'il ne peut pas être écrit, la partie continue
+        }
+        private List<Coup>? coupsLegauxPieceSelectionnee;   // Coups légaux de la pièce sélectionnée selon ReglesDames ; null : on retombe sur l'ancien générateur
+        private void CalculeCoupsLegauxPieceSelectionnee()
+        {   // --- À la sélection d'une pièce (étape 2 du branchement) : ses coups légaux selon ReglesDames, sur la position avant qu'elle quitte sa case ---
+            try
+            {
+                Position position = Position.DepuisFen(RecupereFEN());
+                coupsLegauxPieceSelectionnee = ReglesDames.CoupsLegaux(position).Where(c => c.Depart == CaseSourceManoury).ToList();
+            }
+            catch (Exception ex)
+            {
+                coupsLegauxPieceSelectionnee = null;
+                EcrireJournalRegles($"ERREUR calcul des coups légaux : {ex.Message}");
+            }
+        }
+        private void EnregistrePositionApresCoupHumain()
+        {   // --- Après un coup humain : change le trait et ajoute la nouvelle position aux listes FEN et Hub2 (le coup PDN est ajouté à l'exécution) ---
+            ChangerCouleurTrait();
+            string fenPosition = LogiqueMouvementsDames.RecupereFEN();
+            LogiqueMouvementsDames.ListeCoupsFen.Add(fenPosition);
+            LogiqueMouvementsDames.ListeCoupsHub2.Add(ConvertitFenVersHub2(fenPosition));
+            indexFenCoupActuel = ListeCoupsFen.Count - 1;       // Toujours pointer sur le dernier coup
         }
 
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
