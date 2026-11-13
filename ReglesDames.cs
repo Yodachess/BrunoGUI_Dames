@@ -104,6 +104,41 @@ namespace BrunoGUI_Dames
             return trouves.Count == 1 ? trouves[0] : null;
         }
 
+        /// <summary>
+        /// Le coup légal que désigne cette notation PDN : « 32-28 » pour un déplacement, « 28x19 » (départ et arrivée) ou « 28x19x8 »
+        /// (les cases où la pièce se pose successivement) pour une rafle ; les zéros devant les numéros sont permis (« 05 »). Null s'il
+        /// n'y en a aucun, ou plusieurs (« 28x19 » peut désigner deux rafles qui ne prennent pas les mêmes pièces).
+        /// </summary>
+        public static Coup? TrouverCoupPdn(Position position, string notation)
+        {
+            string[] jetons = notation.Trim().Split('-', 'x');
+            if (jetons.Length < 2) return null;
+            int[] cases = new int[jetons.Length];
+            for (int i = 0; i < jetons.Length; i++)
+                if (!int.TryParse(jetons[i], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out cases[i])) return null;
+            bool prise = notation.Contains('x');
+            if (!prise && cases.Length != 2) return null;
+
+            List<Coup> candidats = CoupsLegaux(position).Where(c => c.Depart == cases[0] && c.Arrivee == cases[^1] && c.EstPrise == prise).ToList();
+            if (prise && cases.Length > 2)
+            {   // Cases intermédiaires données (toutes, ou seulement quelques-unes comme « 15x33x31 » pour 15 > 33 > 22 > 31) : on garde
+                // les coups dont le chemin les contient dans cet ordre ; si aucun ne convient, on retombe sur départ et arrivée seuls
+                int[] citees = cases.Skip(1).ToArray();
+                List<Coup> compatibles = candidats.Where(c => EstSousSuite(citees, c.Chemin)).ToList();
+                if (compatibles.Count > 0) candidats = compatibles;
+            }
+            return candidats.Count == 1 ? candidats[0] : null;
+        }
+
+        // Vrai si tous les éléments de petite se retrouvent dans grande, dans le même ordre (pas forcément à la suite les uns des autres)
+        private static bool EstSousSuite(IReadOnlyList<int> petite, IReadOnlyList<int> grande)
+        {
+            int suivant = 0;
+            foreach (int c in grande)
+                if (suivant < petite.Count && c == petite[suivant]) suivant++;
+            return suivant == petite.Count;
+        }
+
         // ─── Déplacements simples ───────────────────────────────────────────────────────────────────────────────────────
 
         private static List<Coup> Deplacements(Position position)

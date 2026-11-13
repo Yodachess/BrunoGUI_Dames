@@ -41,7 +41,6 @@ namespace BrunoGUI_Dames
         public static readonly List<int> ListeCasesCoupSelectionne = new List<int>();
         public static readonly List<int> ListeCasesMouvementPrecedent = new List<int>();
         public static readonly List<int> ListeCasesDestination = new List<int>();
-        public static List<string> ListeParties = new List<string>();
         public static List<PartieDamesPdn> ListePartiesPdn = new List<PartieDamesPdn>();
         // liste des Bitmaps pour les pièces
         public static readonly Dictionary<LogiqueMouvementsDames.TypePiece, Bitmap> ListeBitmapsPiece = new Dictionary<LogiqueMouvementsDames.TypePiece, Bitmap>();
@@ -1177,7 +1176,6 @@ namespace BrunoGUI_Dames
 
         private void ChargePartiesPdn_Click(object sender, EventArgs e)
         {   // --- Affiche la boîte de dialogue et traite le fichier PDN sélectionné  ---
-            ListeParties.Clear();    // On vide la liste des parties 
             ListePartiesPdn.Clear(); // On vide la liste des parties PDN
             if (ChargerPartiesPdn.ShowDialog() == DialogResult.OK)
             {
@@ -1199,11 +1197,7 @@ namespace BrunoGUI_Dames
                         };
                     }
                     Console.WriteLine("Contenu du fichier PDN : \n" + contenuFichier);
-                    ListeParties = fichierPartiePdn.DecodeFichierPDN(fullPath); // Récupère les parties PDN
-                    foreach (string partie in ListeParties)                     // On parcourt la liste de parties, et
-                    {                                                           // On met chaque partie au format PartieEchecPGN dans ListePartiePGN
-                        ListePartiesPdn.Add(fichierPartiePdn.DecodePartiePDN(partie));
-                    }
+                    ListePartiesPdn.AddRange(fichierPartiePdn.LireParties(fullPath));     // Lit toutes les parties du fichier PDN
                     fichierPartiePdn.NombrePartiesFichier.Text = ListePartiesPdn.Count.ToString()
                         + " partie(s) dans le fichier  " + cheminFichier.Substring(cheminFichier.LastIndexOf('\\') + 1); ;
                     fichierPartiePdn.AfficherListeParties(ListePartiesPdn); 
@@ -1235,6 +1229,7 @@ namespace BrunoGUI_Dames
             Console.WriteLine($"Liste des coups : {PartieCourante.CoupsPartiePDN}");
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
+            ExisteFENDebut = !string.IsNullOrWhiteSpace(partie.FENDebut);     // Propre à CETTE partie (avant, le drapeau gardait la valeur de la dernière partie lue du fichier)
             GenerationListesCoups(PartieCourante.CoupsPartiePDN);
         }
         public async void GenerationListesCoups(string coupsPartiePDN)

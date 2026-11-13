@@ -40,157 +40,33 @@ namespace BrunoGUI_Dames
         {
             InitializeComponent();
         }
-        public List<string> DecodeFichierPDN(string fichierpdn)
-        {   // --- On découpe le fichier PDN pour obtenir la liste des parties contenues dans le fichier. ---
-            List<string> listeParties = new List<string>();
-
-            using (StreamReader lecteur = new StreamReader(fichierpdn, Encoding.UTF8))
-            {   // Note : StreamReader attend le chemin d'accès au fichier, pas le contenu du fichier.
-                string? ligne;
-                StringBuilder partieCourante = new StringBuilder();
-
-                while ((ligne = lecteur.ReadLine()) != null)
-                {
-                    ligne = ligne.Replace("\r", "").Replace("?", "").Replace("!", "").Replace("..", "");    // Tentaive de nettoyage
-                    if (ligne.StartsWith("[Event ")) // Avec un espace à la fin de Event, pour ne pas confondre avec le Tag EventDate ...
-                    {
-                        // Commencer une nouvelle partie
-                        if (partieCourante.Length > 0)
-                        {
-                            // Ajouter la partie précédente à la liste si elle existe
-                            listeParties.Add(partieCourante.ToString().Trim()); // Enlever l'espace final éventuel
-                        }
-                        // Réinitialiser partieCourante pour une nouvelle partie
-                        partieCourante.Clear();
-                    }
-                    // Ajouter la ligne avec un saut de ligne explicite
-                    partieCourante.AppendLine(ligne);
-                }
-
-                if (partieCourante.Length > 0)
-                {
-                    // Ajouter la dernière partie à la liste des parties
-                    listeParties.Add(partieCourante.ToString().Trim());
-                }
-                // Affichage des parties pour vérification
-                foreach (var partie in listeParties)
-                {
-                    Console.WriteLine($"Partie décodée \n" + partie);
-                }
-            }
-            return listeParties;
-        }
-        public PartieDamesPdn DecodePartiePDN(string pdn)
-        {   // --- On recoit UNE partie au format pdn avec balises et on remplit la structure PartieDamesPdn ---
-            pdn = pdn.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n\n", "\n");  // Normalisation des sauts de ligne en cas de besoin
-            BrunoInterfaceGraphiqueDames.ExisteFENDebut = false;    // Msie à zéro du FEN de départ 
-
-            List<string> balises = new List<string>();
-            PartieDamesPdn PartiePDN = new PartieDamesPdn();
-
-            Regex regex = new Regex(@"\[(.*?)\]");                      // Utilisation d'une expression régulière pour extraire les balises [ et ]
-            MatchCollection correspondances = regex.Matches(pdn);       // Recherche de toutes les correspondances
-            foreach (Match correspondance in correspondances)           // Ajout des balises trouvées à la liste "balises"
+        /// <summary>
+        /// Lit un fichier PDN avec LecturePdn (qui lit tout le texte d'un seul passage : balises précédées de tabulations ou groupées sur
+        /// une ligne, commentaires, variantes, « ? » conservés dans les balises…) et renvoie ses parties dans le format de cette fenêtre :
+        /// les coups en un texte « 32-28 17-22 28x17 … » suivi du marqueur de résultat quand il existe.
+        /// </summary>
+        public List<PartieDamesPdn> LireParties(string fichierpdn)
+        {
+            List<PartieDamesPdn> parties = new List<PartieDamesPdn>();
+            foreach (PartiePdn lue in LecturePdn.LireFichier(fichierpdn))
             {
-                balises.Add(correspondance.Groups[1].Value);
-            }
-            foreach (var balise in balises)
-            {   // Ce code suppose le format usuel pour les balises dans la partie PDN, c'est-à-dire que le nom de la balise est avant
-                // le premier guillemet et que la valeur de la balise est entre les guillemets. 
-                string[] parts = balise.Split('"');                 // Divise chaque balise en deux parties en utilisant le caractère ". 
-                string NomBalise = parts[0].Trim();                 // Extrait le nom de la balise et le nettoie de tout espace indésirable.
-                string ValeurBalise = parts.Length > 1 ? parts[1].Trim() : "";      // Extrait la valeur de la balise, si elle existe,
-                                                                                    // et la nettoie également de tout espace indésirable.
-                switch (NomBalise)
-                {   // Met à jour les propriétés de la partie en fonction de la balise (je gère les 7 obligatoires + PlyCount)
-                    case "Event":   //  Balise obligatoire
-                        PartiePDN.Event = ValeurBalise;
-                        break;
-                    case "Site":   //  Balise obligatoire
-                        PartiePDN.Site = ValeurBalise;
-                        break;
-                    case "Date":   //  Balise obligatoire
-                        PartiePDN.Date = ValeurBalise;
-                        break;
-                    case "Round":   //  Balise obligatoire
-                        PartiePDN.Round = ValeurBalise;
-                        break;
-                    case "White":   //  Balise obligatoire
-                        PartiePDN.White = ValeurBalise;
-                        break;
-                    case "Black":   //  Balise obligatoire
-                        PartiePDN.Black = ValeurBalise;
-                        break;
-                    case "Result":   //  Balise obligatoire
-                        PartiePDN.Result = ValeurBalise;
-                        break;
-                    case "PlyCount":   //  Balise qui m'intéresse
-                        PartiePDN.PlyCount = ValeurBalise;
-                        break;
-                    case "FEN":   //  Balise qui m'intéresse
-                        PartiePDN.FENDebut = ValeurBalise;
-                        PartiePDN.FENDebut = PartiePDN.FENDebut.TrimEnd('.');
-                        BrunoInterfaceGraphiqueDames.ExisteFENDebut = true;  // Indique que la FEN de départ existe
-                        break;
-                    default:
-                        break;
-                }   // On se limite aux balises obligatoires + nombre de coups, il en existe beaucoup d'autres
-            }
-
-            // Purge des commentaires entre accolades :
-            pdn = SupprimeCommentaires(pdn, '{', '}');
-            pdn = pdn.Replace("\r", "\r\n");
-            Console.WriteLine($"PDN sans accolades :\n{pdn}");             // DEBUG 05/02
-
-            // Expression régulière pour supprimer toutes les balises avant les coups
-            string pattern = @"\[.*?\]"; // Recherche tout ce qui est entre crochets []
-            string contenuNettoye = Regex.Replace(pdn, pattern, string.Empty).Trim();
-
-            // Maintenant on cherche à partir de "1." dans le texte nettoyé
-            int indexDebut = contenuNettoye.IndexOf("1.");
-
-            if (indexDebut != -1)
-            {   // Extraire la partie du texte à partir de "1."
-                string sectionCoupsPDN = contenuNettoye.Substring(indexDebut).Trim();
-                sectionCoupsPDN = SupprimeCommentaires(sectionCoupsPDN, '(', ')');      // Purge des commentaires entre parenthèses
-                // sectionCoupsPDN = Regex.Replace(sectionCoupsPDN, @"(\r|\n)+", "");      // Purge des \r et \n
-                sectionCoupsPDN = Regex.Replace(sectionCoupsPDN, @"[?!]+|\.{3}|!!|\.{2}", string.Empty);     // Purge des signes de notation
-                sectionCoupsPDN = sectionCoupsPDN.Replace("\\r", "");       // En fait, \r est présent comme 2 caractères le \ et le r !!???
-                PartiePDN.CoupsPartiePDN = sectionCoupsPDN;
-            }
-            else
-            {
-                PartiePDN.CoupsPartiePDN = string.Empty; // Si "1." n'est pas trouvé
-            }
-            Console.WriteLine($"Partie {PartiePDN.White} vs {PartiePDN.Black} - PDN nettoyé = {PartiePDN.CoupsPartiePDN}");
-            return PartiePDN;
-        }
-        public static string SupprimeCommentaires(string chaine, char accoladeOuvrante, char accoladeFermante)
-        {   /* Lorsqu'une accolade ouvrante est rencontrée, le niveau d'imbrication est augmenté de 1.
-            Lorsqu'une accolade fermante est rencontrée et que le niveau d'imbrication est supérieur à 0, 
-            cela signifie qu'elle correspond à une paire d'accolades imbriquées, donc le niveau d'imbrication est décrémenté de 1.
-            Si une accolade fermante est rencontrée et que le niveau d'imbrication est déjà à 0, 
-            cela signifie qu'elle est en dehors de toute paire d'accolades imbriquées, donc elle est conservée dans le résultat final.
-            Les caractères qui ne sont pas situés entre des accolades imbriquées sont ajoutés au résultat final. */
-
-            StringBuilder resultat = new StringBuilder();
-            int niveauAccolade = 0;
-            foreach (char caractere in chaine)
-            {
-                if (caractere == accoladeOuvrante)
+                string coups = string.Join(" ", lue.Coups);
+                if (coups.Length > 0 && !string.IsNullOrEmpty(lue.Resultat)) coups += " " + lue.Resultat;     // Une partie sans coup reste vide (message « aucun coup »)
+                parties.Add(new PartieDamesPdn
                 {
-                    niveauAccolade++;
-                }
-                else if (caractere == accoladeFermante && niveauAccolade > 0)
-                {
-                    niveauAccolade--;
-                }
-                else if (niveauAccolade == 0)
-                {
-                    resultat.Append(caractere);
-                }
+                    Event = lue.Event,
+                    Site = lue.Site,
+                    Date = lue.Date,
+                    Round = lue.Round,
+                    White = lue.White,
+                    Black = lue.Black,
+                    Result = lue.Result.Length > 0 ? lue.Result : lue.Resultat ?? "",
+                    PlyCount = (lue.Balise("PlyCount") ?? "").Trim(),
+                    FENDebut = (lue.Fen ?? "").TrimEnd('.'),
+                    CoupsPartiePDN = coups
+                });
             }
-            return resultat.ToString();
+            return parties;
         }
 
         private void TableauPartiesPdn_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

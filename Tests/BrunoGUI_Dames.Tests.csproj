@@ -15,6 +15,10 @@
     <ProjectReference Include="..\BrunoGUI_Dames.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Parties PDN d'exemple du projet : lues et rejouées par les vérifications (dossier Parties à côté du programme de test) -->
+    <None Include="..\Dames_PartiesPdn_FEN\*.pdn" Link="Parties\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
