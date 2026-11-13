@@ -19,7 +19,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static BrunoGUI_Dames.LogiqueMouvementsDames;
+using static BrunoGUI_Dames.Partie;
 using static BrunoGUI_Dames.FichierPartiePdn;
 using MethodInvoker = System.Windows.Forms.MethodInvoker;
 
@@ -37,7 +37,7 @@ namespace BrunoGUI_Dames
         public static readonly List<int> ListeCasesDestination = new List<int>();
         public static List<PartieDamesPdn> ListePartiesPdn = new List<PartieDamesPdn>();
         // liste des Bitmaps pour les pièces
-        public static readonly Dictionary<LogiqueMouvementsDames.TypePiece, Bitmap> ListeBitmapsPiece = new Dictionary<LogiqueMouvementsDames.TypePiece, Bitmap>();
+        public static readonly Dictionary<TypePiece, Bitmap> ListeBitmapsPiece = new Dictionary<TypePiece, Bitmap>();
         // les Bitmaps
         private readonly Bitmap PionBlanc = Properties.Resources.DamesPionBlanc_transparent;
         private readonly Bitmap PionNoir = Properties.Resources.DamesPionNoir_transparent;
@@ -74,8 +74,7 @@ namespace BrunoGUI_Dames
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
         private AffichePdn? affichePdn = new AffichePdn();   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
         private FichierPartiePdn? fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
-        // GestionDamier et ContenuCase dans GestionDamier.cs
-        // LogiqueMouvementsDames dans LogiqueMouvementsDames.cs
+        // GestionDamier, ContenuCase, TypePiece et CouleurPiece dans GestionDamier.cs ; Partie (listes de coups) dans Partie.cs
 
         public BrunoInterfaceGraphiqueDames()
         {
@@ -312,9 +311,9 @@ namespace BrunoGUI_Dames
                     {   // Un déplacement simple
                         ExecuteDeplacement(indexSourceBox, coupMoteur.Arrivee, pieceDuMoteur, false, 0);
                     }
-                    string fenPosition = LogiqueMouvementsDames.RecupereFEN();                      // On met à jour les listes de coups
-                    LogiqueMouvementsDames.ListeCoupsFen.Add(fenPosition);                          // pour les FEN et Hub2, pour les Pdn
-                    LogiqueMouvementsDames.ListeCoupsHub2.Add(ConvertitFenVersHub2(fenPosition));   // c'est fait dans AnimerEtExecuterRafle
+                    string fenPosition = RecupereFEN();                      // On met à jour les listes de coups
+                    Partie.ListeCoupsFen.Add(fenPosition);                          // pour les FEN et Hub2, pour les Pdn
+                    Partie.ListeCoupsHub2.Add(Partie.Hub2DepuisFen(fenPosition));   // c'est fait dans AnimerEtExecuterRafle
                     indexFenCoupActuel = ListeCoupsFen.Count - 1;   // Toujours pointer sur le dernier coup
                     LabelPrisesPossibles.Text = "";
                     LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
@@ -370,7 +369,53 @@ namespace BrunoGUI_Dames
             List<string> raflesText = prises.Select(rafle => string.Join(", ", rafle.Prises.Zip(rafle.Chemin, (prise, arrivee) => $"{prise} -> {arrivee}"))).ToList();
             LabelPrisesPossibles.Text = raflesText.Count + " Rafle(s) possible(s) de " + prises[0].Prises.Count + " pièce(s) \n" + string.Join("\n", raflesText);
         }
-        private static void EcrireJournalRegles(string ligne)
+        public static void MiseenplaceFen(string fenAutiliser, bool ajouteListeCoups)     // Préparation du logiciel avec la position FEN
+        {   // --- La méthode met la position FEN sur le damier (DamierContenu, PositionCourante et images) et l'ajoute aux listes de coups si ajouteListeCoups ---
+            GestionDamier.ViderDamier();
+            Console.WriteLine("Mise en place de la position FEN : " + fenAutiliser);
+            foreach (var pict in CaseDamier)
+            {
+                pict.Image = null;          // Efface l'image de chaque PictureBox
+            }
+            if (ajouteListeCoups)
+            {
+                ListeCoupsFen.Add(fenAutiliser);    // On enregistre la position dans les listes de coups
+                ListeCoupsHub2.Add(Partie.Hub2DepuisFen(fenAutiliser));
+                // Note : On ne touche pas à ListeCoupsPdn car aucun n'a été joué pour l'instant
+            }
+            // Trouver la première occurrence de guillemet
+            int debutIndex = fenAutiliser.IndexOf("\"") + 1;        // On commence après le premier guillemet
+            int finIndex = fenAutiliser.IndexOf("\"", debutIndex);  // On trouve le prochain guillemet après le debutIndex
+            if (debutIndex >= 0 && finIndex > debutIndex)
+            {   // Extraire le texte entre les guillemets
+                string contenu = fenAutiliser.Substring(debutIndex, finIndex - debutIndex);
+                string[] champsFen = contenu.Split(':');           // On récupère les 3 champs du FEN dans un tableau
+                // Le champ 0 est la couleur qui doit jouer le prochain coup
+                CouleurAuTrait = (champsFen[0] == "W") ? "Blanc" : (champsFen[0] == "B") ? "Noir" : "Inconnu";
+                // Active les cases pour la couleur actuelle
+                ActiveCouleurDamier(CouleurAuTrait, true);
+                // Désactive les cases de l'autre couleur
+                ActiveCouleurDamier(CouleurAuTrait == "Blanc" ? "Noir" : "Blanc", false);
+
+                Position position = Position.DepuisFen(contenu);        // Lève FormatException si le FEN n'est pas valide
+                for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
+                {   // Dessiner chaque pièce : DessinePiece met aussi à jour DamierContenu et GestionDamier.PositionCourante
+                    Piece piece = position[numeroCase];
+                    if (piece != Piece.Vide)
+                        DessinePiece(GestionDamier.ObtenirIndicePictureBox(numeroCase), GestionDamier.TypeDe(piece), GestionDamier.CouleurDe(piece));
+                }
+            }
+            else
+            {
+                Console.WriteLine("Aucun texte trouvé entre les guillemets.");
+            }
+        }
+        public static string RecupereFEN()
+        {   // --- Génère et renvoie le FEN de la position actuelle (GestionDamier.PositionCourante, avec le trait CouleurAuTrait) ---
+            Position position = GestionDamier.PositionCourante.Copie();
+            position.Trait = CouleurAuTrait == "Blanc" ? Couleur.Blanc : Couleur.Noir;
+            return "[FEN \"" + position.VersFen() + "\"]";
+        }        private static void EcrireJournalRegles(string ligne)
         {   // --- Ajoute une ligne datée à JournalRegles.log, à côté de l'exe  ---
             try { File.AppendAllText(Path.Combine(Application.StartupPath, "JournalRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {ligne}{Environment.NewLine}"); }
             catch (IOException) { }     // Le journal est une aide : s'il ne peut pas être écrit, la partie continue
@@ -423,9 +468,9 @@ namespace BrunoGUI_Dames
         private void EnregistrePositionApresCoupHumain()
         {   // --- Après un coup humain : change le trait et ajoute la nouvelle position aux listes FEN et Hub2 (le coup PDN est ajouté à l'exécution) ---
             ChangerCouleurTrait();
-            string fenPosition = LogiqueMouvementsDames.RecupereFEN();
-            LogiqueMouvementsDames.ListeCoupsFen.Add(fenPosition);
-            LogiqueMouvementsDames.ListeCoupsHub2.Add(ConvertitFenVersHub2(fenPosition));
+            string fenPosition = RecupereFEN();
+            Partie.ListeCoupsFen.Add(fenPosition);
+            Partie.ListeCoupsHub2.Add(Partie.Hub2DepuisFen(fenPosition));
             indexFenCoupActuel = ListeCoupsFen.Count - 1;       // Toujours pointer sur le dernier coup
         }
 
@@ -445,13 +490,13 @@ namespace BrunoGUI_Dames
                 ListeCasesCoupSelectionne.Add(casePrise); // Ajoute la case prise
             }
             // Vérification si promotion en Dame : IL FAUDRAIT S'ASSURER QUE LA PIECE N'EST PAS DEJA UNE DAME !!!!!!!!!!!!!!!!!!!
-            if (derniereRangeeBlanche.Contains(destinationManoury) && pieceSource.CouleurPiece == LogiqueMouvementsDames.CouleurPiece.Noir)
+            if (derniereRangeeBlanche.Contains(destinationManoury) && pieceSource.CouleurPiece == CouleurPiece.Noir)
             {
-                pieceSource.TypePiece = LogiqueMouvementsDames.TypePiece.DameNoire; // Promotion en Dame noire
+                pieceSource.TypePiece = TypePiece.DameNoire; // Promotion en Dame noire
             }
-            else if (derniereRangeeNoire.Contains(destinationManoury) && pieceSource.CouleurPiece == LogiqueMouvementsDames.CouleurPiece.Blanc)
+            else if (derniereRangeeNoire.Contains(destinationManoury) && pieceSource.CouleurPiece == CouleurPiece.Blanc)
             {
-                pieceSource.TypePiece = LogiqueMouvementsDames.TypePiece.DameBlanche; // Promotion en Dame blanche
+                pieceSource.TypePiece = TypePiece.DameBlanche; // Promotion en Dame blanche
             }
             DessinePiece(GestionDamier.ManouryVersIndexPictureBox[destinationManoury - 1], pieceSource.TypePiece, pieceSource.CouleurPiece);
             CaseDamier[GestionDamier.ManouryVersIndexPictureBox[destinationManoury - 1]].BackColor = CouleurCaseArrivee;
@@ -508,15 +553,15 @@ namespace BrunoGUI_Dames
                 derniereCaseRafle = caseArrivee;                            // Enregistrer la dernière case de la rafle pour vérifier la promotion
             }
             // Vérification si promotion en Dame à la fin de la rafle
-            if (derniereRangeeBlanche.Contains(derniereCaseRafle) && couleurPiece == LogiqueMouvementsDames.CouleurPiece.Noir)
+            if (derniereRangeeBlanche.Contains(derniereCaseRafle) && couleurPiece == CouleurPiece.Noir)
             {   // promotion du pion noir
-                typePiece = LogiqueMouvementsDames.TypePiece.DameNoire; // Promotion en Dame noire
+                typePiece = TypePiece.DameNoire; // Promotion en Dame noire
                 DessinePiece(GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1], typePiece, couleurPiece);
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1]].BackColor = CouleurCaseArrivee;
             }
-            else if (derniereRangeeNoire.Contains(derniereCaseRafle) && couleurPiece == LogiqueMouvementsDames.CouleurPiece.Blanc)
+            else if (derniereRangeeNoire.Contains(derniereCaseRafle) && couleurPiece == CouleurPiece.Blanc)
             {   // promotion du pion blanc
-                typePiece = LogiqueMouvementsDames.TypePiece.DameBlanche; // Promotion en Dame blanche
+                typePiece = TypePiece.DameBlanche; // Promotion en Dame blanche
                 DessinePiece(GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1], typePiece, couleurPiece);
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1]].BackColor = CouleurCaseArrivee;
             }
@@ -976,7 +1021,7 @@ namespace BrunoGUI_Dames
             if (indexFenCoupActuel > 0) // Assure que l'on peut reculer sans sortir de la liste
             {
                 indexFenCoupActuel--;
-                LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
+                MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 if (indexFenCoupActuel > 0)         // Vérifie si l'on est au premier coup pour éviter un accès incorrect à ListeCoupsPdn
                 {
                     LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
@@ -999,7 +1044,7 @@ namespace BrunoGUI_Dames
             Console.WriteLine("ListeCoupsPdn.Count : " + ListeCoupsPdn.Count);
             if (indexFenCoupActuel <= ListeCoupsFen.Count - 1 && indexFenCoupActuel <= ListeCoupsPdn.Count) // Vérifie la synchronisation
             {
-                LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
+                MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 // Accède à ListeCoupsPdn en tenant compte du décalage
                 LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
                 indexFenCoupActuel++;
@@ -1015,7 +1060,7 @@ namespace BrunoGUI_Dames
             if (ListeCoupsFen.Count > 1) // Vérifie qu'il y a au moins un coup joué
             {
                 indexFenCoupActuel = 1; // Premier coup joué (position initiale est à l'index 0)
-                LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel - 1], false);
+                MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel - 1], false);
                 LabelCoupJoue.Text = "Début de partie";
                 Console.WriteLine("Début : indexFenCoupActuel : " + indexFenCoupActuel);
             }
@@ -1025,14 +1070,14 @@ namespace BrunoGUI_Dames
             if (ListeCoupsFen.Count > 1) // Vérifie qu'il y a au moins un coup joué
             {
                 indexFenCoupActuel = ListeCoupsFen.Count - 1; // Dernière position
-                LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
+                MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
                 Console.WriteLine("Fin : indexFenCoupActuel : " + indexFenCoupActuel);
             }
         }
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
         {   // --- L'ordinateur joue son meilleur coup ---
-            await LancementReflexionMoteur(LogiqueMouvementsDames.ListeCoupsHub2[LogiqueMouvementsDames.ListeCoupsHub2.Count - 1], TempsReflexion);
+            await LancementReflexionMoteur(Partie.ListeCoupsHub2[Partie.ListeCoupsHub2.Count - 1], TempsReflexion);
             PartieEnCours = true;
             ChangerCouleurTrait();      // Inverse le trait
             AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
@@ -1090,7 +1135,7 @@ namespace BrunoGUI_Dames
         {   // --- Charge une partie depuis un fichier PDN lorsque'on double-clique ---
             NettoyageRapide();
             PartieCourante.CoupsPartiePDN = "";
-            LogiqueMouvementsDames.ListeCoupsPdn.Clear();
+            Partie.ListeCoupsPdn.Clear();
             Console.WriteLine("ChargerPartie :  " + partie);
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
             PartieCourante.Event = partie.Event;
@@ -1196,7 +1241,7 @@ namespace BrunoGUI_Dames
                     string positionFEN = RecupereFEN();
                     ListeCoupsFen.Add(positionFEN);   // Ajouter la position FEN après le coup
                     indexFenCoupActuel++;
-                    ListeCoupsHub2.Add(LogiqueMouvementsDames.ConvertitFenVersHub2(positionFEN)); // Ajouter la position Hub2 après le coup
+                    ListeCoupsHub2.Add(Partie.Hub2DepuisFen(positionFEN)); // Ajouter la position Hub2 après le coup
                 }
             }
             LabelPrisesPossibles.Text = "Fin des coups de la partie";
@@ -1353,7 +1398,7 @@ namespace BrunoGUI_Dames
                     return;
                 }
             }
-            LogiqueMouvementsDames.MiseenplaceFen(ListeCoupsFen[ListeCoupsFen.Count - 2], false);       // Met en place la position précédente
+            MiseenplaceFen(ListeCoupsFen[ListeCoupsFen.Count - 2], false);       // Met en place la position précédente
             AfficheListesPieces();
             ListeCoupsPdn.RemoveAt(dernierIndex);   // Supprime les derniers éléments des listes
             ListeCoupsFen.RemoveAt(ListeCoupsFen.Count - 1);
