@@ -34,65 +34,26 @@ namespace BrunoGUI_Dames
         }
         public string GenerationPdn()
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
-            string contenuPdn = "[Event \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Event + "\"]\n" + 
-                                    "[Site \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Site + "\"]\n" +
-                                        "[Date \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Date + "\"]\n" +
-                                            "[Round \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Round + "\"]\n" +
-                                                "[White \"" + BrunoInterfaceGraphiqueDames.PartieCourante.White + "\"]\n" +
-                                                    "[Black \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Black + "\"]\n";
-
-            // Ajout du résultat de la partie s'il existe
-            if (LogiqueMouvementsDames.ListeCoupsPdn.Count != 0)    // Si aucun coup n'a été joué, pas de résultat...
+            FichierPartiePdn.PartieDamesPdn courante = BrunoInterfaceGraphiqueDames.PartieCourante;
+            PartiePdn partie = PartiePdn.Creer(courante.Event, courante.Site, courante.Date, courante.Round, courante.White, courante.Black,
+                                               courante.Result, FenDepartPartie(), LogiqueMouvementsDames.ListeCoupsPdn);
+            return partie.VersTexte();
+        }
+        private static string? FenDepartPartie()
+        {   // --- Le FEN de la position de départ s'il diffère de la position initiale (partie chargée d'un PDN ou d'un fichier FEN), sinon null ---
+            if (LogiqueMouvementsDames.ListeCoupsFen.Count == 0) return null;
+            string fen = LogiqueMouvementsDames.ListeCoupsFen[0];       // Enrobé : [FEN "W:W31-50:B1-20"]
+            Match enrobe = Regex.Match(fen, "\"([^\"]*)\"");
+            if (enrobe.Success) fen = enrobe.Groups[1].Value;
+            try
             {
-                if (string.IsNullOrEmpty(BrunoInterfaceGraphiqueDames.PartieCourante.Result) || BrunoInterfaceGraphiqueDames.PartieCourante.Result == "*")
-                {   // Si le résultat n'est pas renseigné ou est égal à "*", on le met à "*"
-                    contenuPdn = contenuPdn + "[Result \"*\"]\n";
-                    BrunoInterfaceGraphiqueDames.PartieCourante.Result = "*";   // On s'assure que le résultat indique quelque chose ...
-                }
-                else
-                {   // Sinon, on ajoute le résultat de la partie
-                    contenuPdn = contenuPdn + "[Result \"" + BrunoInterfaceGraphiqueDames.PartieCourante.Result + "\"]\n";
-                }
+                Position depart = Position.DepuisFen(fen);
+                return depart.Equals(Position.Initiale()) ? null : depart.VersFen();
             }
-
-            // Ajout de la balise PlyCount (nombre de demi-coups)
-            contenuPdn += "[PlyCount \"" + LogiqueMouvementsDames.ListeCoupsPdn.Count + "\"]\n\n";
-
-            // Fin des balises, début de la liste des coups
-            int coupsParLigne = 5;      // Nombre de paires (blanc/noir) par ligne
-            string ligneEnCours = "";   // Ligne temporaire pour construire la sortie
-            int numeroCoup = 1;
-            for (int i = 0; i < LogiqueMouvementsDames.ListeCoupsPdn.Count; i++)
-            {   // Ajouter le numéro du coup uniquement pour les coups blancs (index pair)
-                string coupActuel = LogiqueMouvementsDames.ListeCoupsPdn[i];        
-                if (i % 2 == 0 && !(coupActuel == " 1-0" || coupActuel == " 0-1" || coupActuel == " 1/2-1/2"))
-                {   // Ajoute le numéro du coup si c'est un coup blanc et non un résultat
-                    ligneEnCours += $" {numeroCoup}. ";
-                }
-                ligneEnCours += LogiqueMouvementsDames.ListeCoupsPdn[i];                // Ajouter le coup (blanc ou noir)
-                // Ajouter un espace après chaque coup sauf le dernier de la ligne
-                if (i % 2 == 0 || i == LogiqueMouvementsDames.ListeCoupsPdn.Count - 1)
-                {
-                    ligneEnCours += " ";
-                }
-                if (i % 2 == 1)                 // Incrémenter le numéro de coup après chaque coup noir
-                {
-                    numeroCoup++;
-                }
-                // Ajouter la ligne au contenu quand on atteint le nombre maximal de paires par ligne
-                if (numeroCoup > 1 && (numeroCoup - 1) % coupsParLigne == 0 && i % 2 == 1)
-                {
-                    contenuPdn += ligneEnCours.TrimEnd() + Environment.NewLine;
-                    ligneEnCours = ""; // Réinitialiser la ligne
-                }
-            }
-            if (ligneEnCours.Length > 0)        // Ajouter la dernière ligne s'il reste des coups
+            catch (FormatException)
             {
-                contenuPdn += ligneEnCours.TrimEnd();
+                return null;
             }
-            // contenuPdn += " " + BrunoInterfaceGraphiqueDames.PartieCourante.Result;  // Ajouter le résultat de la partie
-            Console.WriteLine(contenuPdn);
-            return contenuPdn;
         }
         public void AffichePdnDansZone()
         {

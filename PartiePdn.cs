@@ -72,6 +72,44 @@ namespace BrunoGUI_Dames
         /// <summary>La position de départ : celle de la balise FEN, sinon la position initiale. Lève FormatException si la FEN est invalide.</summary>
         public Position PositionDepart() => string.IsNullOrWhiteSpace(Fen) ? Position.Initiale() : Position.DepuisFen(Fen);
 
+        // ─── Création depuis l'historique de l'application ─────────────────────────────────────────────────────────────────
+
+        private static readonly HashSet<string> marqueursDeFin = new HashSet<string> { "1-0", "0-1", "1/2-1/2", "2-0", "0-2", "1-1", "*", "-" };
+
+        /// <summary>
+        /// La partie à écrire, à partir de l'historique de l'application : les sept balises d'en-tête, puis, s'il y a des coups, Result
+        /// (la valeur donnée, sinon le marqueur de fin trouvé dans la liste, sinon « * »), la balise FEN si la partie ne part pas de la
+        /// position initiale, et PlyCount. Dans <paramref name="coups"/>, un élément qui est un marqueur de fin (« 1-0 » avec ou sans
+        /// espaces autour) devient Resultat et n'est pas compté comme un coup ; les autres sont des coups « 32-28 » ou « 28x19 ».
+        /// </summary>
+        public static PartiePdn Creer(string evenement, string site, string date, string tour, string blancs, string noirs,
+                                      string resultat, string? fenDepart, IEnumerable<string> coups)
+        {
+            PartiePdn partie = new PartiePdn();
+            partie.AjouterBalise("Event", evenement);
+            partie.AjouterBalise("Site", site);
+            partie.AjouterBalise("Date", date);
+            partie.AjouterBalise("Round", tour);
+            partie.AjouterBalise("White", blancs);
+            partie.AjouterBalise("Black", noirs);
+            foreach (string element in coups)
+            {
+                string coup = element.Trim();
+                if (coup.Length == 0) continue;
+                if (marqueursDeFin.Contains(coup)) partie.Resultat = coup;
+                else partie.Coups.Add(coup);
+            }
+            if (partie.Coups.Count > 0)     // Sans aucun coup, pas de résultat
+            {
+                string valeur = resultat.Trim();
+                if (valeur.Length == 0 || valeur == "*") valeur = partie.Resultat ?? "*";
+                partie.AjouterBalise("Result", valeur);
+            }
+            if (!string.IsNullOrWhiteSpace(fenDepart)) partie.AjouterBalise("FEN", fenDepart.Trim());
+            partie.AjouterBalise("PlyCount", partie.Coups.Count.ToString());
+            return partie;
+        }
+
         // ─── Rejeu ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
         /// <summary>

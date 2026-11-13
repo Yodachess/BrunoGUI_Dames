@@ -314,6 +314,19 @@ public static class Scenario
         Verifie("PDN : le résultat écrit est le marqueur lu, sinon la balise Result, sinon « * »",
                 sansResultat.VersTexte(finDeLigne: "\n").EndsWith("1. 32-28 *\n") && resultatBalise.VersTexte(finDeLigne: "\n").EndsWith("\n\n0-2\n"), "* et 0-2");
 
+        PartiePdn historique = PartiePdn.Creer("Entrainement", "Interface graphique", "2026-11-13", "?", "Bruno", "Scan", "1-0", null, ["32-28", "17-22", "28x17", " 1-0"]);
+        string texteHistorique = historique.VersTexte(finDeLigne: "\n");
+        Verifie("PDN : création depuis l'historique de l'application (marqueur de fin retiré des coups, PlyCount juste)",
+                historique.Coups.Count == 3 && historique.Resultat == "1-0" && historique.Balise("PlyCount") == "3" && historique.Balise("Result") == "1-0"
+                && texteHistorique.EndsWith("\n\n1. 32-28 17-22 2. 28x17 1-0\n"), texteHistorique.Replace("\n", "⏎"));
+        PartiePdn enCours = PartiePdn.Creer("E", "S", "D", "R", "B", "N", "", "B:W31-50:B1-20", ["17-22", "31-26"]);
+        Verifie("PDN : création d'une partie en cours : Result « * », balise FEN, « 1... » car les noirs commencent",
+                enCours.Balise("Result") == "*" && enCours.Fen == "B:W31-50:B1-20" && enCours.VersTexte(finDeLigne: "\n").EndsWith("\n\n1... 17-22 2. 31-26 *\n"), enCours.VersTexte(finDeLigne: "\n").Replace("\n", "⏎"));
+        PartiePdn aucunCoup = PartiePdn.Creer("E", "S", "D", "R", "B", "N", "*", null, []);
+        Verifie("PDN : création sans aucun coup : pas de balise Result, PlyCount 0", aucunCoup.Balise("Result") == null && aucunCoup.Balise("PlyCount") == "0", aucunCoup.VersTexte(finDeLigne: "\n").Replace("\n", "⏎"));
+        PartiePdn relueCreee = LecturePdn.LireTexte(historique.VersTexte())[0];
+        Verifie("PDN : la partie créée se relit à l'identique et se rejoue", relueCreee.Balises.SequenceEqual(historique.Balises) && relueCreee.Coups.SequenceEqual(historique.Coups) && relueCreee.Rejouer().Erreur == null, relueCreee.Rejouer().Erreur ?? "ok");
+
         // ═══════════════ PDN : rejeu des coups par les règles ═══════════════
         Console.WriteLine("── PDN : rejeu ──");
 
