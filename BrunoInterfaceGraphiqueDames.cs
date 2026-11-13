@@ -342,7 +342,23 @@ namespace BrunoGUI_Dames
                     SoundPlayer player = new SoundPlayer(@"C:\Windows\Media\Windows Notify.wav");       // Son pour dire que le coup est joué
                     player.Play();
                 }
-                if (MoteurDamesScan.CoupScan.Contains("x"))                 ///////// Rafle détectée /////////
+                Coup? coupMoteur = TrouveCoupDuMoteur(positionHub2, MoteurDamesScan.CoupScan);
+                if (coupMoteur != null)
+                {   // --- Étape 3 du branchement : le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur ---
+                    int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupMoteur.Depart);
+                    CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;
+                    ContenuCase pieceDuMoteur = GestionDamier.ContenuCaseCaseManoury(coupMoteur.Depart);
+                    if (coupMoteur.EstPrise)
+                    {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
+                        List<(int casePrise, int caseArrivee)> rafleDuMoteur = coupMoteur.Prises.Zip(coupMoteur.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
+                        await AnimerEtExecuterRafle(indexSourceBox, rafleDuMoteur, pieceDuMoteur);
+                    }
+                    else
+                    {   // Un déplacement simple
+                        ExecuteDeplacement(indexSourceBox, coupMoteur.Arrivee, pieceDuMoteur, false, 0);
+                    }
+                }
+                else if (MoteurDamesScan.CoupScan.Contains("x"))                 ///////// Rafle détectée (ancien code, repli) /////////
                 {   // Découper le coup en une séquence de prises
                     string[] positions = MoteurDamesScan.CoupScan.Split('x');
                     int caseSource = int.Parse(positions[0]);   // Case source de la rafle (Manoury)
@@ -563,6 +579,21 @@ namespace BrunoGUI_Dames
             {
                 coupsLegauxPieceSelectionnee = null;
                 EcrireJournalRegles($"ERREUR calcul des coups légaux : {ex.Message}");
+            }
+        }
+        private static Coup? TrouveCoupDuMoteur(string positionHub2, string coupScan)
+        {   // --- Le coup légal que désigne la notation Hub2 de Scan (« 28x19x23 », « 32-28 ») dans la position qu'on lui a envoyée, ou null (journal) ---
+            // La position vient de la chaîne Hub2 envoyée au moteur, pas de CouleurAuTrait : pendant que le moteur réfléchit, cette couleur est celle de l'humain
+            try
+            {
+                Coup? coup = ReglesDames.TrouverCoup(Position.DepuisHub2(positionHub2), coupScan);
+                if (coup == null) EcrireJournalRegles($"MOTEUR coup {coupScan} non retrouvé (illégal ou ambigu) dans {positionHub2} : ancien code utilisé");
+                return coup;
+            }
+            catch (Exception ex)
+            {
+                EcrireJournalRegles($"ERREUR MOTEUR {coupScan} dans {positionHub2} : {ex.Message}");
+                return null;
             }
         }
         private void EnregistrePositionApresCoupHumain()

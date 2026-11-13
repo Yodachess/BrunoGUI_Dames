@@ -168,6 +168,17 @@ public static class Scenario
         (bool, int, string) priseOubliee = ComparaisonRegles.Comparer(positionComparee, []);
         Verifie("Comparaison : ancien générateur sans rafle alors que ReglesDames en trouve → écart", !priseOubliee.Item1, priseOubliee.Item3);
 
+        // Le coup de Scan est cherché dans la position Hub2 envoyée au moteur (le trait est celui de cette chaîne), avec la notation complète du coup
+        string hub2NoirsAuTrait = Position.DepuisFen("B:W31-50:B1-20").VersHub2();
+        Coup? coupDeScanSimple = ReglesDames.TrouverCoup(Position.DepuisHub2(hub2NoirsAuTrait), "17-22");
+        Verifie("Coup du moteur : « 17-22 » retrouvé dans une position Hub2 où les noirs ont le trait", coupDeScanSimple != null && coupDeScanSimple.Depart == 17 && coupDeScanSimple.Arrivee == 22, coupDeScanSimple?.Hub2() ?? "(aucun)");
+        Coup? coupDeScanAuxBlancs = ReglesDames.TrouverCoup(Position.DepuisHub2(hub2NoirsAuTrait), "32-28");
+        Verifie("Coup du moteur : un coup de l'autre camp n'est pas retrouvé", coupDeScanAuxBlancs == null, coupDeScanAuxBlancs?.Hub2() ?? "(aucun)");
+        Position avantRafleScan = Position.DepuisFen("W:WK29:B3,7,40");
+        Coup? rafleDeScan = ReglesDames.TrouverCoup(Position.DepuisHub2(avantRafleScan.VersHub2()), "29x45x40");
+        Verifie("Coup du moteur : « 29x45x40 » donne la rafle exacte (départ 29, arrivée 45, pièce prise 40, étapes pièce prise / case d'arrivée)",
+                rafleDeScan != null && rafleDeScan.Prises.Zip(rafleDeScan.Chemin, (prise, arrivee) => (prise, arrivee)).SequenceEqual([(40, 45)]), rafleDeScan?.Hub2() ?? "(aucun)");
+
         // ═══════════════ Exécution d'un coup ═══════════════
         Console.WriteLine("── Exécution des coups ──");
 
