@@ -151,22 +151,8 @@ public static class Scenario
                 apresDeuxFoisVide[36] == Piece.DameBlanche && new[] { 7, 14, 23, 24, 31 }.All(n => apresDeuxFoisVide[n] == Piece.Vide) && apresDeuxFoisVide.Trait == Couleur.Noir,
                 apresDeuxFoisVide.VersFen());
 
-        // ═══════════════ Comparaison avec l'ancien générateur (étape 1 du branchement de l'interface) ═══════════════
-        Console.WriteLine("── Comparaison des rafles ──");
-
-        Position positionComparee = Position.DepuisFen("W:WK29:B3,7,40");
-        (bool, int, string) memesRafles = ComparaisonRegles.Comparer(positionComparee, [(29, 1, new[] { 7 }), (29, 45, new[] { 40 })]);
-        Verifie("Comparaison : mêmes rafles (dans un autre ordre) → identiques", memesRafles.Item1 && memesRafles.Item2 == 0 && memesRafles.Item3 == "", memesRafles.Item3);
-        (bool, int, string) enTrop = ComparaisonRegles.Comparer(positionComparee, [(29, 45, new[] { 40 }), (29, 1, new[] { 7 }), (29, 45, new[] { 40, 7 })]);
-        Verifie("Comparaison : une rafle en trop chez l'ancien générateur est signalée", !enTrop.Item1 && enTrop.Item3.Contains("ancien seul : [29x45x7x40]"), enTrop.Item3);
-        (bool, int, string) enMoins = ComparaisonRegles.Comparer(positionComparee, [(29, 45, new[] { 40 })]);
-        Verifie("Comparaison : une rafle manquante chez l'ancien générateur est signalée", !enMoins.Item1 && enMoins.Item3.Contains("ReglesDames seul : [29x1x7]"), enMoins.Item3);
-        (bool, int, string) avecDoublon = ComparaisonRegles.Comparer(positionComparee, [(29, 45, new[] { 40 }), (29, 1, new[] { 7 }), (29, 45, new[] { 40 })]);
-        Verifie("Comparaison : une rafle donnée deux fois par l'ancien générateur n'est pas un écart (1 doublon)", avecDoublon.Item1 && avecDoublon.Item2 == 1, avecDoublon.Item3);
-        (bool, int, string) sansPrise = ComparaisonRegles.Comparer(Position.Initiale(), []);
-        Verifie("Comparaison : sans prise des deux côtés → identiques", sansPrise.Item1, sansPrise.Item3);
-        (bool, int, string) priseOubliee = ComparaisonRegles.Comparer(positionComparee, []);
-        Verifie("Comparaison : ancien générateur sans rafle alors que ReglesDames en trouve → écart", !priseOubliee.Item1, priseOubliee.Item3);
+        // ═══════════════ Coup du moteur ═══════════════
+        Console.WriteLine("── Coup du moteur ──");
 
         // Le coup de Scan est cherché dans la position Hub2 envoyée au moteur (le trait est celui de cette chaîne), avec la notation complète du coup
         string hub2NoirsAuTrait = Position.DepuisFen("B:W31-50:B1-20").VersHub2();
