@@ -398,6 +398,22 @@ public static class Scenario
         Verifie("Rejeu : « 28x17 » est refusé quand il n'y a pas de prise, « 32-28 » quand il y en a une",
                 ReglesDames.TrouverCoupPdn(Position.DepuisFen("W:W28:B1"), "28x17") == null && ReglesDames.TrouverCoupPdn(Position.DepuisFen("W:W28:B22"), "28-23") == null, "28x17 sans prise, 28-23 avec prise");
 
+        // Une rafle abrégée « 44x24 » qui désigne deux rafles de 3 pièces (39, 18, 19 ou 39, 12, 19) : refusée par défaut, la première est jouée avec premierSiAmbigu
+        PartiePdn ambigue = new PartiePdn { Fen = "W:WK44:B12,18,19,39" };
+        ambigue.Coups.Add("44x24");
+        RejeuPdn rejeuStrict = ambigue.Rejouer();
+        RejeuPdn rejeuTolerant = ambigue.Rejouer(premierSiAmbigu: true);
+        Verifie("Rejeu : « 44x24 » ambigu est refusé par défaut, avec 0 coup rejoué", rejeuStrict.Erreur != null && rejeuStrict.Erreur.Contains("ambigu") && rejeuStrict.Coups.Count == 0, rejeuStrict.Erreur ?? "(pas d'erreur)");
+        Verifie("Rejeu : avec premierSiAmbigu, le coup ambigu est joué (première rafle de 3 pièces) et signalé",
+                rejeuTolerant.Erreur == null && rejeuTolerant.Coups.Count == 1 && rejeuTolerant.Coups[0].Depart == 44 && rejeuTolerant.Coups[0].Arrivee == 24 && rejeuTolerant.Coups[0].Prises.Count == 3
+                && rejeuTolerant.Ambiguites?.Count == 1, rejeuTolerant.Erreur ?? string.Join(" | ", rejeuTolerant.Ambiguites ?? []));
+        PartiePdn illegaleAuMilieu = new PartiePdn();
+        illegaleAuMilieu.Coups.AddRange(["32-28", "17-22", "28x17", "12x21", "33-28", "28-23"]);      // Le 6e coup est illégal : c'est aux noirs de jouer et il n'y a aucun pion noir en 28
+        RejeuPdn rejeuPartiel = illegaleAuMilieu.Rejouer(premierSiAmbigu: true);
+        Verifie("Rejeu : un coup illégal arrête le rejeu au dernier coup légal, avec son numéro (la partie est chargée jusque-là)",
+                rejeuPartiel.Erreur != null && rejeuPartiel.Coups.Count == 5 && rejeuPartiel.Positions.Count == 6 && rejeuPartiel.Erreur.StartsWith("Coup 6 "), rejeuPartiel.Erreur ?? "(pas d'erreur)");
+        Verifie("Rejeu : un coup absurde (« 0-0 ») est une erreur de partie, pas une exception", new PartiePdn { Coups = { "0-0" } }.Rejouer(premierSiAmbigu: true).Erreur != null, "0-0");
+
         // ═══════════════ PDN : fichiers d'exemple du projet ═══════════════
         Console.WriteLine("── PDN : fichiers d'exemple ──");
 

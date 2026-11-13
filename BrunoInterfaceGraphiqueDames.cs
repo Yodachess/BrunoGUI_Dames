@@ -458,22 +458,6 @@ namespace BrunoGUI_Dames
                 return null;
             }
         }
-        private static Coup? TrouveCoupPdn(string mouvement)
-        {   // --- Le coup légal que désigne ce coup PDN (« 32-28 », « 28x19 », « 28x19x8 ») dans la position affichée, ou null s'il n'y en a aucun ---
-            // Si « 28x19 » désigne plusieurs rafles qui ne prennent pas les mêmes pièces, on joue la première (comme avant) et on le note dans le journal
-            Position position = Position.DepuisFen(RecupereFEN());
-            Coup? coup = ReglesDames.TrouverCoupPdn(position, mouvement);
-            if (coup != null)
-                return coup;
-            int[] cases = mouvement.Split('-', 'x').Select(int.Parse).ToArray();
-            List<Coup> candidats = ReglesDames.CoupsLegaux(position).Where(c => c.Depart == cases[0] && c.Arrivee == cases[^1] && c.EstPrise == mouvement.Contains('x')).ToList();
-            if (candidats.Count > 1)
-            {
-                Journal.Ecrit($"AMBIGU PDN {RecupereFEN()} : {mouvement} peut être {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
-                return candidats[0];
-            }
-            return null;
-        }
         private void EnregistrePositionApresCoupHumain()
         {   // --- Après un coup humain : change le trait et ajoute la nouvelle position aux listes FEN et Hub2 (le coup PDN est ajouté à l'exécution) ---
             ChangerCouleurTrait();
@@ -1176,8 +1160,29 @@ namespace BrunoGUI_Dames
                 }
             }
         }
-        public void ChargerPartieDepuisPdn(PartieDamesPdn partie)
+        private bool rejeuPdnEnCours;      // Vrai pendant qu'une partie PDN est rejouée sur le damier
+        public async void ChargerPartieDepuisPdn(PartieDamesPdn partie)
         {   // --- Charge une partie depuis un fichier PDN lorsque'on double-clique ---
+            if (rejeuPdnEnCours || jeuMoteurEnCours || analyseEnCours)
+            {
+                MessageBox.Show("Une partie est déjà en cours de chargement, ou le moteur réfléchit.\nAttends la fin avant d'en charger une autre.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            // La partie est d'abord rejouée par les règles, sans toucher à la fenêtre : un coup illégal n'empêche plus de charger ce qui est jouable et ne fait plus tomber l'application
+            PartiePdn partiePdn = LecturePdn.LireTexte(partie.CoupsPartiePDN).FirstOrDefault() ?? new PartiePdn();
+            if (!string.IsNullOrWhiteSpace(partie.FENDebut))
+                partiePdn.Fen = partie.FENDebut;
+            RejeuPdn rejeu = partiePdn.Rejouer(premierSiAmbigu: true);
+            if (rejeu.Positions.Count == 0)
+            {   // La position de départ (FEN) est invalide : rien n'est chargé et le damier n'est pas touché
+                Journal.Ecrit($"Partie PDN non chargée ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
+                MessageBox.Show($"La partie ne peut pas être chargée :\n{rejeu.Erreur}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            foreach (string ambiguite in rejeu.Ambiguites ?? Array.Empty<string>())
+                Journal.Ecrit($"AMBIGU PDN ({partie.White} - {partie.Black}) : {ambiguite}");
+            foreach (string avertissement in partiePdn.Avertissements)
+                Journal.Ecrit($"Partie PDN ({partie.White} - {partie.Black}) : ignoré à la lecture : {avertissement}");
             NettoyageRapide();
             PartieCourante.CoupsPartiePDN = "";
             Partie.ListeCoupsPdn.Clear();
@@ -1196,10 +1201,30 @@ namespace BrunoGUI_Dames
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
             ExisteFENDebut = !string.IsNullOrWhiteSpace(partie.FENDebut);     // Propre à CETTE partie (avant, le drapeau gardait la valeur de la dernière partie lue du fichier)
-            GenerationListesCoups(PartieCourante.CoupsPartiePDN);
+            rejeuPdnEnCours = true;
+            try
+            {
+                await GenerationListesCoups(rejeu.Coups);
+                if (rejeu.Erreur != null)
+                {   // La partie est chargée jusqu'au dernier coup légal
+                    Journal.Ecrit($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
+                    MessageBox.Show($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {   // Quoi qu'il arrive pendant l'animation, l'application ne tombe pas : on le dit et on rend la main
+                Journal.Ecrit($"ERREUR au rejeu d'une partie PDN ({partie.White} - {partie.Black}) : {ex}");
+                MessageBox.Show($"Le chargement de la partie s'est arrêté :\n{ex.Message}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                BloqueBoutons(false);
+                AnalyseCoupObligatoire(CouleurAuTrait);
+            }
+            finally
+            {
+                rejeuPdnEnCours = false;
+            }
         }
-        public async void GenerationListesCoups(string coupsPartiePDN)
-        {   // --- Génère les listes et affiche les coups à partir de la partie PDN ---
+        public async Task GenerationListesCoups(IReadOnlyList<Coup> coupsDeLaPartie)
+        {   // --- Met la position de départ sur le damier, puis rejoue (avec animation) les coups déjà validés par les règles et remplit les listes de coups ---
             ListeCoupsFen.Clear();  // On vide la liste avant d’ajouter les nouveaux coups
             indexFenCoupActuel = 0; // On repart du début
             ListeCoupsHub2.Clear(); // On vide la liste avant d’ajouter les nouveaux coups
@@ -1212,74 +1237,35 @@ namespace BrunoGUI_Dames
             {
                 MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);  // Position initiale
             }
-            // Blocage des boutons pendant le traitement
-            ActiveDamier(false);
-            BloqueBoutons(true);
-            coupsPartiePDN = coupsPartiePDN.Replace("\n", " "); // Remplace les retours chariots par des espaces
-            // Séparation des coups en supprimant les espaces inutiles
-            string[] coups = coupsPartiePDN.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (coups.Length == 0)                      // Vérifier si la liste est vide
+            if (coupsDeLaPartie.Count == 0)                      // Vérifier si la liste est vide
             {
                 MessageBox.Show("Aucun coup n'a été trouvé dans la partie.", "Information : Pas de coup", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LabelPrisesPossibles.Text = "Pas de coup trouvé dans la partie chargée";
-                BloqueBoutons(false);   // Remettre les boutons en fonction !!
                 AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
                 return;
-            }            
-            string dernierElement = coups.Last();       // Vérifier si le dernier élément est un résultat
-            string[] resultatsValides = { "1-0", "0-1", "1/2-1/2", "*", "2-0", "0-2", "1-1", "-"};
-            string resultatPartiePdn = "";
-            if (resultatsValides.Contains(dernierElement))
-                {
-                    resultatPartiePdn = dernierElement;
-                    coups = coups.Take(coups.Length - 1).ToArray(); // Supprimer le dernier élément
-                }
-            CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
-            await Task.Delay(DureeAnimation);
-            foreach (string coupOriginal in coups)
+            }
+            // Blocage des boutons pendant le traitement
+            ActiveDamier(false);
+            BloqueBoutons(true);
+            try
             {
-                string coup = coupOriginal; // Crée une copie modifiable
-                Console.WriteLine("Coup original : " + coup);
-                if (coup.Contains("."))
+                CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
+                await Task.Delay(DureeAnimation);
+                foreach (Coup coupPdn in coupsDeLaPartie)
                 {
-                    coup = coup.Split('.')[1].Trim();
-                }
-                // Séparer les mouvements individuels ("23-19" ou "28x19x23")
-                string[] mouvements = coup.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string mouvement in mouvements)
-                {
-                    Console.WriteLine("Mouvement = " + mouvement);
+                    Console.WriteLine("Mouvement = " + coupPdn.Pdn());
                     CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
-                    if (!Regex.IsMatch(mouvement, @"^\d+[-x]\d+")) // Vérifie le format (ex: "23-19" ou "28x19x23")
-                    {
-                        throw new FormatException($"Format invalide du coup : {mouvement}");
-                    }
-                    string[] positions = mouvement.Split(new char[] { '-', 'x' });
-                    if (!positions.All(p => int.TryParse(p, out int num) && num >= 1 && num <= 50))
-                    {   // Vérification des numéros de case Manoury
-                        throw new ArgumentOutOfRangeException($"Numéro de case invalide dans le coup : {mouvement}");
-                    }
-                    int caseDepart = int.Parse(positions[0]);
-                    var contenuCaseDepart = GestionDamier.ContenuCaseCaseManoury(caseDepart);
-                    if (contenuCaseDepart.TypePiece == TypePiece.Vide)
-                    {
-                        throw new InvalidOperationException($"Pièce inconnue ou case vide : {caseDepart}");
-                    }
-                    Coup? coupPdn = TrouveCoupPdn(mouvement);       // Le coup légal que désigne cette notation dans la position affichée
-                    if (coupPdn == null)
-                    {
-                        throw new InvalidOperationException($"Coup illégal : {mouvement}");
-                    }
-                    int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(caseDepart);
+                    int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupPdn.Depart);
+                    ContenuCase pieceSource = GestionDamier.ContenuCaseCaseManoury(coupPdn.Depart);
                     if (coupPdn.EstPrise)       // Prise (rafle)
                     {
                         List<(int casePrise, int caseArrivee)> rafle = coupPdn.Prises.Zip(coupPdn.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
-                        await AnimerEtExecuterRafle(indexSourceBox, rafle, contenuCaseDepart);
+                        await AnimerEtExecuterRafle(indexSourceBox, rafle, pieceSource);
                         ChangerCouleurTrait();
                     }
                     else                        // Déplacement simple
                     {
-                        ExecuteDeplacement(indexSourceBox, coupPdn.Arrivee, contenuCaseDepart, false);
+                        ExecuteDeplacement(indexSourceBox, coupPdn.Arrivee, pieceSource, false);
                         ChangerCouleurTrait();
                         await Task.Delay(DureeAnimation);       // Attendre un peu pour l'effet visuel du déplacement
                     }
@@ -1288,11 +1274,13 @@ namespace BrunoGUI_Dames
                     indexFenCoupActuel++;
                     ListeCoupsHub2.Add(Partie.Hub2DepuisFen(positionFEN)); // Ajouter la position Hub2 après le coup
                 }
+                LabelPrisesPossibles.Text = "Fin des coups de la partie";
             }
-            LabelPrisesPossibles.Text = "Fin des coups de la partie";
-            BloqueBoutons(false);
-        }
-        public void boutonMasqueAffiche_Click(object? sender, EventArgs e)
+            finally
+            {
+                BloqueBoutons(false);       // Même si un coup n'a pas pu être joué, l'interface est rendue
+            }
+        }        public void boutonMasqueAffiche_Click(object? sender, EventArgs e)
         {   // --- Masque ou affiche la fenêtre de parties PDN ---
             if (fichierPartiePdn == null || fichierPartiePdn.IsDisposed)
             {   // Vérifier si la fenêtre a été fermée

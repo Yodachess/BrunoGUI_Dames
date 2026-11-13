@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace BrunoGUI_Dames
@@ -20,7 +21,8 @@ namespace BrunoGUI_Dames
     // Positions : La position de départ puis la position après chaque coup joué (une de plus que Coups).
     // Coups : Les coups joués, jusqu'à l'éventuelle erreur.
     // Erreur : Null si tous les coups de la partie sont légaux ; sinon la raison de l'arrêt.
-    public sealed record RejeuPdn(IReadOnlyList<Position> Positions, IReadOnlyList<Coup> Coups, string? Erreur);
+    // Ambiguites : les coups « 28x19 » qui désignaient plusieurs rafles (premierSiAmbigu) : la première a été jouée ; null s'il n'y en a pas.
+    public sealed record RejeuPdn(IReadOnlyList<Position> Positions, IReadOnlyList<Coup> Coups, string? Erreur, IReadOnlyList<string>? Ambiguites = null);
 
     public sealed class PartiePdn
     {
@@ -112,7 +114,9 @@ namespace BrunoGUI_Dames
 
         // Rejoue les coups avec les règles du jeu depuis la position de départ. S'arrête au premier coup illégal, ou ambigu
         // (« 28x19 » qui désigne deux rafles différentes), en le disant dans Erreur ; rien n'est jamais modifié dans la partie.
-        public RejeuPdn Rejouer()
+        // Avec premierSiAmbigu, un coup ambigu n'arrête pas le rejeu : on joue la première des rafles possibles (c'est ce que fait
+        // le clic dans l'interface, qui écrit « 28x19 ») et on le dit dans Ambiguites.
+        public RejeuPdn Rejouer(bool premierSiAmbigu = false)
         {
             Position position;
             try { position = PositionDepart(); }
@@ -120,16 +124,37 @@ namespace BrunoGUI_Dames
 
             List<Position> positions = new List<Position> { position };
             List<Coup> coups = new List<Coup>();
+            List<string> ambiguites = new List<string>();
             for (int i = 0; i < Coups.Count; i++)
             {
                 Coup? coup = ReglesDames.TrouverCoupPdn(position, Coups[i]);
+                if (coup == null && premierSiAmbigu)
+                {
+                    List<Coup> candidats = CandidatsDepartArrivee(position, Coups[i]);
+                    if (candidats.Count > 1)
+                    {
+                        ambiguites.Add($"Coup {i + 1} « {Coups[i]} » peut être {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()} (position {position.VersFen()})");
+                        coup = candidats[0];
+                    }
+                }
                 if (coup == null)
-                    return new RejeuPdn(positions, coups, $"Coup {i + 1} « {Coups[i]} » illégal ou ambigu dans la position {position.VersFen()}");
+                    return new RejeuPdn(positions, coups, $"Coup {i + 1} « {Coups[i]} » illégal ou ambigu dans la position {position.VersFen()}", ambiguites);
                 position = ReglesDames.Jouer(position, coup);
                 positions.Add(position);
                 coups.Add(coup);
             }
-            return new RejeuPdn(positions, coups, null);
+            return new RejeuPdn(positions, coups, null, ambiguites);
+        }
+
+        // Les coups légaux qui partent de la première case de la notation et arrivent sur la dernière, prise ou non comme elle (« x » ou « - »)
+        private static List<Coup> CandidatsDepartArrivee(Position position, string notation)
+        {
+            int[] cases;
+            try { cases = notation.Split('-', 'x').Select(int.Parse).ToArray(); }
+            catch (FormatException) { return new List<Coup>(); }
+            if (cases.Length < 2) return new List<Coup>();
+            bool prise = notation.Contains('x');
+            return ReglesDames.CoupsLegaux(position).Where(c => c.Depart == cases[0] && c.Arrivee == cases[^1] && c.EstPrise == prise).ToList();
         }
 
         // ─── Écriture ───────────────────────────────────────────────────────────────────────────────────────────────────
