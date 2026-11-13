@@ -22,6 +22,9 @@ namespace BrunoGUI_Dames
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            // Police par défaut de .NET Framework (celle de la version 1.04), sur laquelle le Designer est calé (AutoScaleDimensions 6 x 13) :
+            // avec la police par défaut de .NET (Segoe UI 9) la fenêtre est plus grande d'environ 16 %
+            Application.SetDefaultFont(new System.Drawing.Font("Microsoft Sans Serif", 8.25F));
             Application.Run(new BrunoInterfaceGraphiqueDames());
         }
     }
