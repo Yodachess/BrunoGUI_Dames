@@ -44,8 +44,49 @@ namespace BrunoGUI_Dames
 
         public static ContenuCase[,] DamierContenu = new ContenuCase[10, 10]; // Tableau de [10*10] décrivant les contenu de chaque avec [Type de pièce, Couleur de pièce]
 
+        // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier). Elle est tenue à jour avec DamierContenu
+        // par DessinePiece et EffacePiece ; le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
+        public static Position PositionCourante = new Position();
+
+        // --- Conversions entre les types de pièces de l'affichage et ceux de Position ---
+        public static Piece PieceDe(LogiqueMouvementsDames.TypePiece typePiece)
+        {
+            switch (typePiece)
+            {
+                case LogiqueMouvementsDames.TypePiece.PionBlanc: return Piece.PionBlanc;
+                case LogiqueMouvementsDames.TypePiece.PionNoir: return Piece.PionNoir;
+                case LogiqueMouvementsDames.TypePiece.DameBlanche: return Piece.DameBlanche;
+                case LogiqueMouvementsDames.TypePiece.DameNoire: return Piece.DameNoire;
+                default: return Piece.Vide;
+            }
+        }
+        public static LogiqueMouvementsDames.TypePiece TypeDe(Piece piece)
+        {
+            switch (piece)
+            {
+                case Piece.PionBlanc: return LogiqueMouvementsDames.TypePiece.PionBlanc;
+                case Piece.PionNoir: return LogiqueMouvementsDames.TypePiece.PionNoir;
+                case Piece.DameBlanche: return LogiqueMouvementsDames.TypePiece.DameBlanche;
+                case Piece.DameNoire: return LogiqueMouvementsDames.TypePiece.DameNoire;
+                default: return LogiqueMouvementsDames.TypePiece.Vide;
+            }
+        }
+        public static LogiqueMouvementsDames.CouleurPiece CouleurDe(Piece piece)
+        {
+            if (Position.EstBlanche(piece)) return LogiqueMouvementsDames.CouleurPiece.Blanc;
+            if (Position.EstNoire(piece)) return LogiqueMouvementsDames.CouleurPiece.Noir;
+            return LogiqueMouvementsDames.CouleurPiece.Vide;
+        }
+        // --- Nombre de pièces (pions et dames) d'une couleur ---
+        public static int NombreDePieces(Couleur couleur)
+        {
+            return couleur == Couleur.Blanc ? PositionCourante.Compte(Piece.PionBlanc) + PositionCourante.Compte(Piece.DameBlanche)
+                                            : PositionCourante.Compte(Piece.PionNoir) + PositionCourante.Compte(Piece.DameNoire);
+        }
+
         public static void InitialiserDamier()
-        {   // --- Remplit le damier avec des pions, et met à jour le tableau DamierContenu, ainsi que les listes de pions ---
+        {   // --- Remplit le damier avec des pions, et met à jour le tableau DamierContenu, ainsi que PositionCourante ---
+            PositionCourante = new Position();
             for (int ligne = 9; ligne >= 0; ligne--)
             {
                 for (int colonne = 0; colonne < 10; colonne++)
@@ -55,12 +96,12 @@ namespace BrunoGUI_Dames
                         if (ligne < 4)
                         {   // Pions noirs
                             DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.PionNoir, LogiqueMouvementsDames.CouleurPiece.Noir);
-                            LogiqueMouvementsDames.ListePionsNoirs.Add(PictureBoxVersManoury[((ligne * 10) + colonne)]);
+                            PositionCourante[PictureBoxVersManoury[((ligne * 10) + colonne)]] = Piece.PionNoir;
                         }
                         else if (ligne > 5)
                         {   // Pions blancs
                             DamierContenu[ligne, colonne] = new ContenuCase(LogiqueMouvementsDames.TypePiece.PionBlanc, LogiqueMouvementsDames.CouleurPiece.Blanc);
-                            LogiqueMouvementsDames.ListePionsBlancs.Add(PictureBoxVersManoury[((ligne * 10) + colonne)]);
+                            PositionCourante[PictureBoxVersManoury[((ligne * 10) + colonne)]] = Piece.PionBlanc;
                         }
                         else
                         {   // Milieu du damier = cases vides
@@ -90,10 +131,7 @@ namespace BrunoGUI_Dames
                     }
                 }
             }
-            ListeDamesBlanches.Clear();
-            ListeDamesNoires.Clear();
-            ListePionsBlancs.Clear();
-            ListePionsNoirs.Clear();
+            PositionCourante = new Position();
         }
 
         public static void InitialiserCorrespondance(Control.ControlCollection controls)

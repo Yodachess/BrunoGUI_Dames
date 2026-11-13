@@ -66,11 +66,6 @@ namespace BrunoGUI_Dames
         pos pos=Wbbbbbbbbbbbbbbbbbbbbbeeeeeeeeeewwwwwwwwwwwwwwwwwwww
         pos pos=BeeeWWeeeeeeeeeeeeeeeeeeeweeeeeeeeeewweBeeeeeeeeeBee 
          */
-        // Contient les listes des différentes pièces 
-        public static List<int> ListePionsBlancs = new List<int>();
-        public static List<int> ListeDamesBlanches = new List<int>();
-        public static List<int> ListePionsNoirs = new List<int>();
-        public static List<int> ListeDamesNoires = new List<int>();
         public static CouleurPiece ConvertirCouleurTrait(string couleurTrait)
         {   // --- Renvoie la CouleurPiece de la couleurTrait --- 
             switch (couleurTrait)
@@ -87,10 +82,6 @@ namespace BrunoGUI_Dames
         public static void MiseenplaceFen(string fenAutiliser, bool ajouteListeCoups)     // Préparation du logiciel avec la position FEN
         {   // --- La méthode remplit les listes avec les pièces et les affiche à la fin ---
             GestionDamier.ViderDamier();            
-            ListePionsBlancs.Clear();           // Clearer la liste DamierContenu et les ListePions... ListesDames...
-            ListePionsNoirs.Clear();
-            ListeDamesBlanches.Clear();
-            ListeDamesNoires.Clear();     
             Console.WriteLine("Mise en place de la position FEN : " + fenAutiliser);
             foreach (var pict in BrunoInterfaceGraphiqueDames.CaseDamier)
             {
@@ -116,47 +107,13 @@ namespace BrunoGUI_Dames
                 // Désactive les cases de l'autre couleur
                 BrunoInterfaceGraphiqueDames.ActiveCouleurDamier(BrunoInterfaceGraphiqueDames.CouleurAuTrait == "Blanc" ? "Noir" : "Blanc", false);
 
-                // Parcourir les deux champs des pièces (W... et B...)
-                for (int i = 1; i < champsFen.Length; i++)
-                {   // Identifier la couleur (W pour blancs, B pour noirs)
-                    char couleur = champsFen[i][0]; // Premier caractère : 'W' ou 'B'
-                    string[] pieces = champsFen[i].Substring(1).Split(','); // Enlever le 'W' ou 'B' et découper les pièces
-                    foreach (string piece in pieces)
-                    {
-                        if (piece.StartsWith("K"))
-                        {   // C'est une dame
-                            int numeroCase = int.Parse(piece.Substring(1)); // Numéro après le 'K'
-                            if (couleur == 'W')
-                                ListeDamesBlanches.Add(numeroCase);
-                            else
-                                ListeDamesNoires.Add(numeroCase);
-                        }
-                        else if (piece.Contains("-"))
-                        {   // C'est une suite de pions
-                            string[] range = piece.Split('-');
-                            int start = int.Parse(range[0]);
-                            int end = int.Parse(range[1]);
-
-                            // Ajouter toutes les cases dans l'intervalle
-                            for (int numeroCase = start; numeroCase <= end; numeroCase++)
-                            {
-                                if (couleur == 'W')
-                                    ListePionsBlancs.Add(numeroCase);               // On ajoute le pion à la liste
-                                else
-                                    ListePionsNoirs.Add(numeroCase);                // On ajoute le pion à la liste
-                            }
-                        }
-                        else
-                        {   // C'est un pion
-                            int numeroCase = int.Parse(piece);              // Directement le numéro de case
-                            if (couleur == 'W')
-                                ListePionsBlancs.Add(numeroCase);               // On ajoute le pion à la liste
-                            else
-                                ListePionsNoirs.Add(numeroCase);                // On ajoute le pion à la liste
-                        }
-                    }
+                Position position = Position.DepuisFen(contenu);        // Lève FormatException si le FEN n'est pas valide
+                for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
+                {   // Dessiner chaque pièce : DessinePiece met aussi à jour DamierContenu et GestionDamier.PositionCourante
+                    Piece piece = position[numeroCase];
+                    if (piece != Piece.Vide)
+                        BrunoInterfaceGraphiqueDames.DessinePiece(GestionDamier.ObtenirIndicePictureBox(numeroCase), GestionDamier.TypeDe(piece), GestionDamier.CouleurDe(piece));
                 }
-                DessinePiecesAvecListes();
             }
             else
             {
@@ -164,24 +121,10 @@ namespace BrunoGUI_Dames
             }
         }
         public static string RecupereFEN()
-        {   // --- Génère et renvoie le FEN de la position actuelle ---
-            string baseFEN = "[FEN \"";            // Début de la chaîne FEN.
-            baseFEN += BrunoInterfaceGraphiqueDames.CouleurAuTrait == "Blanc" ? "W" : "B";  // Couleur au trait.
-            // Ajout des pions et dames blancs.
-            baseFEN += ":W" + string.Join(",", ListePionsBlancs);
-            foreach (int dame in ListeDamesBlanches)
-            {   // Ajoute les dames blanches avec le bon préfixe.
-                baseFEN += ListePionsBlancs.Count == 0 && baseFEN.EndsWith(":W") ? "K" + dame : ",K" + dame;
-            }
-            // Ajout des pions et dames noirs.
-            baseFEN += ":B" + string.Join(",", ListePionsNoirs);
-            foreach (int dame in ListeDamesNoires)
-            {   // Ajoute les dames noires avec le bon préfixe.
-                baseFEN += ListePionsNoirs.Count == 0 && baseFEN.EndsWith(":B") ? "K" + dame : ",K" + dame;
-            }
-
-            baseFEN += "\"]";            // Fin de la chaîne FEN.
-            return baseFEN;
+        {   // --- Génère et renvoie le FEN de la position actuelle (GestionDamier.PositionCourante, avec le trait CouleurAuTrait) ---
+            Position position = GestionDamier.PositionCourante.Copie();
+            position.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait == "Blanc" ? Couleur.Blanc : Couleur.Noir;
+            return "[FEN \"" + position.VersFen() + "\"]";
         }
         public static string ConvertitFenVersHub2(string fen)
         {   // --- Convertit une position FEN en format Hub2 compréhensible par SCAN 3.1 ---
@@ -240,95 +183,6 @@ namespace BrunoGUI_Dames
             // Placer la pièce (pion ou dame) sur le plateau
             if (couleur == 'W') hub2[indexManoury] = isKing ? 'W' : 'w';
             else if (couleur == 'B') hub2[indexManoury] = isKing ? 'B' : 'b';
-        }
-        public static void DessinePiecesAvecListes()
-        {   //  --- Dessine l'ensemble des pièces sur le damier à partir des listes (et pas de DamierContenu) ---
-            BrunoInterfaceGraphiqueDames brunoInterface = new BrunoInterfaceGraphiqueDames();
-            DessinerPieces(ListePionsBlancs, LogiqueMouvementsDames.TypePiece.PionBlanc, LogiqueMouvementsDames.CouleurPiece.Blanc, brunoInterface);
-            DessinerPieces(ListePionsNoirs, LogiqueMouvementsDames.TypePiece.PionNoir, LogiqueMouvementsDames.CouleurPiece.Noir, brunoInterface);
-            DessinerPieces(ListeDamesBlanches, LogiqueMouvementsDames.TypePiece.DameBlanche, LogiqueMouvementsDames.CouleurPiece.Blanc, brunoInterface);
-            DessinerPieces(ListeDamesNoires, LogiqueMouvementsDames.TypePiece.DameNoire, LogiqueMouvementsDames.CouleurPiece.Noir, brunoInterface);
-        }
-        public static void DessinerPieces(List<int> listeCases, TypePiece pieceType, CouleurPiece pieceCouleur, BrunoInterfaceGraphiqueDames brunoInterface)
-        {   // --- Dessine toutes les pièces de la liste listeCases ---
-            if (listeCases.Count > 0)
-            {
-                foreach (int numeroCase in listeCases)
-                {   // Obtenir l'indice de la PictureBox associée
-                    int indexPictureBox = GestionDamier.ObtenirIndicePictureBox(numeroCase);
-                    // Dessiner la pièce et met à jour DamierContenu
-                    brunoInterface.DessinePiece(indexPictureBox, pieceType, pieceCouleur);
-                }
-            }
-        }
-        public static void MiseaJourListes(int indexPictureBox, LogiqueMouvementsDames.TypePiece pieceType, bool ajouterDansListe)
-        {   // --- Met à jour la liste avec la pièce située en indexPictureBox, l'ajoute si ajouterDansListe, l'enlève sinon ---
-            int caseMiseaJour = GestionDamier.ObtenirCaseManoury(indexPictureBox);
-            string nomListe;    // Obtenir la liste correspondante et son nom
-            List<int>? listeCorrespondante = ListeCorrespondantTypePiece(pieceType, out nomListe);
-            if (listeCorrespondante != null)
-            {   // Ajouter ou retirer la case dans la liste
-                if (ajouterDansListe)
-                {
-                    if (!listeCorrespondante.Contains(caseMiseaJour))
-                    {
-                        listeCorrespondante.Add(caseMiseaJour);
-                    }
-                }
-                else
-                {
-                    if (listeCorrespondante.Contains(caseMiseaJour))
-                    {
-                        listeCorrespondante.Remove(caseMiseaJour);
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Aucune liste trouvée pour le type de pièce : {pieceType}");
-            }
-        }
-        public static void MiseaJourPromotion (int indexPictureBox, ContenuCase pieceSource)
-        {   // --- Met à jour la liste avec la pièce promue --- 
-            int casePionSource = GestionDamier.ObtenirCaseManoury(indexPictureBox);
-            string nomListe;    // Obtenir la liste correspondante et son nom
-            List<int>? listeCorrespondante = ListeCorrespondantTypePiece(pieceSource.TypePiece, out nomListe);
-            if (listeCorrespondante != null)
-            {   // Ajouter ou retirer la case dans la liste
-                if (listeCorrespondante.Contains(casePionSource))
-                {
-                    listeCorrespondante.Remove(casePionSource);
-                }
-                else
-                {
-                    Console.WriteLine($"Aucun pion trouvé : {casePionSource} dans la liste {nomListe}");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Aucune liste trouvée pour le type de pièce : {pieceSource.TypePiece}");
-            }
-        }
-        public static List<int>? ListeCorrespondantTypePiece(LogiqueMouvementsDames.TypePiece typePiece, out string nomListe)
-        {   // --- Le paramètre out permet de retourner à la fois la liste et son nom (string) dans une seule méthode. ---
-            switch (typePiece)
-            {
-                case LogiqueMouvementsDames.TypePiece.PionBlanc:
-                    nomListe = "ListePionsBlancs";
-                    return ListePionsBlancs;
-                case LogiqueMouvementsDames.TypePiece.PionNoir:
-                    nomListe = "ListePionsNoirs";
-                    return ListePionsNoirs;
-                case LogiqueMouvementsDames.TypePiece.DameBlanche:
-                    nomListe = "ListeDamesBlanches";
-                    return ListeDamesBlanches;
-                case LogiqueMouvementsDames.TypePiece.DameNoire:
-                    nomListe = "ListeDamesNoires";
-                    return ListeDamesNoires;
-                default:
-                    nomListe = "Aucune liste";
-                    return null;
-            }
         }
     }
 }

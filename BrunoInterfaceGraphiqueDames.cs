@@ -81,8 +81,10 @@ namespace BrunoGUI_Dames
         {
             InitializeComponent();
         }
+        private static BrunoInterfaceGraphiqueDames? fenetrePrincipale;     // La fenêtre affichée, pour mettre à jour les décomptes de pièces depuis les méthodes statiques
         private void BrunoInterfaceGraphiqueDames_Load(object sender, EventArgs e)
         {
+            fenetrePrincipale = this;
             // les évènements dans les classes
             MoteurDamesScan.AfficheScan += AfficheScan;
             MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;
@@ -326,7 +328,7 @@ namespace BrunoGUI_Dames
         private void AnalyseCoupObligatoire(string couleur)
         {   // --- Analyse pour toutes les pièces des coups obligatoires (prise la + longue) pour la couleur donnée, selon ReglesDames ---
             ActiveDamier(false);            // Désactiver les interactions pendant l'analyse
-            int nombrePieces = couleur == "Blanc" ? ListePionsBlancs.Count + ListeDamesBlanches.Count : ListePionsNoirs.Count + ListeDamesNoires.Count;
+            int nombrePieces = GestionDamier.NombreDePieces(couleur == "Blanc" ? Couleur.Blanc : Couleur.Noir);
             if (nombrePieces > 0)
                 VerifierGain();             // Vérifier si la partie n'est pas finie ?
             List<Coup> prises = new List<Coup>();
@@ -445,12 +447,10 @@ namespace BrunoGUI_Dames
             // Vérification si promotion en Dame : IL FAUDRAIT S'ASSURER QUE LA PIECE N'EST PAS DEJA UNE DAME !!!!!!!!!!!!!!!!!!!
             if (derniereRangeeBlanche.Contains(destinationManoury) && pieceSource.CouleurPiece == LogiqueMouvementsDames.CouleurPiece.Noir)
             {
-                MiseaJourPromotion(indexSourceBox, pieceSource);    // On met à jour la liste de pions avant de faire la promotion ...
                 pieceSource.TypePiece = LogiqueMouvementsDames.TypePiece.DameNoire; // Promotion en Dame noire
             }
             else if (derniereRangeeNoire.Contains(destinationManoury) && pieceSource.CouleurPiece == LogiqueMouvementsDames.CouleurPiece.Blanc)
             {
-                MiseaJourPromotion(indexSourceBox, pieceSource);    // On met à jour la liste de pions avant de faire la promotion ...
                 pieceSource.TypePiece = LogiqueMouvementsDames.TypePiece.DameBlanche; // Promotion en Dame blanche
             }
             DessinePiece(GestionDamier.ManouryVersIndexPictureBox[destinationManoury - 1], pieceSource.TypePiece, pieceSource.CouleurPiece);
@@ -510,16 +510,12 @@ namespace BrunoGUI_Dames
             // Vérification si promotion en Dame à la fin de la rafle
             if (derniereRangeeBlanche.Contains(derniereCaseRafle) && couleurPiece == LogiqueMouvementsDames.CouleurPiece.Noir)
             {   // promotion du pion noir
-                MiseaJourPromotion(indexSourceBoxActuel, pieceSourceLocal);    // On met à jour la liste de pions avant de faire la promotion ...
-                LogiqueMouvementsDames.MiseaJourListes(indexSourceBoxActuel, typePiece, false);  // false pour retirer pièce de la liste
                 typePiece = LogiqueMouvementsDames.TypePiece.DameNoire; // Promotion en Dame noire
                 DessinePiece(GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1], typePiece, couleurPiece);
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1]].BackColor = CouleurCaseArrivee;
             }
             else if (derniereRangeeNoire.Contains(derniereCaseRafle) && couleurPiece == LogiqueMouvementsDames.CouleurPiece.Blanc)
             {   // promotion du pion blanc
-                MiseaJourPromotion(indexSourceBoxActuel, pieceSourceLocal);    // On met à jour la liste de pions avant de faire la promotion ...
-                LogiqueMouvementsDames.MiseaJourListes(indexSourceBoxActuel, typePiece, false);  // false pour retirer pièce de la liste
                 typePiece = LogiqueMouvementsDames.TypePiece.DameBlanche; // Promotion en Dame blanche
                 DessinePiece(GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1], typePiece, couleurPiece);
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[derniereCaseRafle - 1]].BackColor = CouleurCaseArrivee;
@@ -635,16 +631,15 @@ namespace BrunoGUI_Dames
         // Routines de Dessin
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 
-        public void DessinePiece(int indexPictureBox, TypePiece pieceType, CouleurPiece pieceCouleur)
-        {   // --- Dessin de la pièce passée en paramètre sur la case PictureBox en paramètre + mise à jour de DamierContenu + mise à jour des listes ---
+        public static void DessinePiece(int indexPictureBox, TypePiece pieceType, CouleurPiece pieceCouleur)
+        {   // --- Dessin de la pièce passée en paramètre sur la case PictureBox en paramètre + mise à jour de DamierContenu et de PositionCourante ---
             try
             {   // Traduire l'index linéaire 0-99 en coordonnées (ligne, colonne) pour DamierContenu
                 (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexPictureBox);
                 // Mettre à jour DamierContenu
                 GestionDamier.DamierContenu[ligne, colonne].CouleurPiece = pieceCouleur;
                 GestionDamier.DamierContenu[ligne, colonne].TypePiece = pieceType;
-                // Mettre à jour les listes
-                LogiqueMouvementsDames.MiseaJourListes(indexPictureBox, pieceType, true);   // true pour ajouter la pièce à la liste
+                GestionDamier.PositionCourante[GestionDamier.ObtenirCaseManoury(indexPictureBox)] = GestionDamier.PieceDe(pieceType);   // Mettre à jour la position
                 AfficheListesPieces();
                 if (pieceType == TypePiece.Vide)
                 {   // Si la case est vide, on efface l'image
@@ -666,15 +661,14 @@ namespace BrunoGUI_Dames
                 Console.WriteLine($"StackTrace : {ex.StackTrace}");
             }
         }
-        public void EffacePiece(int indexPictureBox, bool damier)
-        {   // --- Efface la pièce située à indexPictureBox, et actualise DamierContenu si damier est vrai ---
+        public static void EffacePiece(int indexPictureBox, bool damier)
+        {   // --- Efface la pièce située à indexPictureBox, et actualise DamierContenu et PositionCourante si damier est vrai ---
             if (damier)
             {
                 (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexPictureBox);
-                TypePiece pieceAEffacer = GestionDamier.DamierContenu[ligne, colonne].TypePiece;
                 GestionDamier.DamierContenu[ligne, colonne].TypePiece = TypePiece.Vide;
                 GestionDamier.DamierContenu[ligne, colonne].CouleurPiece = CouleurPiece.Vide;
-                LogiqueMouvementsDames.MiseaJourListes(indexPictureBox, pieceAEffacer, false);  // false pour retirer pièce de la liste
+                GestionDamier.PositionCourante[GestionDamier.ObtenirCaseManoury(indexPictureBox)] = Piece.Vide;     // Retirer la pièce de la position
                 AfficheListesPieces();
             }
             CaseDamier[indexPictureBox].Image = null;
@@ -838,14 +832,14 @@ namespace BrunoGUI_Dames
         }
         public void VerifierGain()
         {   // --- Verifie le gain uniquement sur a présence de pièces ---
-            if (ListePionsBlancs.Count == 0 && ListeDamesBlanches.Count == 0)
+            if (GestionDamier.NombreDePieces(Couleur.Blanc) == 0)
             {   // Vérifier si les listes blanches sont vides
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
                 RadioGainNoir.Checked = PartieTerminee = FinPartie = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de pièces";
                 MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            if (ListePionsNoirs.Count == 0 && ListeDamesNoires.Count == 0)
+            if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
             {   // Vérifier si les listes noires sont vides
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
                 RadioGainBlanc.Checked = PartieTerminee = FinPartie = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
@@ -868,12 +862,15 @@ namespace BrunoGUI_Dames
             IndexPictureBoxSource100 = -1;
             clickCaseSource = true; // Retourne à l'état de sélection de pièce
         }
-        public void AfficheListesPieces()
-        {   // --- Affiche les 4 listes de pièces, pions blancs et noirs, dames blanches et noires ---
-            LabelPionsBlancs.Text = ListePionsBlancs.Count +  " pions blancs";
-            LabelPionsNoirs.Text = ListePionsNoirs.Count +  " pions noirs";
-            LabelDamesBlanches.Text = ListeDamesBlanches.Count +  " Dames blanches";
-            LabelDamesNoires.Text = ListeDamesNoires.Count +  " Dames noires";
+        public static void AfficheListesPieces()
+        {   // --- Affiche les nombres de pions blancs et noirs, de dames blanches et noires de la position ---
+            if (fenetrePrincipale == null)
+                return;
+            Position position = GestionDamier.PositionCourante;
+            fenetrePrincipale.LabelPionsBlancs.Text = position.Compte(Piece.PionBlanc) + " pions blancs";
+            fenetrePrincipale.LabelPionsNoirs.Text = position.Compte(Piece.PionNoir) + " pions noirs";
+            fenetrePrincipale.LabelDamesBlanches.Text = position.Compte(Piece.DameBlanche) + " Dames blanches";
+            fenetrePrincipale.LabelDamesNoires.Text = position.Compte(Piece.DameNoire) + " Dames noires";
         }
         public static void AfficheIndexBox(PictureBox pict, int index, int caseLogique)
         {   // --- Affiche les index Box et Manoury an haut à gauche et droite ---
