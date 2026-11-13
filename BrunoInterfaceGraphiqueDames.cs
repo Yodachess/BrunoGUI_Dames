@@ -428,6 +428,7 @@ namespace BrunoGUI_Dames
                 ActiveDamier(true);     // Réactiver toutes les cases, y compris les cases vides
                 ActiveCouleurDamier(CouleurAuTrait, true);          // Réactiver les cases de la couleur au trait
                 ActiveCouleurDamier(CouleurPasAuTrait(), false);    // Désactiver les cases de la couleur pas au trait
+                ComparerReglesAncienNouveau();
                 return;                 // Sortir de la méthode, rien à faire de plus
             } 
             // Regrouper les rafles par case de départ
@@ -482,6 +483,37 @@ namespace BrunoGUI_Dames
                 .FirstOrDefault()?.Count ?? 0; // Prend la taille de la première rafle ou 0 si la liste est vide
                                                // Combine toutes les chaînes en une seule avec un saut de ligne entre chaque liste
             LabelPrisesPossibles.Text = raflesText.Count + " Rafle(s) possible(s) de " + elementsParRafle + " pièce(s) \n" + string.Join("\n", raflesText);
+            ComparerReglesAncienNouveau();
+        }
+        private int comparaisonsFaites, comparaisonsEcarts;
+        private void ComparerReglesAncienNouveau()
+        {   // --- Étape 1 du branchement sur ReglesDames (lecture seule, provisoire) : compare les rafles de l'ancien générateur avec celles de ReglesDames ---
+            // Rien n'est modifié dans la partie ni sur le damier ; un écart est écrit dans ComparaisonRegles.log (à côté de l'exe) et compté dans le titre.
+            string fen = "";
+            try
+            {
+                fen = RecupereFEN();
+                Position position = Position.DepuisFen(fen);
+                var anciennes = RaflesMaximales.SelectMany(kv => kv.Value.Select(rafle =>
+                                    (Depart: kv.Key, Arrivee: rafle.Last().caseArrivee, Prises: (IReadOnlyList<int>)rafle.Select(t => t.casePrise).ToList())));
+                (bool identiques, int doublons, string detail) = ComparaisonRegles.Comparer(position, anciennes);
+                comparaisonsFaites++;
+                if (!identiques)
+                {
+                    comparaisonsEcarts++;
+                    File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} ECART {fen} : {detail}{Environment.NewLine}");
+                }
+                else if (doublons > 0)
+                {   // Même ensemble de rafles, mais l'ancien générateur en donne certaines en double : pas un écart
+                    File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} doublons ({doublons}) {fen}{Environment.NewLine}");
+                }
+            }
+            catch (Exception ex)
+            {
+                comparaisonsEcarts++;
+                try { File.AppendAllText(Path.Combine(Application.StartupPath, "ComparaisonRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} ERREUR {fen} : {ex.Message}{Environment.NewLine}"); } catch (IOException) { }
+            }
+            Text = $" Bruno Interface Graphique   [règles : {comparaisonsFaites} position(s) comparée(s), {comparaisonsEcarts} écart(s)]";
         }
 
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
