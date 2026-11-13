@@ -6,123 +6,205 @@
 // █ Use of SCAN 3.1 engine from Fabien Letouzey via Hub2's protocol        █
 // █ Scan is available at : github.com/rhalbersma/scan                      █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
+// Le moteur Scan 3.1 (processus « scan.exe hub », protocole Hub2) : démarrage, envoi des commandes, lecture de sa sortie et réponse à une demande
+// de coup. Logique sans Windows Forms. La sortie du moteur arrive sur un thread du pool : les événements sont déclenchés sur ce thread et ne
+// modifient jamais l'état de la partie, c'est à l'interface de repasser sur son thread. Une seule demande de coup est active à la fois : une
+// nouvelle demande abandonne la précédente, et la réponse arrive par ReflechirAsync (jamais d'attente sans fin : délai maximal, arrêt du moteur).
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace BrunoGUI_Dames
 {
-    public delegate void AfficheMoteurDamesScan();
-    public delegate void AfficheDonneesBrutesDamesScan();
+    public delegate void AfficheMoteurDamesScan(string ligne);
+    public delegate void AfficheDonneesBrutesDamesScan(string ligne, bool venantDuMoteur);
+
+    // --- La réponse du moteur à une demande de coup : Coup est la notation Hub2 (« 32-28 », « 28x19x23 »), vide si le moteur n'a aucun coup à jouer ---
+    public sealed record ReponseMoteur(string Coup, string Suggestion);
+
     public class MoteurDamesScan
     {
-        public static event AfficheMoteurDamesScan? AfficheScan;
-        public static event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;
-        public static string DonneesScan { get; set; } = "";
-        public static string DonneesVersScan { get; set; } = "";
-        public static string CoupScan { get; set; } = "";
-        public static string SuggestionScan { get; set; } = "";
-        public static bool ScanVersGui { get; set; }
-        public static bool CoupScanJoue; // Flag indiquant si le coup a été mis à jour
+        public static event AfficheMoteurDamesScan? AfficheScan;                  // Une ligne reçue du moteur (thread du pool)
+        public static event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;  // Une ligne échangée, avec son sens (thread du pool ou de l'interface)
+        public static event Action<string>? MoteurArrete;                         // Le moteur s'est arrêté sans qu'on le lui demande (thread du pool)
+
         private static Process? Proc;
-        private static Process ProcessusMoteur => Proc ?? throw new InvalidOperationException("Le moteur Scan n'est pas démarré.");
+        private static readonly object verrou = new object();
+        private static TaskCompletionSource<ReponseMoteur?>? demande;             // La demande de coup en cours, ou null
+        private static bool arretVoulu;
 
-        public void Start(string fichierMoteurDames)
+        public static bool EstDemarre
         {
-            // Récupère le répertoire contenant le fichier moteur
-            string repertoireMoteur = Path.GetDirectoryName(fichierMoteurDames) ?? string.Empty;
-            Proc = new Process();
-
-            // Paramétrage de Proc.StartInfo
-            Proc.StartInfo.FileName = fichierMoteurDames;   // Chemin du moteur
-            Proc.StartInfo.Arguments = "hub";               // Ajout du paramètre "hub"
-            Proc.StartInfo.WorkingDirectory = repertoireMoteur; // Répertoire de travail
-            Proc.StartInfo.UseShellExecute = false;
-            Proc.StartInfo.RedirectStandardOutput = true;
-            Proc.StartInfo.RedirectStandardInput = true;
-            Proc.StartInfo.CreateNoWindow = true;
-            Proc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-            // Démarrer le processus
-            Proc.Start();
-
-            // Gestionnaire d'événement de sortie de données
-            Proc.OutputDataReceived += ProcOutputDataReceived;
-
-            // Commencer à lire les sorties de données
-            Proc.BeginOutputReadLine();
-
-            // Première interrogation du processus : le moteur SCAN est-il prêt ?
-            StandardInputDataToScan("hub"); // On demande les infos au moteur
-            StandardInputDataToScan("init"); // On demande les infos au moteur
-            StandardInputDataToScan("ping"); // Pour le fun ...
+            get { lock (verrou) { return Proc != null && !Proc.HasExited; } }
         }
 
-        // Evènement de sortie de données du processus SCAN vers l'interface pour jouer le coup du moteur SCAN
-        private void ProcOutputDataReceived(object sender, DataReceivedEventArgs e)
+        // --- Lance « scan.exe hub » dans son dossier. Lève FileNotFoundException si le moteur n'existe pas, et l'exception du système s'il ne peut pas démarrer ---
+        public static void Demarre(string fichierMoteurDames)
         {
-            ScanVersGui = true;
-            if (string.IsNullOrWhiteSpace(e.Data) == false)   // true si la chaine est " ", "\n", null, ""
+            if (!File.Exists(fichierMoteurDames))
+                throw new FileNotFoundException("Le moteur Scan est introuvable : " + fichierMoteurDames, fichierMoteurDames);
+            Process processus = new Process();
+            processus.StartInfo.FileName = fichierMoteurDames;
+            processus.StartInfo.Arguments = "hub";
+            processus.StartInfo.WorkingDirectory = Path.GetDirectoryName(fichierMoteurDames) ?? string.Empty;
+            processus.StartInfo.UseShellExecute = false;
+            processus.StartInfo.RedirectStandardOutput = true;
+            processus.StartInfo.RedirectStandardInput = true;
+            processus.StartInfo.CreateNoWindow = true;
+            processus.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            processus.EnableRaisingEvents = true;
+            processus.OutputDataReceived += ProcOutputDataReceived;     // Avant Start, pour ne perdre aucune ligne
+            processus.Exited += ProcExited;
+            lock (verrou)
             {
-                // extraire les mots de l'instruction
-                DonneesScan = e.Data;
-                AfficheScan?.Invoke();
+                arretVoulu = false;
+                processus.Start();
+                Proc = processus;
+            }
+            processus.BeginOutputReadLine();
+            Envoie("hub");      // On demande les infos au moteur
+            Envoie("init");
+            Envoie("ping");
+        }
 
-                string[] DataTableau = DonneesScan.Split(' ');
-                AfficheDonneesBrutes?.Invoke();
+        // --- Demande un coup pour la position Hub2 en réfléchissant secondes secondes ; null si le moteur ne répond pas (arrêté, délai dépassé, remplacé par une autre demande) ---
+        public static async Task<ReponseMoteur?> ReflechirAsync(string positionHub2, int secondes)
+        {
+            TaskCompletionSource<ReponseMoteur?> cetteDemande = new TaskCompletionSource<ReponseMoteur?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            lock (verrou)
+            {
+                demande?.TrySetResult(null);        // Une nouvelle demande abandonne la précédente
+                demande = cetteDemande;
+            }
+            try
+            {
+                Envoie("pos pos=" + positionHub2);          // On envoie la position au format Hub2
+                Envoie("level move-time=" + secondes);      // x secondes pour le coup
+                Envoie("go think");
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidOperationException)
+            {
+                Journal.Ecrit("Moteur : commande non envoyée : " + ex.Message);
+                lock (verrou) { if (demande == cetteDemande) demande = null; }
+                return null;
+            }
+            Task premiere = await Task.WhenAny(cetteDemande.Task, Task.Delay(TimeSpan.FromSeconds(secondes + 15)));
+            if (premiere != cetteDemande.Task)
+            {   // Le moteur ne répond plus : on arrête la recherche et on rend la main
+                Journal.Ecrit($"Moteur : pas de réponse après {secondes + 15} s, recherche interrompue");
+                lock (verrou) { if (demande == cetteDemande) demande = null; }
+                try { Envoie("stop"); } catch (Exception ex) when (ex is IOException || ex is InvalidOperationException) { }
+                return null;
+            }
+            return await cetteDemande.Task;
+        }
 
-                switch (DataTableau[0])         // Analyse réponse moteur SCAN 
-                {   // identifier le premier mot 
-                    case "\n":
-                    case " ":
-                        break;
-                    case "done": // le moteur SCAN propose le meilleur coup
-                        if (DataTableau[1].Contains("move="))
-                        {   // Récupérer ce qu'il y a après "move="
-                            CoupScan = DataTableau[1].Split(new[] { "move=" }, StringSplitOptions.None)[1];
-                            // Vérifier si DataTableau contient plus de 2 éléments et si "ponder=" est présent
-                            if (DataTableau.Count() > 2 && DataTableau[2].Contains("ponder="))
-                            {   // Récupérer ce qu'il y a après "ponder="
-                                SuggestionScan = DataTableau[2].Split(new[] { "ponder=" }, StringSplitOptions.None)[1];
-                            }
-                            else
-                            {   // Aucun "ponder=" trouvé
-                                SuggestionScan = ""; // ou une autre valeur par défaut
-                            }
-                            CoupScanJoue = true;  // Indique que le coup a été mis à jour
-                            // Afficher le résultat
-                            Console.WriteLine($"CoupScan : {CoupScan} / SuggestionScan : {SuggestionScan}");
-                        }
-                        else
-                        {
-                            BrunoInterfaceGraphiqueDames.FinPartie = true;
-                        }
-                        break;
-                    case "error":
-                        Console.WriteLine($"ERROR MESSAGE RETOURNE PAR SCAN !");
-                        break;
+        // --- Envoi d'une commande de l'interface vers le moteur ---
+        public static void Envoie(string data)
+        {
+            Process processus;
+            lock (verrou)
+                processus = Proc ?? throw new InvalidOperationException("Le moteur Scan n'est pas démarré.");
+            Declenche(() => AfficheDonneesBrutes?.Invoke(data, false));
+            processus.StandardInput.Write(data + Environment.NewLine);
+        }
+
+        // --- Arrête le moteur : « quit », puis arrêt forcé s'il ne s'est pas terminé tout seul ; sans effet s'il n'est pas démarré ---
+        public static void Quitte()
+        {
+            Process? processus;
+            lock (verrou)
+            {
+                processus = Proc;
+                Proc = null;
+                arretVoulu = true;
+                demande?.TrySetResult(null);
+                demande = null;
+            }
+            if (processus == null)
+                return;
+            try
+            {
+                if (!processus.HasExited)
+                {
+                    try { processus.StandardInput.Write("quit" + Environment.NewLine); }
+                    catch (Exception ex) when (ex is IOException || ex is InvalidOperationException) { }
+                    if (!processus.WaitForExit(1500))
+                        processus.Kill(true);       // true : toute l'arborescence
                 }
             }
-            ScanVersGui = false;
+            catch (Exception ex)
+            {
+                Journal.Ecrit("Moteur : erreur à l'arrêt : " + ex.Message);
+                try { processus.Kill(true); } catch (Exception) { }
+            }
+            finally
+            {
+                processus.Dispose();
+            }
         }
 
-        public static void StandardInputDataToScan(string data)
-        {   // Envoi de données de l'interface vers moteur SCAN
-            // Debug.WriteLine($"[App] {Data}");
-            ScanVersGui = false;
-            DonneesVersScan = data;
-            AfficheDonneesBrutes?.Invoke();
-            ProcessusMoteur.StandardInput.Write(data + Environment.NewLine);
+        // Une ligne de sortie du moteur SCAN (thread du pool)
+        private static void ProcOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            string? ligne = e.Data;
+            if (string.IsNullOrWhiteSpace(ligne))
+                return;
+            Declenche(() => AfficheScan?.Invoke(ligne));
+            Declenche(() => AfficheDonneesBrutes?.Invoke(ligne, true));
+            string[] mots = ligne.Split(' ');
+            switch (mots[0])
+            {
+                case "done":        // le moteur SCAN propose le meilleur coup : « done move=28-23 ponder=17-22 », ou « done » seul s'il n'a aucun coup
+                    string coup = "", suggestion = "";
+                    foreach (string mot in mots)
+                    {
+                        if (mot.StartsWith("move=")) coup = mot.Substring("move=".Length);
+                        else if (mot.StartsWith("ponder=")) suggestion = mot.Substring("ponder=".Length);
+                    }
+                    TaskCompletionSource<ReponseMoteur?>? attendante;
+                    lock (verrou)
+                    {
+                        attendante = demande;
+                        demande = null;
+                    }
+                    attendante?.TrySetResult(new ReponseMoteur(coup, suggestion));
+                    break;
+                case "error":
+                    Journal.Ecrit("Moteur : " + ligne);
+                    break;
+            }
         }
-        public static void Quitte()
-        {   // On ferme le moteur SCAN
-            StandardInputDataToScan("quit");
-            ProcessusMoteur.Dispose();
+
+        // Le processus s'est terminé (thread du pool) : si on ne l'a pas demandé, la demande en cours reçoit null et l'interface est prévenue
+        private static void ProcExited(object? sender, EventArgs e)
+        {
+            TaskCompletionSource<ReponseMoteur?>? attendante;
+            bool voulu;
+            lock (verrou)
+            {
+                attendante = demande;
+                demande = null;
+                voulu = arretVoulu;
+            }
+            attendante?.TrySetResult(null);
+            if (!voulu)
+            {
+                Journal.Ecrit("Moteur : le processus scan.exe s'est arrêté de lui-même");
+                Declenche(() => MoteurArrete?.Invoke("Le moteur Scan s'est arrêté."));
+            }
+        }
+
+        // --- Exécute une notification vers l'interface sans que l'exception d'un abonné (fenêtre déjà fermée…) ne fasse tomber le thread du pool ---
+        private static void Declenche(Action notification)
+        {
+            try { notification(); }
+            catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException)
+            {
+                Journal.Ecrit("Moteur : notification de l'interface impossible : " + ex.Message);
+            }
         }
     }
 }
-
-

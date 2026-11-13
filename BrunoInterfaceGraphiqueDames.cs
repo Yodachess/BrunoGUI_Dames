@@ -65,6 +65,7 @@ namespace BrunoGUI_Dames
         private ContenuCase pieceCouleurSource = new ContenuCase();     // Pièce sélectionnée au premier clic (case vide = aucune)
         private string[] donneesMoteurScan = Array.Empty<string>();        // Données en provenance du Moteur SCAN
         private string cheminMoteur = "";
+        private static bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
         private int indexFenCoupActuel = 0; // Indice du coup affiché
         // Définir les indices des dernières rangées en notation Manoury
@@ -87,6 +88,7 @@ namespace BrunoGUI_Dames
             // les évènements dans les classes
             MoteurDamesScan.AfficheScan += AfficheScan;
             MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;
+            MoteurDamesScan.MoteurArrete += MoteurArrete;
             // Liste des pièces du jeu
             ListeBitmapsPiece.Add(TypePiece.PionBlanc, PionBlanc);       // pion blanc
             ListeBitmapsPiece.Add(TypePiece.PionNoir, PionNoir);         // pion noir
@@ -128,10 +130,16 @@ namespace BrunoGUI_Dames
                 ActiveCouleurDamier("Blanc", false);
                 LabelInformationJoueur.Text = "Trait aux Noirs";
             }
-            cheminMoteur = Path.Combine(Directory.GetCurrentDirectory(), "Dames_Scan31_FabienLetouzey", "scan.exe");
-            // Instanciation et démarrage du moteur
-            var moteurDamesScan = new MoteurDamesScan();
-            moteurDamesScan.Start(cheminMoteur);
+            cheminMoteur = Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
+            try
+            {   // Démarrage du moteur
+                MoteurDamesScan.Demarre(cheminMoteur);
+            }
+            catch (Exception ex) when (ex is IOException || ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
+            {   // Sans moteur on peut jouer entre humains : on désactive ce qui en dépend
+                Journal.Ecrit("Moteur : démarrage impossible : " + ex.Message);
+                DesactiveMoteur("Le moteur Scan n'a pas pu démarrer : " + ex.Message);
+            }
             AnalyseCoupObligatoire(CouleurAuTrait);
         }
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
@@ -200,7 +208,7 @@ namespace BrunoGUI_Dames
                                 // --- ReglesDames décide si le coup est légal et quelle rafle est jouée ---
                                 List<Coup> candidats = coupsLegauxPieceSelectionnee?.Where(c => c.Arrivee == CaseDestinationManoury).ToList() ?? new List<Coup>();    // Vide si le calcul a échoué : le coup est refusé
                                 if (candidats.Count > 1)    // Plusieurs rafles de même départ et même arrivée qui ne prennent pas les mêmes pièces : on joue la première
-                                    EcrireJournalRegles($"AMBIGU {RecupereFEN()} : {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
+                                    Journal.Ecrit($"AMBIGU {RecupereFEN()} : {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
                                 Coup? coupJoue = candidats.FirstOrDefault();
                                 if (coupJoue == null)
                                 {   // Le coup n'est pas légal, on remet la pièce sur sa case d'origine
@@ -275,27 +283,32 @@ namespace BrunoGUI_Dames
             ActiveCouleurDamier(CouleurAuTrait, false);
             string couleurEnJeu = positionHub2[0] == 'W' ? "Blancs" : "Noirs";      // On récupère la couleur en jeu
             LabelInformationJoueur.Text = "Trait aux " + couleurEnJeu + ", le moteur réfléchit ...";
-            MoteurDamesScan.CoupScanJoue = false;
-            MoteurDamesScan.StandardInputDataToScan("pos pos=" + positionHub2);     // On envoie la position au format Hub2
-            MoteurDamesScan.StandardInputDataToScan("level move-time=" + tempsReflexion);   // x second pour le coup
-            MoteurDamesScan.StandardInputDataToScan("go think");            // Au moteur de bosser .... :-)
-            while (!MoteurDamesScan.CoupScanJoue)   // On boucle jusqu'à que le coup soit joué
-            {
-                await Task.Delay(100);  // Attendre un peu avant de vérifier à nouveau
-            }
+            ReponseMoteur? reponse = await MoteurDamesScan.ReflechirAsync(positionHub2, tempsReflexion);   // Au moteur de bosser .... :-)
             CouleurToutesCasesManoury(CouleurCasesombre);
-            if (!analyseEnCours)    // On execute les coups si ce n'est pas une analyse
+            if (reponse == null)
+            {   // Le moteur n'a pas répondu (arrêté, trop long ou remplacé par une autre demande) : rien n'est joué, c'est noté dans le journal
+                LabelInformationJoueur.Text = "Le moteur n'a pas répondu";
+            }
+            else if (reponse.Coup.Length == 0)
+            {   // « done » sans coup : le moteur n'a aucun coup à jouer
+                if (!analyseEnCours)
+                {
+                    FinPartie = true;
+                    LabelInformationJoueur.Text = "Le moteur n'a aucun coup à jouer";
+                }
+            }
+            else if (!analyseEnCours)    // On execute les coups si ce n'est pas une analyse
             {
-                LabelCoupJoue.Text = "Coup joué : " + MoteurDamesScan.CoupScan + " --  Suggéré : " + MoteurDamesScan.SuggestionScan;
+                LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion;
                 if (EmetUnSon)
                 {
                     SoundPlayer player = new SoundPlayer(@"C:\Windows\Media\Windows Notify.wav");       // Son pour dire que le coup est joué
                     player.Play();
                 }
-                Coup? coupMoteur = TrouveCoupDuMoteur(positionHub2, MoteurDamesScan.CoupScan);
+                Coup? coupMoteur = TrouveCoupDuMoteur(positionHub2, reponse.Coup);
                 if (coupMoteur == null)
                 {   // Le coup de Scan n'a pas été retrouvé dans les coups légaux (c'est noté dans le journal) : rien n'est joué
-                    LabelInformationJoueur.Text = "Coup du moteur non reconnu : " + MoteurDamesScan.CoupScan;
+                    LabelInformationJoueur.Text = "Coup du moteur non reconnu : " + reponse.Coup;
                 }
                 else
                 {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur
@@ -337,7 +350,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {
-                EcrireJournalRegles($"ERREUR analyse des coups obligatoires : {ex.Message}");
+                Journal.Ecrit($"ERREUR analyse des coups obligatoires : {ex.Message}");
             }
             if (prises.Count == 0)              // S'il n'y a pas de rafles possibles, on réactive toutes les cases
             {
@@ -415,10 +428,6 @@ namespace BrunoGUI_Dames
             Position position = GestionDamier.PositionCourante.Copie();
             position.Trait = CouleurAuTrait == "Blanc" ? Couleur.Blanc : Couleur.Noir;
             return "[FEN \"" + position.VersFen() + "\"]";
-        }        private static void EcrireJournalRegles(string ligne)
-        {   // --- Ajoute une ligne datée à JournalRegles.log, à côté de l'exe  ---
-            try { File.AppendAllText(Path.Combine(Application.StartupPath, "JournalRegles.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {ligne}{Environment.NewLine}"); }
-            catch (IOException) { }     // Le journal est une aide : s'il ne peut pas être écrit, la partie continue
         }
         private List<Coup>? coupsLegauxPieceSelectionnee;   // Coups légaux de la pièce sélectionnée selon ReglesDames ; null si le calcul a échoué
         private void CalculeCoupsLegauxPieceSelectionnee()
@@ -431,7 +440,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex)
             {
                 coupsLegauxPieceSelectionnee = null;
-                EcrireJournalRegles($"ERREUR calcul des coups légaux : {ex.Message}");
+                Journal.Ecrit($"ERREUR calcul des coups légaux : {ex.Message}");
             }
         }
         private static Coup? TrouveCoupDuMoteur(string positionHub2, string coupScan)
@@ -440,12 +449,12 @@ namespace BrunoGUI_Dames
             try
             {
                 Coup? coup = ReglesDames.TrouverCoup(Position.DepuisHub2(positionHub2), coupScan);
-                if (coup == null) EcrireJournalRegles($"MOTEUR coup {coupScan} non retrouvé (illégal ou ambigu) dans {positionHub2} : rien n'est joué");
+                if (coup == null) Journal.Ecrit($"MOTEUR coup {coupScan} non retrouvé (illégal ou ambigu) dans {positionHub2} : rien n'est joué");
                 return coup;
             }
             catch (Exception ex)
             {
-                EcrireJournalRegles($"ERREUR MOTEUR {coupScan} dans {positionHub2} : {ex.Message}");
+                Journal.Ecrit($"ERREUR MOTEUR {coupScan} dans {positionHub2} : {ex.Message}");
                 return null;
             }
         }
@@ -460,7 +469,7 @@ namespace BrunoGUI_Dames
             List<Coup> candidats = ReglesDames.CoupsLegaux(position).Where(c => c.Depart == cases[0] && c.Arrivee == cases[^1] && c.EstPrise == mouvement.Contains('x')).ToList();
             if (candidats.Count > 1)
             {
-                EcrireJournalRegles($"AMBIGU PDN {RecupereFEN()} : {mouvement} peut être {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
+                Journal.Ecrit($"AMBIGU PDN {RecupereFEN()} : {mouvement} peut être {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
                 return candidats[0];
             }
             return null;
@@ -586,15 +595,27 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Procédures d'affichage diverses
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
-        private void AfficheScan()  // Analyse et affiche les informations du moteur SCAN
+        private void AfficheScan(string ligne)  // Analyse et affiche les informations du moteur SCAN (appelée sur le thread du moteur, passe sur celui de l'interface)
         {   // --- Le protocole Hub2 est malheuresement assez peu documenté ...  ---
+            if (IsDisposed || !IsHandleCreated)
+                return;     // La fenêtre se ferme : plus rien à afficher
             if (InvokeRequired)
             {
-                Invoke(new MethodInvoker(AfficheScan));
+                Invoke(new Action<string>(AfficheScan), ligne);
                 return; // Empêche l'exécution du reste de la méthode sur le thread d'origine
             }
-            else
-                donneesMoteurScan = MoteurDamesScan.DonneesScan.Split(' ');     // Découpage des informations du moteur SCAN
+            try
+            {
+                AnalyseLigneMoteur(ligne);
+            }
+            catch (Exception ex)
+            {   // Une ligne du moteur que l'on ne sait pas lire ne doit jamais faire tomber l'application
+                Journal.Ecrit($"Affichage d'une ligne du moteur impossible ({ex.Message}) : {ligne}");
+            }
+        }
+        private void AnalyseLigneMoteur(string ligne)
+        {
+            donneesMoteurScan = ligne.Split(' ');     // Découpage des informations du moteur SCAN
             if (string.IsNullOrWhiteSpace(donneesMoteurScan[0]) == false & donneesMoteurScan.Length > 2)
             {   // true si la chaine est " ", "\n", null, ""
                 switch (donneesMoteurScan[0])   // identifier le premier mot
@@ -609,7 +630,7 @@ namespace BrunoGUI_Dames
                         {   // Expression régulière pour extraire les données
                             string pattern = @"name=(\S+)|version=(\S+)|author=""([^""]+)""|country=(\S+)";     // Extraction des correspondances
                             string? name = null, version = null, author = null, country = null;
-                            foreach (Match match in Regex.Matches(MoteurDamesScan.DonneesScan, pattern))
+                            foreach (Match match in Regex.Matches(ligne, pattern))
                             {
                                 if (match.Groups[1].Success) name = match.Groups[1].Value;
                                 if (match.Groups[2].Success) version = match.Groups[2].Value;
@@ -632,8 +653,8 @@ namespace BrunoGUI_Dames
                                     LabelScore.Text = "Score = " + valeur.ToString("F2", CultureInfo.InvariantCulture);     // Affichage avec le format "XX.YY"
                                     break;
                                 case "pv":          // Affichage de la variation principlale
-                                    int position = MoteurDamesScan.DonneesScan.IndexOf(" pv");
-                                    string variationMoteur = MoteurDamesScan.DonneesScan.Substring(position + 4);   // exemple : pv="14x23x19 50-44 
+                                    int position = ligne.IndexOf(" pv");
+                                    string variationMoteur = ligne.Substring(position + 4);   // exemple : pv="14x23x19 50-44 
                                     variationMoteur = variationMoteur.Trim('"');       // Il arrive qu'il y ait un " en début de chaine ??!
                                     if (analyseEnCours)
                                         {
@@ -646,33 +667,55 @@ namespace BrunoGUI_Dames
                                     break;
                             }
                         break;
-                    case "error":
-                        Console.WriteLine($"ERROR MESSAGE RETOURNE PAR SCAN !");
+                    case "error":   // Déjà noté dans le journal par MoteurDamesScan
                         break;
                 }
             }
         }
-        private void AfficheDonneesBrutes()
-        {
+        private void AfficheDonneesBrutes(string ligne, bool venantDuMoteur)
+        {   // --- Ajoute une ligne échangée avec le moteur à la fenêtre du protocole (appelée sur le thread du moteur ou celui de l'interface) ---
+            if (IsDisposed || !IsHandleCreated)
+                return;     // La fenêtre se ferme : plus rien à afficher
             if (InvokeRequired)
             {
-                Invoke(new MethodInvoker(AfficheDonneesBrutes));
+                Invoke(new Action<string, bool>(AfficheDonneesBrutes), ligne, venantDuMoteur);
                 return;     // Empêche le code suivant de s'exécuter sur le thread secondaire
             }
+            RichTextBox vue = donneesBrutesDames.DonneesBrutesVue;
+            if (venantDuMoteur)
+                vue.AppendText(Environment.NewLine + "[" + "SCAN 3.1" + "]" + ligne);
             else
-            {
-                if (MoteurDamesScan.ScanVersGui)
-                {
-                    donneesBrutesDames.DonneesBrutesVue.AppendText(Environment.NewLine + "[" + "SCAN 3.1" + "]" + MoteurDamesScan.DonneesScan);
-                }
-                else
-                {
-                    donneesBrutesDames.DonneesBrutesVue.AppendText(Environment.NewLine + " [BrunoGUI_Dames]    " + MoteurDamesScan.DonneesVersScan);
-                    donneesBrutesDames.DonneesBrutesVue.ScrollToCaret();   // Pour garder l'affichage dans toute la fenêtre
-                }
-            }
+                vue.AppendText(Environment.NewLine + " [BrunoGUI_Dames]    " + ligne);
+            vue.SelectionStart = vue.TextLength;
+            vue.ScrollToCaret();        // Pour garder la dernière ligne visible, quel que soit le sens de l'échange (avant, seules les lignes de l'interface faisaient défiler)
         }
-        // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+        private void MoteurArrete(string message)
+        {   // --- Le moteur s'est arrêté sans qu'on le lui demande (appelée sur le thread du moteur) ---
+            if (IsDisposed || !IsHandleCreated)
+                return;
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(MoteurArrete), message);
+                return;
+            }
+            DesactiveMoteur(message);
+        }
+        private void DesactiveMoteur(string message)
+        {   // --- Sans moteur : on désactive ce qui en dépend (l'ordinateur ne joue plus, pas d'analyse), le jeu entre humains reste possible ---
+            moteurDisponible = false;
+            PartieEnCours = false;
+            OrdinateurBosse.Checked = false;
+            OrdinateurBosse.Enabled = false;
+            OrdinateurJoue.Enabled = false;
+            AnalysePosition.Enabled = false;
+            LabelAfficheScan.Text = message;
+        }
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {   // --- À la fermeture de la fenêtre, par la croix comme par « Quitter », on arrête le moteur (sinon scan.exe resterait actif) ---
+            base.OnFormClosing(e);
+            if (!e.Cancel)
+                MoteurDamesScan.Quitte();
+        }        // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Routines de Dessin
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 
@@ -994,6 +1037,8 @@ namespace BrunoGUI_Dames
             NouvellePartie.Enabled = OrdinateurJoue.Enabled = BoutonRetourArriere.Enabled = SauvePositionFen.Enabled = !bloque;
             VisualisationPdn.Enabled = boutonMasqueAffiche.Enabled = groupParcoursPartie.Enabled = AnalysePosition.Enabled = !bloque;
             ChargePartiesPdn.Enabled = boutonMasqueAffiche.Enabled = SauvePartiesPdn.Enabled = ChargePositionFen.Enabled = !bloque;
+            if (!moteurDisponible)
+                OrdinateurJoue.Enabled = AnalysePosition.Enabled = false;      // Sans moteur, ces deux boutons restent désactivés
         }
         private void MontreDonneesScan_Click(object sender, EventArgs e)
         {   // --- Affiche ou masque les données de SCAN 3.1 à chaque clic ---
@@ -1476,8 +1521,7 @@ namespace BrunoGUI_Dames
         }
         private void BoutonQuitterApplication_Click(object sender, EventArgs e)
         {   // --- Ferme et quitte l'appliccation proprement ---
-            MoteurDamesScan.Quitte();
-            Close();
+            Close();        // OnFormClosing arrête le moteur
         }
     }
 }
