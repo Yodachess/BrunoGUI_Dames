@@ -130,6 +130,27 @@ public static class Scenario
                 boucle.Count == 1 && boucle[0].Depart == 28 && boucle[0].Arrivee == 28 && boucle[0].Prises.Count == 4,
                 string.Join(" ", boucle.Select(c => c.Hub2())));
 
+        // Règle essentielle : au cours d'une rafle on peut passer deux fois sur une même case vide, mais pas deux fois sur la même pièce ;
+        // les pièces prises ne sont enlevées qu'une fois la pièce prenante posée sur sa case terminale (elles bloquent donc le passage)
+
+        // La dame en 29 prend 40 et se pose en 45 : de là, la diagonale vers 29 passe par 40, pièce déjà prise, qui reste sur le damier
+        // et ne peut être ni sautée une seconde fois ni traversée. Si 40 était retirée tout de suite, la dame traverserait sa case et sa
+        // propre case de départ pour prendre aussi 7 (« 29x45x40x7 ») : ce coup de deux pièces ne doit pas exister.
+        List<Coup> pieceBloquante = ReglesDames.CoupsLegaux(Position.DepuisFen("W:WK29:B3,7,40"));
+        VerifieCoups("Rafle : une pièce déjà prise reste sur le damier, ne peut être sautée deux fois ni traversée", "W:WK29:B3,7,40", "29x45x40 29x1x7");
+        Verifie("Rafle : aucune rafle de la dame en 29 ne prend plus d'une pièce", pieceBloquante.All(c => c.Prises.Count == 1), string.Join(" ", pieceBloquante.Select(c => c.Hub2())));
+
+        // La dame en 7 prend 23, 24, 14 puis 31 : sa dernière diagonale (9 vers 36) repasse par la case vide 18, déjà traversée au premier
+        // trajet (7 vers 29). Passer deux fois sur une case vide est permis, et c'est le seul coup légal.
+        List<Coup> deuxFoisVide = ReglesDames.CoupsLegaux(Position.DepuisFen("W:WK7:B14,23,24,31"));
+        Verifie("Rafle : la dame repasse deux fois sur la même case vide (18) et prend 4 pièces",
+                deuxFoisVide.Count == 1 && deuxFoisVide[0].Hub2() == "7x36x23x24x14x31" && string.Join(">", deuxFoisVide[0].Chemin) == "29>20>9>36" && deuxFoisVide[0].Pdn() == "7x36",
+                string.Join(" ", deuxFoisVide.Select(c => $"{c.Hub2()} via {string.Join(">", c.Chemin)}")));
+        Position apresDeuxFoisVide = ReglesDames.Jouer(Position.DepuisFen("W:WK7:B14,23,24,31"), deuxFoisVide[0]);
+        Verifie("Rafle : les 4 pièces prises disparaissent à la fin, la dame est en 36",
+                apresDeuxFoisVide[36] == Piece.DameBlanche && new[] { 7, 14, 23, 24, 31 }.All(n => apresDeuxFoisVide[n] == Piece.Vide) && apresDeuxFoisVide.Trait == Couleur.Noir,
+                apresDeuxFoisVide.VersFen());
+
         // ═══════════════ Exécution d'un coup ═══════════════
         Console.WriteLine("── Exécution des coups ──");
 
