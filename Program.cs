@@ -25,7 +25,19 @@ namespace BrunoGUI_Dames
             // Police par défaut de .NET Framework (celle de la version 1.04), sur laquelle le Designer est calé (AutoScaleDimensions 6 x 13) :
             // avec la police par défaut de .NET (Segoe UI 9) la fenêtre est plus grande d'environ 16 %
             Application.SetDefaultFont(new System.Drawing.Font("Microsoft Sans Serif", 8.25F));
+            // Une exception qu'aucun code n'a attrapée ne ferme plus l'application sans trace : elle est écrite dans Journal.log et signalée
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (sender, e) => ErreurImprevue(e.Exception);
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Journal.Ecrit("ERREUR fatale non attrapée : " + e.ExceptionObject);
             Application.Run(new BrunoInterfaceGraphiqueDames());
+        }
+
+        // --- Une erreur imprévue dans l'interface : on la note dans le journal et on le dit, l'application continue ---
+        private static void ErreurImprevue(Exception exception)
+        {
+            Journal.Ecrit("ERREUR imprévue : " + exception);
+            MessageBox.Show("Une erreur imprévue s'est produite :\n" + exception.Message + "\n\nElle est notée dans Journal.log, à côté du programme.\nSi l'application se comporte bizarrement, ferme-la et relance-la.",
+                            "Erreur imprévue", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 }

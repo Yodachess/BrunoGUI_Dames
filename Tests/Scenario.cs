@@ -207,6 +207,43 @@ public static class Scenario
         Verifie("Camp au trait sans aucune pièce : partie terminée", ReglesDames.EstTerminee(Position.DepuisFen("W:W:B1")), "W:W:B1");
         Verifie("Camp au trait dont toutes les pièces sont bloquées : partie terminée", ReglesDames.EstTerminee(Position.DepuisFen("W:W6:B1")), "W:W6:B1 (le pion 6 est bloqué par le pion 1)");
 
+        // ═══════════════ Fichiers qui ne sont pas du PDN ═══════════════
+        string dossierEssai = Path.Combine(Path.GetTempPath(), "dames_pdn_essai_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dossierEssai);
+        try
+        {
+            string imageFausse = Path.Combine(dossierEssai, "image.jpeg");
+            File.WriteAllBytes(imageFausse, [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x20, 0x2D, 0x20, 0x00, 0x2D, 0x0D, 0x0A, 0x80, 0x90]);
+            Verifie("Fichier qui n'est pas du PDN (une image) : aucune partie dans la liste des parties, même si la lecture voit un marqueur « - »",
+                    FichierPartiePdn.LireParties(imageFausse).Count == 0, $"{LecturePdn.LireFichier(imageFausse).Count} partie(s) brute(s), {FichierPartiePdn.LireParties(imageFausse).Count} gardée(s)");
+            string imageAvecCrochet = Path.Combine(dossierEssai, "image_avec_crochet.jpeg");
+            File.WriteAllText(imageAvecCrochet, "ÿØÿà [p©KR«Zµè©-\u0001* ] \u0080\u0090 - ", System.Text.Encoding.Latin1);
+            Verifie("Fichier qui n'est pas du PDN dont les octets contiennent un « [ » : la « balise » au nom illisible ne fait pas une partie",
+                    LecturePdn.LireFichier(imageAvecCrochet).Count >= 1 && FichierPartiePdn.LireParties(imageAvecCrochet).Count == 0,
+                    $"{LecturePdn.LireFichier(imageAvecCrochet).Count} partie(s) brute(s), {FichierPartiePdn.LireParties(imageAvecCrochet).Count} gardée(s)");
+            string fichierFen = Path.Combine(dossierEssai, "position.fen");
+            File.WriteAllText(fichierFen, "[FEN \"W:W31-50:B1-20\"]");
+            string? raisonFen = FichierPartiePdn.RaisonFichierNonUtilisable(FichierPartiePdn.LireParties(fichierFen));
+            Verifie("Un fichier de position FEN n'est pas une liste de parties : refusé, avec un message qui renvoie à « Charger position FEN »",
+                    raisonFen != null && raisonFen.Contains("Charger position FEN"), raisonFen ?? "(accepté)");
+            string? raisonImage = FichierPartiePdn.RaisonFichierNonUtilisable(FichierPartiePdn.LireParties(imageFausse));
+            Verifie("Une image n'est pas une liste de parties : refusée, avec un message sur le format PDN", raisonImage != null && raisonImage.Contains("PDN"), raisonImage ?? "(acceptée)");
+            string pdnReel = Path.Combine(dossierEssai, "une.pdn");
+            File.WriteAllText(pdnReel, "[White \"A\"]\r\n[Black \"B\"]\r\n\r\n1. 32-28 17-22 *\r\n\r\n[Empty \"\"]\r\n");
+            Verifie("Un vrai PDN : ses parties sont gardées, même celle qui n'a qu'une balise sans coup", FichierPartiePdn.LireParties(pdnReel).Count == 2, $"{FichierPartiePdn.LireParties(pdnReel).Count} parties");
+            Verifie("Un vrai PDN est utilisable comme liste de parties", FichierPartiePdn.RaisonFichierNonUtilisable(FichierPartiePdn.LireParties(pdnReel)) == null, "");
+        }
+        finally
+        {
+            Directory.Delete(dossierEssai, true);
+        }
+
+        string ligneDeJournal = Journal.LigneSure("PNG \u0089\u0000\u0001 � fin\r\nligne 2\tavec tabulation\nligne 3");
+        Verifie("Journal : les octets de contrôle et le caractère de remplacement deviennent « ? », les lignes suivantes sont décalées",
+                !ligneDeJournal.Any(c => c == (char)0 || c == (char)1 || c == (char)0xFFFD || c == (char)0x89) && ligneDeJournal.StartsWith("PNG ?") && ligneDeJournal.Contains("    ligne 2\tavec tabulation") && ligneDeJournal.Contains("    ligne 3"),
+                ligneDeJournal.Replace(Environment.NewLine, "⏎"));
+        Verifie("Journal : un texte de plusieurs milliers de caractères est coupé", Journal.LigneSure(new string('a', 10000)).Length < 3200, "");
+
         // ═══════════════ Parties nulles ═══════════════
         Console.WriteLine("── Parties nulles ──");
 

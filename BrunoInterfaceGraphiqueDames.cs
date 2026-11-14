@@ -201,7 +201,7 @@ namespace BrunoGUI_Dames
                         }
                         else
                         {
-                            Console.WriteLine($"Passage sur une PictureBox = null : {CaseDamier[indexCase100].Image}");
+                            // La case cliquée ne porte aucune image : il n'y a rien à sélectionner
                         }
                     }
                     else
@@ -210,7 +210,7 @@ namespace BrunoGUI_Dames
                         Cursor = Cursors.Default;       // On revient au curseur "normal"
                         try
                         {   // Le try-catch récupère l'exception qui se produit lorsque que l'on clique sur une case inactive
-                            CaseDestinationManoury = GestionDamier.ObtenirCaseManoury(indexCase100);
+                            CaseDestinationManoury = GestionDamier.PictureBoxVersManoury.TryGetValue(indexCase100, out int caseCliquee) ? caseCliquee : 0;     // 0 : case claire, non jouable (la pièce revient)
                             // Il faut que la case destination soit une case Manoury, soit valide et != de la source
                             if (GestionDamier.EstCaseManouryValide(CaseDestinationManoury) && EstCaseValide(CaseDestinationManoury) && CaseDestinationManoury != CaseSourceManoury)
                             {
@@ -265,8 +265,8 @@ namespace BrunoGUI_Dames
                             }
                         }
                         catch (ArgumentOutOfRangeException ex)
-                        {   // Une case non-Manoury a été cliquée comme destination, on redessine la pièce sur sa case d'origine
-                            Console.WriteLine($"Erreur : {ex.Message}");
+                        {   // Une case hors du damier a été trouvée dans un calcul (anomalie : un clic sur une case claire est déjà traité plus haut), on redessine la pièce sur sa case d'origine
+                            Journal.Ecrit($"ERREUR au clic de destination : {ex}");
                             DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
                             CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCasesombre;
                         }
@@ -276,20 +276,17 @@ namespace BrunoGUI_Dames
                             coupsLegauxPieceSelectionnee = null;
                             clickCaseSource = true;
                             InitialiserEtatMouvement();
-                            // Console.WriteLine($"Couleur au trait = {CouleurAuTrait}");
                         }
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Erreur : sender n'est pas une PictureBox.");
+                    Journal.Ecrit("ERREUR : CaseMouseDown appelé par un objet qui n'est pas une PictureBox");
                 }
-                // GestionDamier.AfficherDamierContenu();      // DEBUG
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Erreur dans CaseMoveDown : " + ex.Message);
-                Console.WriteLine($"StackTrace : {ex.StackTrace}");
+                Journal.Ecrit($"ERREUR au clic sur une case : {ex}");
             }
         }
 
@@ -426,7 +423,6 @@ namespace BrunoGUI_Dames
         public static void MiseenplaceFen(string fenAutiliser, bool ajouteListeCoups)     // Préparation du logiciel avec la position FEN
         {   // --- La méthode met la position FEN sur le damier (DamierContenu, PositionCourante et images) et l'ajoute aux listes de coups si ajouteListeCoups ---
             GestionDamier.ViderDamier();
-            Console.WriteLine("Mise en place de la position FEN : " + fenAutiliser);
             foreach (var pict in CaseDamier)
             {
                 pict.Image = null;          // Efface l'image de chaque PictureBox
@@ -461,7 +457,7 @@ namespace BrunoGUI_Dames
             }
             else
             {
-                Console.WriteLine("Aucun texte trouvé entre les guillemets.");
+                Journal.Ecrit($"ERREUR MiseenplaceFen : aucun texte entre guillemets dans « {fenAutiliser} », le damier reste vide");
             }
         }
         public static string RecupereFEN()
@@ -543,7 +539,6 @@ namespace BrunoGUI_Dames
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
             if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
-            Console.WriteLine($"Coup joué : {coupEffectue}");
             ActiveDamier(true);         // Réactiver les interactions après le déplacement
             ActiveCouleurDamier(couleurPiece.ToString(), false);
             VerifierGain();
@@ -612,7 +607,6 @@ namespace BrunoGUI_Dames
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
             if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
-            Console.WriteLine($"Coup joué : {coupEffectue}");
             ActiveDamier(true); // Réactiver les interactions après l'animation
             ActiveCouleurDamier(couleurPiece.ToString(), false);
             VerifierGain();
@@ -842,8 +836,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Erreur dans DessinePiece : " + ex.Message);
-                Console.WriteLine($"StackTrace : {ex.StackTrace}");
+                Journal.Ecrit($"ERREUR DessinePiece (case {indexPictureBox}) : {ex}");
             }
         }
         public static void EffacePiece(int indexPictureBox, bool damier)
@@ -1235,7 +1228,6 @@ namespace BrunoGUI_Dames
                 {   // Si on est au début, afficher un message spécial ou la position initiale.
                     LabelCoupJoue.Text = $"Position initiale : {ListeCoupsPdn[0]}";
                 }
-                Console.WriteLine("Précédent : indexFenCoupActuel : " + indexFenCoupActuel);
             }
             else
             {
@@ -1244,9 +1236,6 @@ namespace BrunoGUI_Dames
         }
         private void BoutonSuivant_Click(object sender, EventArgs e)
         {   // --- Bouton pour avancer d'un coup (parcours de partie) ---
-            Console.WriteLine("Suivant : indexFenCoupActuel : " + indexFenCoupActuel);
-            Console.WriteLine("ListeCoupsFen.Count : " + ListeCoupsFen.Count);
-            Console.WriteLine("ListeCoupsPdn.Count : " + ListeCoupsPdn.Count);
             if (indexFenCoupActuel <= ListeCoupsFen.Count - 1 && indexFenCoupActuel <= ListeCoupsPdn.Count) // Vérifie la synchronisation
             {
                 MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
@@ -1267,7 +1256,6 @@ namespace BrunoGUI_Dames
                 indexFenCoupActuel = 1; // Premier coup joué (position initiale est à l'index 0)
                 MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel - 1], false);
                 LabelCoupJoue.Text = "Début de partie";
-                Console.WriteLine("Début : indexFenCoupActuel : " + indexFenCoupActuel);
             }
         }
         private void BoutoonFin_Click(object sender, EventArgs e)
@@ -1277,7 +1265,6 @@ namespace BrunoGUI_Dames
                 indexFenCoupActuel = ListeCoupsFen.Count - 1; // Dernière position
                 MiseenplaceFen(ListeCoupsFen[indexFenCoupActuel], false);
                 LabelCoupJoue.Text = $"Coup {indexFenCoupActuel} : {ListeCoupsPdn[indexFenCoupActuel - 1]}";
-                Console.WriteLine("Fin : indexFenCoupActuel : " + indexFenCoupActuel);
             }
         }
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
@@ -1293,7 +1280,6 @@ namespace BrunoGUI_Dames
             LabelInformationJoueur.Text = "Analyse de la position en cours ... (" + TempsReflexion + ")";
             BloqueBoutons(true);
             analyseEnCours = true;
-            Console.WriteLine("Analyse de la position à l'index : " + indexFenCoupActuel);
             await LancementReflexionMoteur(ListeCoupsHub2[indexFenCoupActuel], TempsReflexion);
             LabelInformationJoueur.Text = "Analyse terminée !";
             BloqueBoutons(false);
@@ -1302,17 +1288,21 @@ namespace BrunoGUI_Dames
 
         private void ChargePartiesPdn_Click(object sender, EventArgs e)
         {   // --- Affiche la boîte de dialogue et traite le fichier PDN sélectionné  ---
-            ListePartiesPdn.Clear(); // On vide la liste des parties PDN
             if (ChargerPartiesPdn.ShowDialog() == DialogResult.OK)
             {
                 string cheminFichier = ChargerPartiesPdn.FileName;
                 try
                 {   // Vérifie et obtient le chemin complet
                     string fullPath = Path.GetFullPath(cheminFichier);
-                    Console.WriteLine("Chemin complet du fichier : " + fullPath);
-
-                    // Lire le contenu du fichier et l'afficher dans la console
-                    string contenuFichier = File.ReadAllText(fullPath);
+                    List<PartieDamesPdn> partiesLues = FichierPartiePdn.LireParties(fullPath);       // Lit toutes les parties du fichier PDN
+                    string? raison = FichierPartiePdn.RaisonFichierNonUtilisable(partiesLues);
+                    if (raison != null)
+                    {   // Pas de partie avec des coups (image, position FEN…) : on le dit et on ne touche à rien
+                        Journal.Ecrit($"Fichier inutilisable comme liste de parties PDN ({cheminFichier}) : {raison.Replace("\n", " ")}");
+                        MessageBox.Show($"{Path.GetFileName(cheminFichier)}\n\n{raison}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+                    ListePartiesPdn.Clear(); // On vide la liste des parties PDN
                     NettoyageRapide();
                     if (fichierPartiePdn == null || fichierPartiePdn.IsDisposed)
                     {   // Traitement pour prendre en compte la fermeture par croix rouge en haut à droite ...
@@ -1322,8 +1312,7 @@ namespace BrunoGUI_Dames
                             fichierPartiePdn = null;
                         };
                     }
-                    Console.WriteLine("Contenu du fichier PDN : \n" + contenuFichier);
-                    ListePartiesPdn.AddRange(fichierPartiePdn.LireParties(fullPath));     // Lit toutes les parties du fichier PDN
+                    ListePartiesPdn.AddRange(partiesLues);
                     fichierPartiePdn.NombrePartiesFichier.Text = ListePartiesPdn.Count.ToString()
                         + " partie(s) dans le fichier  " + cheminFichier.Substring(cheminFichier.LastIndexOf('\\') + 1); ;
                     fichierPartiePdn.AfficherListeParties(ListePartiesPdn); 
@@ -1332,7 +1321,8 @@ namespace BrunoGUI_Dames
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Chargement Pdn : Erreur lors de la lecture du fichier : " + ex.Message);
+                    Journal.Ecrit($"ERREUR chargement des parties PDN ({cheminFichier}) : {ex}");
+                    MessageBox.Show($"Le fichier PDN n'a pas pu être lu :\n{ex.Message}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
         }
@@ -1362,7 +1352,6 @@ namespace BrunoGUI_Dames
             NettoyageRapide();
             PartieCourante.CoupsPartiePDN = "";
             Partie.ListeCoupsPdn.Clear();
-            Console.WriteLine("ChargerPartie :  " + partie);
             nomsDepuisPartie = true;        // Ces noms sont ceux de la partie chargée : ils ne deviennent pas des préférences
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
             PartieCourante.Event = partie.Event;
@@ -1375,7 +1364,6 @@ namespace BrunoGUI_Dames
             PartieCourante.Result = partie.Result;
             PartieCourante.CoupsPartiePDN = partie.CoupsPartiePDN;
             PartieCourante.FENDebut = partie.FENDebut;
-            Console.WriteLine($"Liste des coups : {PartieCourante.CoupsPartiePDN}");
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
             ExisteFENDebut = !string.IsNullOrWhiteSpace(partie.FENDebut);     // Propre à CETTE partie (avant, le drapeau gardait la valeur de la dernière partie lue du fichier)
@@ -1431,7 +1419,6 @@ namespace BrunoGUI_Dames
                 await Task.Delay(DureeAnimation);
                 foreach (Coup coupPdn in coupsDeLaPartie)
                 {
-                    Console.WriteLine("Mouvement = " + coupPdn.Pdn());
                     CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
                     int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupPdn.Depart);
                     ContenuCase pieceSource = GestionDamier.ContenuCaseCaseManoury(coupPdn.Depart);
@@ -1490,30 +1477,35 @@ namespace BrunoGUI_Dames
         }
         private void PositionFen_Click(object sender, EventArgs e)
         {   // --- Charge une position au format FEN à partir d'un fichier  ---
+            if (ChargerFichierFen.ShowDialog() != DialogResult.OK)
+                return;         // Rien n'a été touché : la partie en cours reste telle quelle
+            string contenuFichier;
+            try
+            {   // Le fichier est lu et la position vérifiée avant de toucher à la partie
+                contenuFichier = File.ReadAllText(ChargerFichierFen.FileName).Trim();
+                Position.DepuisFen(contenuFichier);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is FormatException)
+            {
+                // Le message d'une FEN invalide recopie le contenu du fichier : le journal n'en garde que le début
+                string resume = ex is FormatException ? "contenu qui n'est pas une position FEN (" + new FileInfo(ChargerFichierFen.FileName).Length + " octets)" : ex.Message;
+                Journal.Ecrit($"ERREUR position FEN non chargée ({ChargerFichierFen.FileName}) : {resume}");
+                string pourLeJoueur = ex is FormatException ? "Ce fichier ne contient pas de position FEN valide." : ex.Message;
+                MessageBox.Show($"La position n'a pas pu être chargée :\n{Path.GetFileName(ChargerFichierFen.FileName)}\n\n{pourLeJoueur}", "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (!contenuFichier.Contains('"'))
+                contenuFichier = "[FEN \"" + contenuFichier + "\"]";        // Un FEN sans l'enrobage [FEN "..."] est accepté
             ListeCoupsFen.Clear();
             ListeCoupsPdn.Clear();
             ListeCoupsHub2.Clear();
             indexFenCoupActuel = 0;     // On repart du début
             NettoyageRapide();
             PartieCourante.White =PartieCourante.Black = PartieCourante.Result = PartieCourante.Round = PartieCourante.Site = PartieCourante.Event = "?";
-            if (ChargerFichierFen.ShowDialog() == DialogResult.OK)
-            {
-                string cheminFichier = ChargerFichierFen.FileName;
-                try
-                {
-                    // Lire le contenu du fichier et l'afficher dans la console
-                    string contenuFichier = File.ReadAllText(cheminFichier);
-                    MiseenplaceFen(contenuFichier, true);   // Met en place la position
-                    AfficheListesPieces();
-                    AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Erreur lors de la lecture du fichier : " + ex.Message);
-                }
-            }
-        }
-        private void SauvePositionFen_Click(object sender, EventArgs e)
+            MiseenplaceFen(contenuFichier, true);   // Met en place la position
+            AfficheListesPieces();
+            AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
+        }        private void SauvePositionFen_Click(object sender, EventArgs e)
         {   // --- Sauvegarde la position au format FEN dans un fichier texte ---
             if (SauverFichierFen.ShowDialog() == DialogResult.OK)
             {
@@ -1526,6 +1518,7 @@ namespace BrunoGUI_Dames
                 }
                 catch (Exception ex)
                 {
+                    Journal.Ecrit($"ERREUR sauvegarde de la position FEN ({SauverFichierFen.FileName}) : {ex.Message}");
                     MessageBox.Show("Erreur lors de la sauvegarde : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -1546,7 +1539,6 @@ namespace BrunoGUI_Dames
         {   // --- Gestion du trackBar pour le temps de réflexion de l'ordinateur ---
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";
             TempsReflexion = trackBarTempsReflexion.Value;
-            Console.WriteLine($"Temps de réflexion = {TempsReflexion} secondes");
         }
         private void OrdinateurBosse_CheckedChanged(object sender, EventArgs e)
         {   // L'ordinateur joue si la case est cochée (avant, la valeur était basculée, et pouvait se désynchroniser de la case)

@@ -130,7 +130,7 @@ namespace BrunoGUI_Dames
                 if (!processus.HasExited)
                 {
                     try { processus.StandardInput.Write("quit" + Environment.NewLine); }
-                    catch (Exception ex) when (ex is IOException || ex is InvalidOperationException) { }
+                    catch (Exception ex) when (ex is IOException || ex is InvalidOperationException) { }       // Le moteur est déjà arrêté : le Kill ci-dessous ne sera pas nécessaire
                     if (!processus.WaitForExit(1500))
                         processus.Kill(true);       // true : toute l'arborescence
                 }
@@ -138,7 +138,8 @@ namespace BrunoGUI_Dames
             catch (Exception ex)
             {
                 Journal.Ecrit("Moteur : erreur à l'arrêt : " + ex.Message);
-                try { processus.Kill(true); } catch (Exception) { }
+                try { processus.Kill(true); }
+                catch (Exception exArret) { Journal.Ecrit("Moteur : arrêt forcé impossible : " + exArret.Message); }
             }
             finally
             {
