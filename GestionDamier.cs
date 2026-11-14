@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -79,11 +79,9 @@ namespace BrunoGUI_Dames
         // Dictionnaire inverse : Indice PictureBox (0-99) -> Case Manoury (1-50)
         public static Dictionary<int, int> PictureBoxVersManoury = new Dictionary<int, int>();
 
-        public static ContenuCase[,] DamierContenu = new ContenuCase[10, 10]; // Tableau de [10*10] décrivant les contenu de chaque avec [Type de pièce, Couleur de pièce]
-
-        // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier). Elle est tenue à jour avec DamierContenu
-        // à la mise en place d'une position (MiseenplaceFen, InitialiserDamier, ViderDamier) et une fois par coup, à la fin du coup (AppliqueCoupALaPosition,
-        // par ReglesDames.Jouer) ; DessinePiece et EffacePiece ne touchent qu'à DamierContenu et aux images. Le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
+        // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier) : c'est la seule description du contenu du damier.
+        // Elle change à la mise en place d'une position (MiseenplaceFen, InitialiserDamier, ViderDamier) et une fois par coup, à la fin du coup
+        // (AppliqueCoupALaPosition, par ReglesDames.Jouer) ; DessinePiece et EffacePiece ne touchent qu'aux images. Le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
         public static Position PositionCourante = new Position();
 
         // --- Conversions entre les types de pièces de l'affichage et ceux de Position ---
@@ -123,52 +121,11 @@ namespace BrunoGUI_Dames
         }
 
         public static void InitialiserDamier()
-        {   // --- Remplit le damier avec des pions, et met à jour le tableau DamierContenu, ainsi que PositionCourante ---
-            PositionCourante = new Position();
-            for (int ligne = 9; ligne >= 0; ligne--)
-            {
-                for (int colonne = 0; colonne < 10; colonne++)
-                {
-                    if ((ligne % 2 == 0 && colonne % 2 != 0) || (ligne % 2 != 0 && colonne % 2 == 0))
-                    {   // Ajouter des pions blancs ou noirs selon la logique de placement
-                        if (ligne < 4)
-                        {   // Pions noirs
-                            DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.PionNoir, CouleurPiece.Noir);
-                            PositionCourante[PictureBoxVersManoury[((ligne * 10) + colonne)]] = Piece.PionNoir;
-                        }
-                        else if (ligne > 5)
-                        {   // Pions blancs
-                            DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.PionBlanc, CouleurPiece.Blanc);
-                            PositionCourante[PictureBoxVersManoury[((ligne * 10) + colonne)]] = Piece.PionBlanc;
-                        }
-                        else
-                        {   // Milieu du damier = cases vides
-                            DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.Vide, CouleurPiece.Vide);
-                        }
-                    }
-                    else
-                    {   // Les cases inactives, généralement les cases sombres non jouables
-                        DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.Inactive, CouleurPiece.Inactive);
-                    }
-                }
-            }
+        {   // --- Met la position initiale dans PositionCourante (sans rien afficher) ---
+            PositionCourante = Position.Initiale();
         }
         public static void ViderDamier()
-        {   // Remplit le damier avec des cases vides, et met à jour le tableau DamierContenu
-            for (int ligne = 9; ligne >= 0; ligne--)
-            {
-                for (int colonne = 0; colonne < 10; colonne++)
-                {
-                    if ((ligne % 2 == 0 && colonne % 2 != 0) || (ligne % 2 != 0 && colonne % 2 == 0))
-                    {   // Vider les cases actives
-                        DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.Vide, CouleurPiece.Vide);
-                    }
-                    else
-                    {   // Les cases inactives, généralement les cases sombres non jouables
-                        DamierContenu[ligne, colonne] = new ContenuCase(TypePiece.Inactive, CouleurPiece.Inactive);
-                    }
-                }
-            }
+        {   // --- Vide la position (sans rien afficher) ---
             PositionCourante = new Position();
         }
 
@@ -198,9 +155,15 @@ namespace BrunoGUI_Dames
             }
         }
         public static ContenuCase ContenuCaseCaseManoury(int numeroCaseManoury)
-        {   // --- Retourne le ContenuCase présente sur la case Manoury ---
-            (int ligne, int colonne) = IndiceVersCoordonnees(ObtenirIndicePictureBox(numeroCaseManoury));
-            return (GestionDamier.DamierContenu[ligne, colonne]);
+        {   // --- Retourne le contenu (type et couleur de la pièce) de la case Manoury, d'après PositionCourante ---
+            Piece piece = PositionCourante[numeroCaseManoury];
+            return new ContenuCase(TypeDe(piece), CouleurDe(piece));
+        }
+        public static ContenuCase ContenuCaseIndice(int indicePictureBox)
+        {   // --- Retourne le contenu de la PictureBox : celui de sa case Manoury, ou une case inactive si la case ne sert pas au jeu (case claire) ---
+            return PictureBoxVersManoury.TryGetValue(indicePictureBox, out int numeroCase)
+                ? ContenuCaseCaseManoury(numeroCase)
+                : new ContenuCase(TypePiece.Inactive, CouleurPiece.Inactive);
         }
         public static (int ligne, int colonne) IndiceVersCoordonnees(int indiceBox)
         {   // --- Retourne la ligne et la colonne de la case indiceBox ---
