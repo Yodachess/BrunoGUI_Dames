@@ -34,6 +34,7 @@ Un seul projet WinForms (`BrunoGUI_Dames.csproj`, `WinExe`), environ 3 000 ligne
 | `LecturePdn.cs` | **Logique pure** : lecture de parties PDN (`LireFichier` : UTF-8, sinon ISO-8859-1 ; `LireTexte`). Voir le paragraphe PDN ci-dessous. |
 | `Tests\` | Projet de tests : `Scenario.cs` (les vérifications), `Program.cs` (console), `VerificationsTests.cs` (xUnit). Les fichiers de `Dames_PartiesPdn_FEN` sont copiés dans `Tests\bin\...\Parties` et tous lus et rejoués. |
 | `MoteurDamesScan.cs` | Pilote du moteur (sans Windows Forms, testé avec le vrai Scan par `dotnet run --project Tests -- --complet`) : `Demarre`, `ReflechirAsync` (une seule demande active, délai maximal, réponse `ReponseMoteur`), `Envoie`, `Quitte`, événements `AfficheScan`, `AfficheDonneesBrutes` (une ligne et son sens en paramètre) et `MoteurArrete`. |
+| `Preferences.cs` | **Logique pure** : les préférences personnelles (temps de réflexion, noms des joueurs, son, « Ordinateur » qui joue, durée d'animation, sens du damier, huit couleurs du damier `CouleurCaseSombre`… écrites `#RRGGBB`) dans `BrunoGUI_Dames.preferences.ini` à côté de l'exe, au format `Cle=Valeur` : `Lire`, `DepuisTexte`, `VersTexte`, `Ecrire` (une valeur absente, refusée ou une ligne illisible garde la valeur par défaut et est notée dans `Avertissements`, jamais d'exception). Le formulaire lit les couleurs et la durée d'animation dans `ChargePreferences` (avant `CreeDamier`), applique le reste dans `AppliquePreferences` et le sens du damier en appelant `BoutonTournerDamier_Click` après la mise en place de la position (au chargement) et les écrit dans `EnregistrePreferences` (`OnFormClosing`) ; les noms d'une partie PDN chargée ne deviennent pas des préférences (`nomsDepuisPartie`) ; sans moteur, le choix « Ordinateur » précédent est conservé. |
 | `Journal.cs` | Journal des anomalies : `Journal.Ecrit(ligne)` ajoute une ligne datée à `Journal.log` à côté de l'exe (jamais d'exception). |
 | `FichierPartiePdn.cs` | Fenêtre « liste des parties » et classe `PartieDamesPdn` (le format de ligne de cette fenêtre) ; `LireParties(fichier)` convertit les parties de `LecturePdn`. |
 | `AffichePdn.cs` | Fenêtre d'affichage des coups (PDN, FEN, Hub2) et enregistrement PDN (`GenerationPdn`). |
@@ -68,7 +69,7 @@ Fichiers d'exemple (tous lus, 773 parties sur 774 rejouées, 80 304 coups) : qua
 6. (Corrigé le 2026-11-13 : chemin du moteur par `Application.StartupPath`, abonnement avant `Start`, `Quitte()` à la fermeture de la fenêtre, plus de `Process` ni de `CoupScanJoue` partagés par le formulaire, la ligne `error` est écrite dans le journal.)
 7. (Corrigé le 2026-11-13 : `GenerationListesCoups` ne lève plus d'exception pour une partie non rejouable, le rejeu est validé avant l'animation, tout le reste est dans un `try` / `catch` / `finally` qui rend l'interface et écrit dans `Journal.log` ; `ChargerPartieDepuisPdn` reste le seul `async void`, à la frontière de l'interface. L'ancien défaut de l'analyseur, qui supprimait `?`, `!` et `..` de toutes les lignes balises et ne trouvait aucune partie dans les fichiers Montpellier, avait été corrigé plus tôt par `LecturePdn`.)
 8. (En partie corrigé le 2026-11-13 : `Journal.Ecrit` écrit dans `Journal.log` les anomalies du moteur et des règles ; il reste des `Console.WriteLine` et des `catch` qui n'y écrivent pas, par exemple dans `DessinePiece` et le chargement des fichiers.)
-9. Aucune préférence enregistrée (couleurs, temps de réflexion, noms, son) ; le son est lu depuis `C:\Windows\Media\Windows Notify.wav` en dur.
+9. (Corrigé le 2026-11-14, à essayer : `Preferences.cs` ; le son est cherché dans le dossier Windows lu dans le système, avec un son système à défaut ; les gestionnaires de `OrdinateurBosse` et `SonEmis` ne basculent plus une valeur mais la lisent dans la case, ce qui corrige aussi « Ordinateur » désactivé à tort quand le moteur manque. Le 2026-11-14 : enregistrés aussi la durée d'animation, le sens du damier et les couleurs du damier (pas de sélecteur dans l'interface : on les change en éditant le `.ini`).)
 
 ## Commandes
 
@@ -113,7 +114,7 @@ dotnet test Tests
 - Le thread du moteur ne modifie jamais l'état de la partie : passage au thread de l'interface par un `Invoke` protégé ; chaque demande au moteur est numérotée et toute action qui change la partie abandonne la réflexion en cours.
 - Journal des erreurs à côté de l'exe ; tout `catch` qui avale une erreur l'y écrit.
 - Chemins cherchés à côté de l'exécutable (`Application.StartupPath`), jamais relatifs au dossier courant.
-- Préférences : un `.ini` livré, jamais écrit, et un `.preferences.ini` personnel écrit à la fermeture.
+- Préférences : un `.ini` livré, jamais écrit, et un `.preferences.ini` personnel écrit à la fermeture (pour l'instant, les valeurs par défaut sont dans le code et seul `BrunoGUI_Dames.preferences.ini` existe).
 
 **Publication** (quand elle existera)
 - La balise `<Version>` du `.csproj` est le numéro de version ; une ligne d'historique dans « À propos » ; tag `vX.YY` seulement sur demande.

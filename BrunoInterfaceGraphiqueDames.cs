@@ -55,6 +55,7 @@ namespace BrunoGUI_Dames
         public static Color CouleurCasePivot = Color.DarkKhaki;
         public static Color CouleurCasePrise = Color.DarkOliveGreen;                        
         public static Color CouleurCaseArrivee = Color.OliveDrab;
+        public static Color CouleurCaseEtape = Color.Orange;        // Cases d'arrivée intermédiaires d'une rafle
         public static string CouleurAuTrait = "";
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn PartieCourante = new FichierPartiePdn.PartieDamesPdn();
@@ -65,6 +66,10 @@ namespace BrunoGUI_Dames
         private ContenuCase pieceCouleurSource = new ContenuCase();     // Pièce sélectionnée au premier clic (case vide = aucune)
         private string[] donneesMoteurScan = Array.Empty<string>();        // Données en provenance du Moteur SCAN
         private string cheminMoteur = "";
+        private Preferences preferencesChargees = new Preferences();     // Celles lues au démarrage (gardées si le moteur est absent)
+        private string nomBlancPrefere = "", nomNoirPrefere = "";        // Les noms tapés par le joueur (pas ceux d'une partie PDN chargée)
+        private bool nomsDepuisPartie;                                   // Vrai pendant que les noms d'une partie PDN chargée sont mis dans les zones de texte
+        private static string FichierPreferences => Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
         private static bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
         private int indexFenCoupActuel = 0; // Indice du coup affiché
@@ -106,6 +111,7 @@ namespace BrunoGUI_Dames
             boutonMasqueAffiche.Enabled = false;
             AfficheCaseLogique = clickCaseSource = true;
             DureeAnimation = 900;
+            ChargePreferences();                // Les couleurs et la durée d'animation avant la création du damier ; le reste des préférences plus bas (AppliquePreferences)
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";            // Affichage 
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
 
@@ -118,8 +124,11 @@ namespace BrunoGUI_Dames
             ListeCoupsHub2.Clear();
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;
             BoxNomJoueurNoir.Text = NomJoueurNoir;
+            AppliquePreferences();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);          // Position initiale
             AfficheListesPieces();
+            if (preferencesChargees.VueCoteNoir)
+                BoutonTournerDamier_Click(this, EventArgs.Empty);       // Le damier est vu du côté des noirs, comme à la dernière fermeture
             if (CouleurAuTrait == "Blanc")
             {
                 ActiveCouleurDamier("Noir", false);
@@ -307,8 +316,7 @@ namespace BrunoGUI_Dames
                 LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion;
                 if (EmetUnSon)
                 {
-                    SoundPlayer player = new SoundPlayer(@"C:\Windows\Media\Windows Notify.wav");       // Son pour dire que le coup est joué
-                    player.Play();
+                    JoueSonCoupJoue();       // Son pour dire que le coup est joué
                 }
                 Coup? coupMoteur = TrouveCoupDuMoteur(positionHub2, reponse.Coup);
                 if (coupMoteur == null)
@@ -707,11 +715,82 @@ namespace BrunoGUI_Dames
             AnalysePosition.Enabled = false;
             LabelAfficheScan.Text = message;
         }
+        private static int VersRgb(Color couleur) => couleur.ToArgb() & 0xFFFFFF;
+        private static Color DepuisRgb(int rgb) => Color.FromArgb(255, (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+        private void ChargePreferences()
+        {   // --- Lit BrunoGUI_Dames.preferences.ini (les avertissements vont au journal) et applique les couleurs du damier et la durée d'animation ---
+            preferencesChargees = Preferences.Lire(FichierPreferences);
+            foreach (string avertissement in preferencesChargees.Avertissements)
+                Journal.Ecrit("Préférences : " + avertissement);
+            DureeAnimation = preferencesChargees.DureeAnimation;
+            Color Choisie(string nom, Color parDefaut) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : parDefaut;
+            CouleurCasesombre = Choisie("CaseSombre", CouleurCasesombre);
+            CouleurCaseclaire = Choisie("CaseClaire", CouleurCaseclaire);
+            CouleurCaseDepart = Choisie("CaseDepart", CouleurCaseDepart);
+            CouleurTrajetSuivi = Choisie("TrajetSuivi", CouleurTrajetSuivi);
+            CouleurCasePivot = Choisie("CasePivot", CouleurCasePivot);
+            CouleurCasePrise = Choisie("CasePrise", CouleurCasePrise);
+            CouleurCaseArrivee = Choisie("CaseArrivee", CouleurCaseArrivee);
+            CouleurCaseEtape = Choisie("CaseEtape", CouleurCaseEtape);
+        }
+        private void AppliquePreferences()
+        {   // --- Applique les préférences enregistrées (temps de réflexion, noms, son, ordinateur qui joue) ; les valeurs absentes ou refusées gardent leur valeur par défaut ---
+            Preferences preferences = preferencesChargees;      // Lues par ChargePreferences
+            trackBarTempsReflexion.Value = Math.Clamp(preferences.TempsReflexion, trackBarTempsReflexion.Minimum, trackBarTempsReflexion.Maximum);   // ValueChanged met à jour le libellé et TempsReflexion
+            if (preferences.NomJoueurBlanc != null)
+                BoxNomJoueurBlanc.Text = preferences.NomJoueurBlanc;
+            if (preferences.NomJoueurNoir != null)
+                BoxNomJoueurNoir.Text = preferences.NomJoueurNoir;
+            nomBlancPrefere = BoxNomJoueurBlanc.Text;
+            nomNoirPrefere = BoxNomJoueurNoir.Text;
+            SonEmis.Checked = preferences.SonEmis;
+            OrdinateurBosse.Checked = preferences.OrdinateurJoue;
+        }
+        private void EnregistrePreferences()
+        {   // --- Écrit les préférences personnelles dans BrunoGUI_Dames.preferences.ini, à côté de l'exe ---
+            Preferences aEnregistrer = new Preferences
+            {
+                TempsReflexion = trackBarTempsReflexion.Value,
+                DureeAnimation = DureeAnimation,
+                VueCoteNoir = VisuCoteNoir,
+                NomJoueurBlanc = nomBlancPrefere,
+                NomJoueurNoir = nomNoirPrefere,
+                SonEmis = SonEmis.Checked,
+                OrdinateurJoue = moteurDisponible ? OrdinateurBosse.Checked : preferencesChargees.OrdinateurJoue     // Sans moteur la case est grisée : on garde le choix précédent
+            };
+            aEnregistrer.Couleurs["CaseSombre"] = VersRgb(CouleurCasesombre);
+            aEnregistrer.Couleurs["CaseClaire"] = VersRgb(CouleurCaseclaire);
+            aEnregistrer.Couleurs["CaseDepart"] = VersRgb(CouleurCaseDepart);
+            aEnregistrer.Couleurs["TrajetSuivi"] = VersRgb(CouleurTrajetSuivi);
+            aEnregistrer.Couleurs["CasePivot"] = VersRgb(CouleurCasePivot);
+            aEnregistrer.Couleurs["CasePrise"] = VersRgb(CouleurCasePrise);
+            aEnregistrer.Couleurs["CaseArrivee"] = VersRgb(CouleurCaseArrivee);
+            aEnregistrer.Couleurs["CaseEtape"] = VersRgb(CouleurCaseEtape);
+            aEnregistrer.Ecrire(FichierPreferences);
+        }
+        private static void JoueSonCoupJoue()
+        {   // --- Joue le son de Windows « Windows Notify » (dossier Windows lu dans le système) ; à défaut, un son système ---
+            try
+            {
+                string fichier = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Media", "Windows Notify.wav");
+                if (File.Exists(fichier))
+                    new SoundPlayer(fichier).Play();
+                else
+                    System.Media.SystemSounds.Asterisk.Play();
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidOperationException || ex is UnauthorizedAccessException)
+            {
+                Journal.Ecrit("Son impossible : " + ex.Message);
+            }
+        }
         protected override void OnFormClosing(FormClosingEventArgs e)
-        {   // --- À la fermeture de la fenêtre, par la croix comme par « Quitter », on arrête le moteur (sinon scan.exe resterait actif) ---
+        {   // --- À la fermeture de la fenêtre, par la croix comme par « Quitter », on enregistre les préférences et on arrête le moteur (sinon scan.exe resterait actif) ---
             base.OnFormClosing(e);
             if (!e.Cancel)
+            {
+                EnregistrePreferences();
                 MoteurDamesScan.Quitte();
+            }
         }        // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Routines de Dessin
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
@@ -774,7 +853,7 @@ namespace BrunoGUI_Dames
                         {
                             CaseDamier[indexPrise].BackColor = CouleurCasePrise;
                             CaseDamier[indexArrivee].Image = CadreGrisSansPrise;
-                            CaseDamier[indexArrivee].BackColor = Color.Orange;    // A enlever si on ne veut que les cases pièces prises !!!!
+                            CaseDamier[indexArrivee].BackColor = CouleurCaseEtape;    // A enlever si on ne veut que les cases pièces prises !!!!
                             // Sauvegarder les cases pour les étapes ultérieures
                             ListeCasesMouvementPrecedent.Add(prise);
                             ListeCasesMouvementPrecedent.Add(arrivee);
@@ -1217,6 +1296,7 @@ namespace BrunoGUI_Dames
             PartieCourante.CoupsPartiePDN = "";
             Partie.ListeCoupsPdn.Clear();
             Console.WriteLine("ChargerPartie :  " + partie);
+            nomsDepuisPartie = true;        // Ces noms sont ceux de la partie chargée : ils ne deviennent pas des préférences
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
             PartieCourante.Event = partie.Event;
             PartieCourante.Site = partie.Site;
@@ -1224,6 +1304,7 @@ namespace BrunoGUI_Dames
             PartieCourante.Round = partie.Round;
             PartieCourante.White = BoxNomJoueurBlanc.Text = NomJoueurBlanc = partie.White;
             PartieCourante.Black = BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
+            nomsDepuisPartie = false;
             PartieCourante.Result = partie.Result;
             PartieCourante.CoupsPartiePDN = partie.CoupsPartiePDN;
             PartieCourante.FENDebut = partie.FENDebut;
@@ -1384,10 +1465,14 @@ namespace BrunoGUI_Dames
         private void BoxNomJoueurBlanc_TextChanged(object sender, EventArgs e)
         {   // --- Gestion du changement de nom du joueur blanc ---
             NomJoueurBlanc = PartieCourante.White = BoxNomJoueurBlanc.Text;
+            if (!nomsDepuisPartie)
+                nomBlancPrefere = BoxNomJoueurBlanc.Text;
         }
         private void BoxNomJoueurNoir_TextChanged(object sender, EventArgs e)
         {   //  --- Gestion du changement de nom du joueur noir ---
             NomJoueurNoir = PartieCourante.Black = BoxNomJoueurNoir.Text;
+            if (!nomsDepuisPartie)
+                nomNoirPrefere = BoxNomJoueurNoir.Text;
         }
         private void trackBarTempsReflexion_ValueChanged(object sender, EventArgs e)
         {   // --- Gestion du trackBar pour le temps de réflexion de l'ordinateur ---
@@ -1396,12 +1481,12 @@ namespace BrunoGUI_Dames
             Console.WriteLine($"Temps de réflexion = {TempsReflexion} secondes");
         }
         private void OrdinateurBosse_CheckedChanged(object sender, EventArgs e)
-        {   // Bascule la valeur de PartieEnCours
-            PartieEnCours = !PartieEnCours;
+        {   // L'ordinateur joue si la case est cochée (avant, la valeur était basculée, et pouvait se désynchroniser de la case)
+            PartieEnCours = OrdinateurBosse.Checked;
         }
         private void SonEmis_CheckedChanged(object sender, EventArgs e)
-        {   // Bascule la valeur de EmetUnson
-            EmetUnSon = !EmetUnSon;
+        {   // Le son est émis si la case est cochée
+            EmetUnSon = SonEmis.Checked;
         }
         private void RadioGainBlanc_CheckedChanged(object sender, EventArgs e)
         {   // --- Gestion du bouton radio gain blanc ---

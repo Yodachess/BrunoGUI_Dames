@@ -481,6 +481,51 @@ public static class Scenario
             Verifie($"Perft {profondeur} depuis la position initiale", obtenu == perftReference[profondeur - 1], $"{obtenu} (attendu {perftReference[profondeur - 1]})");
         }
 
+        // ═══════════════ Préférences ═══════════════
+        Console.WriteLine("── Préférences ──");
+
+        Preferences parDefaut = new Preferences();
+        Verifie("Préférences : valeurs par défaut (5 s, aucun nom, pas de son, l'ordinateur joue)",
+                parDefaut.TempsReflexion == 5 && parDefaut.NomJoueurBlanc == null && parDefaut.NomJoueurNoir == null && !parDefaut.SonEmis && parDefaut.OrdinateurJoue, "");
+        Preferences aEnregistrer = new Preferences { TempsReflexion = 12, NomJoueurBlanc = "Élise = Dupont", NomJoueurNoir = "SCAN 3.1", SonEmis = true, OrdinateurJoue = false };
+        Preferences reluesDuTexte = Preferences.DepuisTexte(aEnregistrer.VersTexte());
+        Verifie("Préférences : écriture puis relecture à l'identique (accents, « = » dans un nom, booléens)",
+                reluesDuTexte.TempsReflexion == 12 && reluesDuTexte.NomJoueurBlanc == "Élise = Dupont" && reluesDuTexte.NomJoueurNoir == "SCAN 3.1" && reluesDuTexte.SonEmis && !reluesDuTexte.OrdinateurJoue && reluesDuTexte.Avertissements.Count == 0,
+                aEnregistrer.VersTexte().Replace(Environment.NewLine, "⏎"));
+        string fichierPreferences = Path.Combine(Path.GetTempPath(), "dames_preferences_test_" + Guid.NewGuid().ToString("N") + ".ini");
+        try
+        {
+            bool ecrit = aEnregistrer.Ecrire(fichierPreferences);
+            Preferences deFichier = Preferences.Lire(fichierPreferences);
+            Verifie("Préférences : écrites dans un fichier UTF-8 puis relues", ecrit && deFichier.NomJoueurBlanc == "Élise = Dupont" && deFichier.TempsReflexion == 12, File.Exists(fichierPreferences) ? "fichier écrit" : "pas de fichier");
+        }
+        finally
+        {
+            File.Delete(fichierPreferences);
+        }
+        Preferences sansFichier = Preferences.Lire(Path.Combine(Path.GetTempPath(), "dames_preferences_absentes_" + Guid.NewGuid().ToString("N") + ".ini"));
+        Verifie("Préférences : un fichier absent donne les valeurs par défaut, sans avertissement", sansFichier.TempsReflexion == 5 && sansFichier.Avertissements.Count == 0, "");
+        Preferences abimees = Preferences.DepuisTexte("﻿; commentaire\r\n[Preferences]\r\nTempsReflexion=abc\r\nTempsReflexion = 0\r\nSonEmis=peut-être\r\nCouleurDuDamier=rouge\r\nligne sans egal\r\n\r\n  NOMJOUEURNOIR =  Scan  \r\nOrdinateurJoue=non\r\n");
+        Verifie("Préférences : lignes abîmées signalées (5 avertissements), sans exception, le reste est lu (clés sans majuscules, espaces, BOM, sections)",
+                abimees.Avertissements.Count == 5 && abimees.TempsReflexion == 5 && !abimees.SonEmis && abimees.NomJoueurNoir == "Scan" && !abimees.OrdinateurJoue, string.Join(" | ", abimees.Avertissements));
+        Verifie("Préférences : durée d'animation par défaut 900 ms, damier côté blancs, aucune couleur changée", parDefaut.DureeAnimation == 900 && !parDefaut.VueCoteNoir && parDefaut.Couleurs.Count == 0, "");
+        Preferences avecCouleurs = new Preferences { DureeAnimation = 250, VueCoteNoir = true };
+        avecCouleurs.Couleurs["CaseSombre"] = 0xCD853F;
+        avecCouleurs.Couleurs["CaseArrivee"] = 0x010203;
+        Preferences couleursRelues = Preferences.DepuisTexte(avecCouleurs.VersTexte());
+        Verifie("Préférences : durée d'animation, sens du damier et couleurs (écrites #RRGGBB) se relisent à l'identique",
+                couleursRelues.DureeAnimation == 250 && couleursRelues.VueCoteNoir && couleursRelues.Couleurs.Count == 2
+                && couleursRelues.Couleurs["CaseSombre"] == 0xCD853F && couleursRelues.Couleurs["CaseArrivee"] == 0x010203 && couleursRelues.Avertissements.Count == 0,
+                avecCouleurs.VersTexte().Replace(Environment.NewLine, "⏎"));
+        Preferences couleursAbimees = Preferences.DepuisTexte("CouleurCaseSombre=rouge\r\nCouleurCaseInconnue=#000000\r\ncouleurcaseclaire = abcdef\r\nCouleurCaseDepart=#12345\r\nDureeAnimation=20000\r\nVueCoteNoir=x\r\n");
+        Verifie("Préférences : couleur invalide, clé de couleur inconnue, durée hors limites et booléen invalide signalés ; « # » facultatif, clé insensible à la casse",
+                couleursAbimees.Avertissements.Count == 5 && couleursAbimees.Couleurs.Count == 1 && couleursAbimees.Couleurs["CaseClaire"] == 0xABCDEF && couleursAbimees.DureeAnimation == 900 && !couleursAbimees.VueCoteNoir,
+                string.Join(" | ", couleursAbimees.Avertissements));
+        Preferences nomSurDeuxLignes =Preferences.DepuisTexte(new Preferences { NomJoueurBlanc = "Ligne 1\r\nLigne 2" }.VersTexte());
+        Verifie("Préférences : un nom sur plusieurs lignes est écrit sur une seule", nomSurDeuxLignes.NomJoueurBlanc == "Ligne 1 Ligne 2", nomSurDeuxLignes.NomJoueurBlanc ?? "(null)");
+        Verifie("Préférences : un dossier inexistant fait renvoyer faux, sans exception",
+                !new Preferences().Ecrire(Path.Combine(Path.GetTempPath(), "dossier_absent_" + Guid.NewGuid().ToString("N"), "p.ini")), "");
+
         // ═══════════════ Moteur Scan ═══════════════
         Console.WriteLine("── Moteur Scan ──");
 
