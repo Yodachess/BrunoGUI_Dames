@@ -295,13 +295,38 @@ public static class Scenario
                 historique.RemoveAt(historique.Count - 1);
             }
             return null;
-        }        List<Position> cinquanteDemiCoups = MarcheDeDames([Position.DepuisFen("W:WK47:BK4")], 50) ?? [];
+        }
+        List<Position> cinquanteDemiCoups = MarcheDeDames([Position.DepuisFen("W:WK47,K46:BK4,K3")], 50) ?? [];
         Verifie("Nulles : la marche de 50 demi-coups de dames a pu être construite", cinquanteDemiCoups.Count == 51, cinquanteDemiCoups.Count == 0 ? "aucune suite trouvée" : $"{cinquanteDemiCoups.Count - 1} demi-coups");
         Verifie("Nulles : 49 demi-coups de dames ne suffisent pas", NullesDames.Detecte(cinquanteDemiCoups.Take(50).ToList()) == RaisonNulle.Aucune, "24 coups et demi");
         Verifie("Nulles : 25 coups de dames de chaque joueur (50 demi-coups) : nulle", NullesDames.Detecte(cinquanteDemiCoups) == RaisonNulle.CoupsDeDames, "50 demi-coups");
-        List<Position> avecPion = MarcheDeDames([Position.DepuisFen("W:W31,K47:BK4")], 60, plyPion: 20) ?? [];
+        List<Position> avecPion = MarcheDeDames([Position.DepuisFen("W:W31,K47:BK4,K3")], 60, plyPion: 20) ?? [];
         Verifie("Nulles : un déplacement de pion remet le compteur à zéro (60 demi-coups dont un de pion : pas nulle)", avecPion.Count == 61 && NullesDames.Detecte(avecPion) == RaisonNulle.Aucune, avecPion.Count == 0 ? "aucune suite trouvée" : $"{avecPion.Count - 1} demi-coups");
         Verifie("Nulles : une partie sans coup ou avec une seule position n'est jamais nulle", NullesDames.Detecte([]) == RaisonNulle.Aucune && NullesDames.Detecte([Position.Initiale()]) == RaisonNulle.Aucune, "");
+
+        // Finales à peu de pièces (règles 6.3 et 6.4)
+        Verifie("Nulles : les finales de 16 coups (trois dames, deux dames et un pion, une dame et deux pions contre une dame)",
+                NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1,K2,K3:BK50")) == 16 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:W20,K2,K3:BK50")) == 16
+                && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:W20,21,K3:BK50")) == 16 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK50:BK1,K2,K3")) == 16, "côté blanc et côté noir");
+        Verifie("Nulles : les finales de 5 coups (deux dames, une dame et un pion, une dame contre une dame)",
+                NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1,K2:BK50")) == 5 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:W20,K2:BK50")) == 5
+                && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1:BK50")) == 5 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK50:BK1,K2")) == 5, "côté blanc et côté noir");
+        Verifie("Nulles : ce ne sont pas des finales de nulle (deux contre deux, quatre dames contre une, un pion adverse, deux pions et une dame contre un pion)",
+                NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1,K2:BK50,K49")) == 0 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1,K2,K3,K4:BK50")) == 0
+                && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:WK1:B20,21,K50,K49")) == 0 && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:W20,21,K3:B30")) == 0
+                && NullesDames.CoupsPermisFinale(Position.DepuisFen("W:W20,21,22:BK50")) == 0, "");
+        // Positions toutes différentes (une dame blanche avance d'une case à chaque demi-coup) : ni répétition ni série de coups de dames
+        List<Position> Finale(string materielFen, int positions) =>
+            Enumerable.Range(0, positions).Select(i => Position.DepuisFen((i % 2 == 0 ? "W:" : "B:") + string.Format(materielFen, 1 + i))).ToList();
+        Verifie("Nulles : 5 coups de chaque joueur (10 demi-coups) d'une dame contre une dame : nulle ; 9 demi-coups : pas encore",
+                NullesDames.Detecte(Finale("WK{0}:BK50", 11)) == RaisonNulle.FinaleCinqCoups && NullesDames.Detecte(Finale("WK{0}:BK50", 10)) == RaisonNulle.Aucune, "11 et 10 positions");
+        Verifie("Nulles : 16 coups de chaque joueur (32 demi-coups) de trois dames contre une dame : nulle ; 31 demi-coups : pas encore",
+                NullesDames.Detecte(Finale("WK{0},K40,K41:BK50", 33)) == RaisonNulle.FinaleSeizeCoups && NullesDames.Detecte(Finale("WK{0},K40,K41:BK50", 32)) == RaisonNulle.Aucune, "33 et 32 positions");
+        List<Position> avantFinale = Finale("WK{0},K40,K41:BK50,K49", 20);       // deux dames contre deux : pas de finale, puis une dame adverse disparaît
+        List<Position> debutDeFinale = Finale("WK{0},K40,K41:BK50", 14);
+        List<Position> miseEnRoute = [.. avantFinale, .. debutDeFinale];
+        Verifie("Nulles : le compte des coups part de la première position de la finale (14 positions de finale : pas nulle)", NullesDames.Detecte(miseEnRoute) == RaisonNulle.Aucune, "20 positions hors finale puis 14");
+        Verifie("Nulles : de trois dames contre une dame, la finale de 5 coups ne remplace pas celle de 16 (10 demi-coups : pas nulle)", NullesDames.Detecte(Finale("WK{0},K40,K41:BK50", 11)) == RaisonNulle.Aucune, "11 positions");
 
         // ═══════════════ Partie réelle de Scan ═══════════════
         Console.WriteLine("── Partie de Scan ──");
@@ -602,7 +627,7 @@ public static class Scenario
             if (cinquantieme != null) avecCinquantieme.Add(ReglesDames.Jouer(derniereNulle, cinquantieme));
             Verifie("Exemple de nulle : 49 demi-coups de dames, pas encore nulle ; un 50e : nulle",
                     rejeuNulle.Erreur == null && rejeuNulle.Coups.Count == 49 && NullesDames.Detecte(rejeuNulle.Positions) == RaisonNulle.Aucune && cinquantieme != null && NullesDames.Detecte(avecCinquantieme) != RaisonNulle.Aucune,
-                    rejeuNulle.Erreur ?? $"{rejeuNulle.Coups.Count} demi-coups, 50e : {NullesDames.Detecte(avecCinquantieme)}");
+                    rejeuNulle.Erreur ?? $"{rejeuNulle.Coups.Count} demi-coups, {rejeuNulle.Positions.Count} positions, 49e : {NullesDames.Detecte(rejeuNulle.Positions)}, 50e : {cinquantieme?.Pdn()} {NullesDames.Detecte(avecCinquantieme)}");
         }
 
         // ═══════════════ Perft ═══════════════

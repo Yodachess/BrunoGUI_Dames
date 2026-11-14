@@ -1067,9 +1067,13 @@ namespace BrunoGUI_Dames
         {   // --- La partie est nulle (répétition de position ou coups de dames) : on l'annonce et on la termine (résultat 1/2-1/2) ---
             if (PartieTerminee)
                 return;
-            string motif = raison == RaisonNulle.Repetition
-                ? "la même position s'est présentée trois fois"
-                : $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise";
+            string motif = raison switch
+            {
+                RaisonNulle.Repetition => "la même position s'est présentée trois fois",
+                RaisonNulle.FinaleSeizeCoups => $"finale à peu de pièces : {NullesDames.CoupsFinale3Pieces} coups de chaque joueur sans gagner",
+                RaisonNulle.FinaleCinqCoups => $"finale à peu de pièces : {NullesDames.CoupsFinaleSimple} coups de chaque joueur sans gagner",
+                _ => $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise"
+            };
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             RadioNulle.Checked = PartieTerminee = FinPartie = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
             LabelInformationJoueur.Text = "Partie nulle : " + motif;
