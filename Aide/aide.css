@@ -1,0 +1,83 @@
+/* Aide de BrunoGUI Dames : mise en page de la page française (fr/index.html) */
+:root {
+    --fond: #fbfaf7;
+    --texte: #22252b;
+    --doux: #5d6470;
+    --accent: #1f6f3a;
+    --cadre: #e2ded3;
+    --encart: #f1efe8;
+}
+@media screen and (prefers-color-scheme: dark) {
+    :root {
+        --fond: #1d1f23;
+        --texte: #e6e6e3;
+        --doux: #a3a8b0;
+        --accent: #6cc28a;
+        --cadre: #3a3d44;
+        --encart: #26292e;
+    }
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font: 14px/1.55 "Segoe UI", system-ui, sans-serif;
+}
+.page {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    max-width: 1120px;
+    margin: 0 auto;
+}
+nav {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 22px 16px;
+    border-right: 1px solid var(--cadre);
+}
+nav .titre { font-weight: 700; font-size: 16px; color: var(--accent); }
+nav .version { color: var(--doux); margin-bottom: 14px; }
+nav ol { margin: 0; padding-left: 20px; }
+nav li { margin: 5px 0; }
+nav a { color: var(--texte); text-decoration: none; }
+nav a:hover { color: var(--accent); text-decoration: underline; }
+main { padding: 22px 34px 60px; min-width: 0; }
+h1 { margin: 0 0 6px; font-size: 26px; color: var(--accent); }
+h2 { margin: 36px 0 8px; padding-top: 8px; font-size: 20px; border-top: 1px solid var(--cadre); }
+h3 { margin: 20px 0 4px; font-size: 15px; }
+.intro { color: var(--doux); font-size: 15px; margin-bottom: 18px; }
+a { color: var(--accent); }
+code, .fichier {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 13px;
+    background: var(--encart);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+.bouton {
+    display: inline-block;
+    padding: 0 9px;
+    border: 1px solid var(--cadre);
+    border-radius: 11px;
+    background: var(--encart);
+    font-size: 13px;
+    white-space: nowrap;
+}
+.note {
+    margin: 12px 0;
+    padding: 9px 14px;
+    background: var(--encart);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+}
+table { border-collapse: collapse; margin: 10px 0; }
+th, td { border: 1px solid var(--cadre); padding: 5px 10px; text-align: left; vertical-align: top; }
+th { background: var(--encart); }
+@media (max-width: 760px) {
+    .page { grid-template-columns: 1fr; }
+    nav { position: static; border-right: 0; border-bottom: 1px solid var(--cadre); }
+}

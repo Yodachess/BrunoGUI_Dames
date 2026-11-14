@@ -56,6 +56,7 @@
             this.RadioGainBlanc = new System.Windows.Forms.RadioButton();
             this.ChargePositionFen = new Krypton.Toolkit.KryptonButton();
             this.Apropos = new Krypton.Toolkit.KryptonButton();
+            this.BoutonAide = new Krypton.Toolkit.KryptonButton();
             this.ChargerFichierFen = new System.Windows.Forms.OpenFileDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.trackBarTempsReflexion = new System.Windows.Forms.TrackBar();
@@ -198,7 +199,7 @@
             // 
             // MontreDonneesScan
             // 
-            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 598);
+            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 562);
             this.MontreDonneesScan.Name = "MontreDonneesScan";
             this.MontreDonneesScan.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.MontreDonneesScan.Size = new System.Drawing.Size(110, 30);
@@ -395,9 +396,22 @@
             this.ChargePositionFen.Values.Text = "Charge position";
             this.ChargePositionFen.Click += new System.EventHandler(this.PositionFen_Click);
             // 
+            // BoutonAide
+            // 
+            this.BoutonAide.Location = new System.Drawing.Point(653, 634);
+            this.BoutonAide.Name = "BoutonAide";
+            this.BoutonAide.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
+            this.BoutonAide.Size = new System.Drawing.Size(110, 30);
+            this.BoutonAide.StateCommon.Border.Rounding = 20F;
+            this.BoutonAide.StateCommon.Border.Width = 1;
+            this.BoutonAide.TabIndex = 60;
+            this.BoutonAide.Values.DropDownArrowColor = System.Drawing.Color.Empty;
+            this.BoutonAide.Values.Text = "Aide (F1)";
+            this.BoutonAide.Click += new System.EventHandler(this.BoutonAide_Click);
+            // 
             // Apropos
             // 
-            this.Apropos.Location = new System.Drawing.Point(653, 634);
+            this.Apropos.Location = new System.Drawing.Point(653, 598);
             this.Apropos.Name = "Apropos";
             this.Apropos.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.Apropos.Size = new System.Drawing.Size(110, 30);
@@ -593,6 +607,7 @@
             this.Controls.Add(this.SauvePositionFen);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.Apropos);
+            this.Controls.Add(this.BoutonAide);
             this.Controls.Add(this.ChargePositionFen);
             this.Controls.Add(this.GroupResultat);
             this.Controls.Add(this.SonEmis);
@@ -663,6 +678,7 @@
         private System.Windows.Forms.RadioButton RadioGainBlanc;
         private Krypton.Toolkit.KryptonButton ChargePositionFen;
         private Krypton.Toolkit.KryptonButton Apropos;
+        private Krypton.Toolkit.KryptonButton BoutonAide;
         private System.Windows.Forms.OpenFileDialog ChargerFichierFen;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TrackBar trackBarTempsReflexion;

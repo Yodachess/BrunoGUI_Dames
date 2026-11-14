@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aide de BrunoGUI Dames</title>
+<link rel="stylesheet" href="../aide.css">
+</head>
+<body>
+<div class="page">
+<nav>
+    <div class="titre">BrunoGUI Dames</div>
+    <div class="version">Aide de l'utilisateur</div>
+    <ol>
+        <li><a href="#demarrage">Démarrage rapide</a></li>
+        <li><a href="#fenetre">La fenêtre principale</a></li>
+        <li><a href="#jouer">Jouer une partie</a></li>
+        <li><a href="#ordinateur">Jouer contre l'ordinateur</a></li>
+        <li><a href="#nulles">Fin de partie et nulles</a></li>
+        <li><a href="#parcours">Parcourir une partie</a></li>
+        <li><a href="#pdn">Fichiers PDN (parties)</a></li>
+        <li><a href="#fen">Fichiers FEN (positions)</a></li>
+        <li><a href="#damier">Tourner le damier</a></li>
+        <li><a href="#preferences">Préférences</a></li>
+        <li><a href="#programme">Les fichiers du programme</a></li>
+    </ol>
+</nav>
+<main>
+
+<h1>Aide de BrunoGUI Dames</h1>
+<p class="intro">BrunoGUI Dames est une interface pour jouer et analyser des parties de <b>dames internationales</b> (damier 10×10, cases numérotées de 1 à 50 en notation Manoury). Vous jouez contre le moteur <b>Scan 3.1</b> de Fabien Letouzey ou contre un ami, vous chargez et sauvegardez des parties PDN et des positions FEN.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="demarrage">1. Démarrage rapide</h2>
+<ol>
+    <li>Au lancement, le damier est prêt : les blancs sont en bas, ils jouent en premier. Pour recommencer à tout moment, cliquez sur <span class="bouton">Nouvelle Partie</span>.</li>
+    <li>Cliquez sur la pièce à jouer : elle « se prend en main » et les cases où elle peut aller sont marquées. Cliquez sur la case d'arrivée pour jouer le coup.</li>
+    <li>Avec la case <b>Ordinateur</b> cochée (par défaut), le moteur répond tout seul après chacun de vos coups. Décochez-la pour jouer à deux sur le même damier.</li>
+    <li>Pour sauvegarder la partie : <span class="bouton">Sauve Partie</span> (format PDN). Pour jouer une partie déjà jouée : <span class="bouton">Charge Parties</span>.</li>
+</ol>
+<div class="note">Les règles sont celles des dames internationales : les pions prennent en avant et en arrière, les dames sont « volantes », la prise est obligatoire, et on doit prendre le plus grand nombre de pièces (prise majoritaire). Le programme vous le fait respecter : seules les pièces et les cases autorisées sont jouables.</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="fenetre">2. La fenêtre principale</h2>
+<ul>
+    <li><b>Le damier</b> (à gauche) : les cases jouables portent les numéros de 1 à 50 de la notation Manoury (de 1, en haut du côté des noirs, à 50, en bas du côté des blancs).</li>
+    <li><b>Le bandeau du haut</b> : le nom du joueur blanc et du joueur noir (modifiables), et au centre le statut : « Trait aux Blancs », « Trait aux Noirs », la fin de partie éventuelle.</li>
+    <li><b>Sous le bandeau</b> : le <b>score</b> estimé par le moteur et sa <b>ligne</b> de jeu (la suite de coups qu'il prévoit), pendant ou après sa réflexion.</li>
+    <li><b>En bas</b> : le dernier coup joué (« Mouvement »), les <b>prises possibles</b> (les rafles qu'il faut jouer, case de la pièce prise et case d'arrivée), le décompte des pions et des dames de chaque couleur, le groupe <b>Résultat</b>, les cases <b>Ordinateur</b> et <b>Son</b>, et le réglage du <b>temps de réflexion</b>.</li>
+    <li><b>La colonne de boutons</b> (à droite) : voir les sections suivantes. Pendant que le moteur réfléchit, les boutons qui changeraient la partie sont inactifs.</li>
+</ul>
+<table>
+    <tr><th>Bouton</th><th>Rôle</th></tr>
+    <tr><td><span class="bouton">Nouvelle Partie</span></td><td>Recommence une partie depuis la position de départ.</td></tr>
+    <tr><td><span class="bouton">Ordinateur joue</span></td><td>Le moteur joue un coup à la place du joueur au trait.</td></tr>
+    <tr><td><span class="bouton">Retour Arrière</span></td><td>Recule d'un demi-coup (un coup d'un des deux camps).</td></tr>
+    <tr><td><span class="bouton">Tourner damier</span></td><td>Fait pivoter le damier de 180° (voir la section 9).</td></tr>
+    <tr><td><span class="bouton">Analyse position</span></td><td>Le moteur étudie la position et donne son score et sa ligne, sans rien jouer.</td></tr>
+    <tr><td><span class="bouton">Liste des coups</span></td><td>Affiche les coups de la partie en PDN, en FEN et en Hub2, et permet de les enregistrer.</td></tr>
+    <tr><td><span class="bouton">Parcours partie</span> (Début, Préc., Suiv., Fin)</td><td>Parcourt la partie coup par coup (section 6).</td></tr>
+    <tr><td><span class="bouton">Charge Parties</span></td><td>Lit un fichier PDN et affiche la liste de ses parties.</td></tr>
+    <tr><td><span class="bouton">Masque parties</span></td><td>Cache ou montre la liste des parties.</td></tr>
+    <tr><td><span class="bouton">Sauve Partie</span></td><td>Enregistre la partie en PDN, éventuellement à la suite d'un fichier existant.</td></tr>
+    <tr><td><span class="bouton">Charge position</span> / <span class="bouton">Sauve position</span></td><td>Lit ou écrit une position au format FEN.</td></tr>
+    <tr><td><span class="bouton">Protocole</span></td><td>Montre les échanges bruts entre le programme et le moteur (protocole Hub2).</td></tr>
+    <tr><td><span class="bouton">Aide (F1)</span></td><td>Ouvre cette aide.</td></tr>
+    <tr><td><span class="bouton">A propos de BIG</span></td><td>Numéro de version du programme et du moteur.</td></tr>
+    <tr><td><span class="bouton">Quitter</span></td><td>Ferme le programme et arrête le moteur.</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="jouer">3. Jouer une partie</h2>
+<h3>Jouer un coup</h3>
+<p>Un premier clic sur une de vos pièces la sélectionne : son image devient le curseur de la souris, sa case est colorée et les cases où elle peut aller sont marquées. Un second clic sur une case d'arrivée joue le coup, avec une courte animation. Si vous cliquez sur une case où la pièce ne peut pas aller, elle revient à sa place et rien n'est joué.</p>
+<h3>La prise obligatoire</h3>
+<p>Quand une prise est possible, seules les pièces qui peuvent prendre peuvent être jouées, et seules les prises qui prennent <b>le plus de pièces</b> sont autorisées. Les cases de départ et d'arrivée de ces prises sont colorées dès que c'est votre tour, et les rafles sont écrites dans la zone « Prises possibles » (de la forme « 28 -&gt; 19, 17 -&gt; 10 » : la case de la pièce prise puis la case où la pièce se pose).</p>
+<h3>Plusieurs rafles possibles pour le même clic</h3>
+<p>Il arrive que deux rafles différentes partent de la même case et arrivent sur la même case en prenant des pièces différentes. Une petite fenêtre « Choix de la rafle » s'ouvre alors : les boutons <span class="bouton">&lt; Précédente</span> et <span class="bouton">Suivante &gt;</span> montrent sur le damier le chemin de chaque rafle et, en rouge, les pièces qu'elle prend ; <span class="bouton">Jouer cette rafle</span> la joue, <span class="bouton">Annuler</span> remet la pièce en place. Dans le fichier PDN, une telle rafle est alors écrite en entier (« 44x22x13x24 ») pour qu'on puisse la rejouer sans ambiguïté.</p>
+<h3>Une rafle qui revient sur sa case</h3>
+<p>Une pièce peut parfois faire un tour complet et revenir sur sa case de départ. Pour jouer une telle rafle, sélectionnez la pièce puis cliquez à nouveau sur sa propre case. Si aucune rafle de ce genre n'existe, cliquer sur sa propre case n'est pas un coup et la pièce revient simplement.</p>
+<h3>La promotion</h3>
+<p>Un pion devient dame quand il <b>termine</b> son coup sur la dernière rangée. S'il ne fait qu'y passer au milieu d'une rafle, il reste un pion et continue.</p>
+<h3>Retour arrière</h3>
+<p><span class="bouton">Retour Arrière</span> reprend le dernier demi-coup. Après un retour arrière, le moteur ne répond plus automatiquement à votre prochain coup : cliquez sur <span class="bouton">Ordinateur joue</span> pour qu'il reprenne la main.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="ordinateur">4. Jouer contre l'ordinateur</h2>
+<ul>
+    <li><b>Ordinateur</b> (case à cocher) : coché, le moteur joue sa réponse après chacun de vos coups ; décoché, vous jouez à deux. Sans moteur sur le disque, cette case est inactive et le jeu entre humains reste possible.</li>
+    <li><b>Temps de réflexion</b> : de 1 à 25 secondes par coup (5 par défaut). Plus c'est long, plus le moteur joue fort.</li>
+    <li><span class="bouton">Ordinateur joue</span> : le moteur joue un coup à la place du joueur au trait, quel qu'il soit. Pratique pour lui faire jouer les blancs, ou pour se faire montrer un coup.</li>
+    <li><span class="bouton">Analyse position</span> : le moteur réfléchit sur la position affichée et en donne le score (en centipions) et la meilleure suite, <b>sans rien jouer</b>. On peut s'en servir sur n'importe quelle position, y compris en parcourant une partie.</li>
+    <li><b>Son</b> : coché, un son est émis quand le moteur a joué.</li>
+</ul>
+<div class="note">Le moteur est Scan 3.1, de Fabien Letouzey. Le bouton <span class="bouton">Protocole</span> ouvre une fenêtre qui montre ce que le programme et le moteur s'envoient : utile pour comprendre ou pour signaler un problème.</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="nulles">5. Fin de partie et nulles</h2>
+<p>Le programme termine la partie tout seul dans ces cas, en annonçant le résultat et en l'écrivant dans le groupe <b>Résultat</b> :</p>
+<ul>
+    <li><b>Gain</b> : un joueur n'a plus de pièce, ou il a encore des pièces mais ne peut plus jouer aucun coup (il est bloqué) : il perd.</li>
+    <li><b>Répétition</b> : la même position se présente pour la <b>troisième fois</b>, avec le même joueur au trait. Nulle.</li>
+    <li><b>Coups de dames</b> : pendant <b>25 coups de chaque joueur</b> (50 demi-coups de suite), seules des dames ont bougé, sans déplacement de pion ni prise. Nulle.</li>
+    <li><b>Finales à peu de pièces</b> : quand un joueur n'a plus qu'une seule dame contre, selon le cas,
+        <ul>
+            <li>trois dames, ou deux dames et un pion, ou une dame et deux pions : nulle après <b>16 coups</b> de chaque joueur ;</li>
+            <li>deux dames, ou une dame et un pion, ou une dame : nulle après <b>5 coups</b> de chaque joueur.</li>
+        </ul>
+        Le compte part du moment où la finale apparaît (règles 6.3 et 6.4 de la FMJD).</li>
+</ul>
+<p>Dans ces cas, le message « Nulle possible, la partie est terminée » indique la raison, et le résultat 1/2-1/2 est écrit.</p>
+<p>La nulle <b>par accord</b> ne se détecte pas : si vous vous mettez d'accord avec votre adversaire, cochez vous-même <b>1/2-1/2</b> dans le groupe Résultat (de même <b>1-0</b> ou <b>0-1</b> pour un abandon). Le résultat choisi est ajouté à la fin de la liste des coups.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="parcours">6. Parcourir une partie</h2>
+<p>Le groupe <b>Parcours partie</b> sert à revoir la partie en cours ou une partie chargée, sans la modifier :</p>
+<ul>
+    <li><span class="bouton">Préc.</span> et <span class="bouton">Suiv.</span> : un coup en arrière, un coup en avant ; « Mouvement » indique le numéro et le coup affiché ;</li>
+    <li><span class="bouton">Début</span> : la position de départ ; <span class="bouton">Fin</span> : la dernière position.</li>
+</ul>
+<p>La position affichée est celle que <span class="bouton">Analyse position</span> et <span class="bouton">Ordinateur joue</span> utilisent.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="pdn">7. Fichiers PDN (parties)</h2>
+<h3>Charger des parties</h3>
+<p><span class="bouton">Charge Parties</span> lit un fichier <code>.pdn</code> et affiche la liste de ses parties (joueurs, résultat, date, événement…). <b>Double-cliquez</b> sur une partie : elle est déroulée sur le damier, un peu plus vite que le jeu normal, et vous pouvez ensuite la parcourir. <span class="bouton">Masque parties</span> cache ou montre la liste.</p>
+<p>La lecture est tolérante : balises sur une ou plusieurs lignes, commentaires <code>{…}</code>, variantes, numéros de coups collés aux coups, marqueurs de résultat variés. Si une partie contient un coup illégal, elle est chargée jusqu'au dernier coup légal, avec un message. Un fichier qui n'est pas du PDN, ou qui contient une simple position FEN, est refusé avec une explication.</p>
+<h3>Sauvegarder la partie</h3>
+<p><span class="bouton">Sauve Partie</span> ouvre la fenêtre d'enregistrement : la partie est écrite en PDN avec ses balises (joueurs, résultat, nombre de coups, et la position de départ si elle n'est pas la position initiale). On peut l'ajouter à la fin d'un fichier existant.</p>
+<h3>La liste des coups</h3>
+<p><span class="bouton">Liste des coups</span> montre les coups de la partie en trois écritures : <b>PDN</b> (« 32-28 », « 28x19 »), <b>FEN</b> (la position après chaque coup) et <b>Hub2</b> (le format du moteur). Elle permet d'enregistrer le PDN.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="fen">8. Fichiers FEN (positions)</h2>
+<p><span class="bouton">Sauve position</span> écrit la position affichée, et <span class="bouton">Charge position</span> en lit une pour la mettre sur le damier (la partie repart de cette position). Le format est celui des dames : <code>W:W31-50:B1-20</code> signifie « trait aux blancs, pions blancs sur les cases 31 à 50, pions noirs sur les cases 1 à 20 » ; une dame s'écrit avec un <code>K</code> (par exemple <code>W:WK47:BK4</code>).</p>
+<p>Un fichier FEN invalide est refusé, et votre partie en cours n'est pas touchée.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="damier">9. Tourner le damier</h2>
+<p><span class="bouton">Tourner damier</span> fait pivoter le damier de 180° : par défaut, vous voyez la partie du côté des blancs ; après le pivot, du côté des noirs. Les numéros des cases ne changent pas, ils tournent avec les pièces. Le sens choisi est retenu pour la prochaine fois.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="preferences">10. Préférences</h2>
+<p>À la fermeture, le programme retient le temps de réflexion, les noms des joueurs, les cases Ordinateur et Son, et le sens du damier. Il les retrouve au lancement suivant. Elles sont écrites dans le fichier <code>BrunoGUI_Dames.preferences.ini</code>, à côté du programme.</p>
+<p>Ce fichier (texte, une ligne <code>Cle=Valeur</code> par réglage) permet aussi de changer, à la main, la <b>durée de l'animation</b> (<code>DureeAnimation</code>, en millisecondes, 900 par défaut ; 0 pour jouer sans animation) et les <b>huit couleurs du damier</b> (cases sombres, claires, de départ, du trajet, du pivot, de la prise, de l'arrivée, d'étape), écrites <code>#RRGGBB</code>. Une valeur absente ou invalide est ignorée et remplacée par la valeur par défaut. Fermez le programme avant de modifier le fichier.</p>
+<p>Les noms des joueurs d'une partie PDN chargée ne deviennent pas des préférences.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="programme">11. Les fichiers du programme</h2>
+<table>
+    <tr><th>Fichier ou dossier</th><th>Contenu</th></tr>
+    <tr><td><span class="fichier">BrunoGUI_Dames.exe</span></td><td>Le programme.</td></tr>
+    <tr><td><span class="fichier">Dames_Scan31_FabienLetouzey\</span></td><td>Le moteur Scan 3.1 (<code>scan.exe</code>, ses réglages <code>scan.ini</code> et ses données d'ouvertures et d'évaluation) et sa licence.</td></tr>
+    <tr><td><span class="fichier">Aide\</span></td><td>Cette aide.</td></tr>
+    <tr><td><span class="fichier">BrunoGUI_Dames.preferences.ini</span></td><td>Vos préférences (créé à la première fermeture).</td></tr>
+    <tr><td><span class="fichier">Journal.log</span></td><td>Le journal des anomalies : une ligne datée à chaque problème rencontré (fichier illisible, moteur arrêté, erreur imprévue…). Si une anomalie survient, ce fichier aide à comprendre ; joignez-le à votre signalement.</td></tr>
+</table>
+<p>Le programme garde tout dans son propre dossier : il peut être copié sur une clé USB ou déplacé sans rien installer.</p>
+<p>Le programme est libre (licence GPL 3). Toute remarque ou signalement d'anomalie est bienvenu : <a href="https://github.com/Yodachess/BrunoGUI_Dames">github.com/Yodachess/BrunoGUI_Dames</a>.</p>
+
+</main>
+</div>
+</body>
+</html>

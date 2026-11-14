@@ -1447,13 +1447,52 @@ namespace BrunoGUI_Dames
                 boutonMasqueAffiche.Text = "Masque parties";  // Changer le texte du bouton
             }
         }
+        // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.10), avec le mineur sur deux chiffres ---
+        private static string VersionAffichee
+        {
+            get
+            {
+                Version? version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                return version == null ? "?" : $"{version.Major}.{version.Minor:D2}";
+            }
+        }
         private void Apropos_Click(object sender, EventArgs e)
         {   // --- Affiche une boîte de dialogue avec les informations sur l'application ---
-            string message = $"Version Interface graphique = 1.04 / Auteur : Bruno Courtois\n" +
-                                $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}";
+            string message = $"Version Interface graphique = {VersionAffichee} / Auteur : Bruno Courtois\n" +
+                                $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}\n\n" +
+                                "Historique :\n" +
+                                "1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n" +
+                                "1.04 : première version publiée.";
             MessageBox.Show(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        private void SauvePartiesPdn_Click(object sender, EventArgs e)
+        private void BoutonAide_Click(object sender, EventArgs e)
+        {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur ---
+            string page = Path.Combine(Application.StartupPath, "Aide", "fr", "index.html");
+            if (!File.Exists(page))
+            {
+                Journal.Ecrit("Aide introuvable : " + page);
+                MessageBox.Show("Le fichier d'aide est introuvable :\n" + page, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(page) { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
+            {
+                Journal.Ecrit("Aide : ouverture impossible (" + ex.Message + ")");
+                MessageBox.Show("L'aide n'a pas pu être ouverte :\n" + ex.Message, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {   // --- F1 ouvre l'aide ---
+            if (keyData == Keys.F1)
+            {
+                BoutonAide_Click(this, EventArgs.Empty);
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }        private void SauvePartiesPdn_Click(object sender, EventArgs e)
         {   // --- Ouvre la feneêtre de sauvegarde de fichier ---
             affichePdn?.LancerEnregistrementPdn();
         }

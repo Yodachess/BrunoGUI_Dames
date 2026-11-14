@@ -1,0 +1,63 @@
+# Publication d'une version : quand un tag "v..." est poussé (ex : v1.10), GitHub compile BrunoGUI_Dames, lance les tests,
+# prépare une archive portable autonome (.NET inclus, moteur Scan 3.1 et aide) et crée une "Release" GitHub avec cette archive.
+#   Créer et pousser un tag :  git tag v1.10   puis   git push origin v1.10
+name: Publication
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write           # nécessaire pour créer la Release
+
+jobs:
+  publication:
+    runs-on: windows-latest
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v7
+
+      - name: Installation de .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Le numéro de version de l'application est la balise <Version> du .csproj : le tag doit lui correspondre (v1.10 <-> 1.10),
+      # sinon l'archive publiée afficherait un autre numéro que celui de la Release
+      - name: Vérification du numéro de version
+        run: |
+          [xml]$projet = Get-Content BrunoGUI_Dames.csproj
+          $version = @($projet.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ })[0]
+          if ("v$version" -ne "${{ github.ref_name }}") { throw "Le tag ${{ github.ref_name }} ne correspond pas à la version du .csproj ($version)" }
+          Write-Host "Version $version"
+
+      - name: Compilation
+        run: dotnet build BrunoGUI_Dames.sln -c Release
+
+      - name: Tests (une version n'est publiée que si tous les tests passent)
+        run: dotnet run --project Tests -c Release --no-build -- --complet
+
+      # Archive autonome : .NET 10 y est inclus, l'utilisateur n'a rien à installer ; seulement les ressources françaises et anglaises du runtime
+      - name: Publication autonome (avec .NET)
+        run: dotnet publish BrunoGUI_Dames.csproj -c Release -r win-x64 --self-contained true -p:SatelliteResourceLanguages="fr%3Ben" -o publie
+
+      - name: Archive portable
+        run: |
+          $sortie = "publie"
+          # Fichiers de débogage et parties du moteur inutiles sous Windows (sources C++, programmes Linux et Mac) : absents de l'archive
+          Remove-Item "$sortie/*.pdb" -Force -ErrorAction SilentlyContinue
+          $scan = "$sortie/Dames_Scan31_FabienLetouzey"
+          Remove-Item "$scan/src" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item "$scan/scan_linux", "$scan/scan_mac" -Force -ErrorAction SilentlyContinue
+          if (-not (Test-Path "$sortie/BrunoGUI_Dames.exe") -or -not (Test-Path "$scan/scan.exe") -or -not (Test-Path "$scan/data") -or -not (Test-Path "$sortie/Aide/fr/index.html")) { throw "Archive incomplète" }
+          Compress-Archive -Path "$sortie/*" -DestinationPath "BrunoGUI_Dames-${{ github.ref_name }}.zip"
+
+      # Notes de la release : installation, déblocage du zip et avertissement SmartScreen (programme non signé), en français et en anglais
+      - name: Création de la Release GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ github.ref_name }}" "BrunoGUI_Dames-${{ github.ref_name }}.zip"
+          --title "BrunoGUI Dames ${{ github.ref_name }}"
+          --notes-file .github/notes-publication.md

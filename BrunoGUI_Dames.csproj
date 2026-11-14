@@ -1,10 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <Nullable>enable</Nullable>
+    <!-- Numéro de version de l'application (« À propos », propriétés de l'exe) : à changer à chaque version publiée ; le tag Git vX.YY doit lui correspondre -->
+    <Version>1.10</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Krypton.Docking" Version="95.25.10.293" />
@@ -24,6 +27,12 @@
     <Content Include="Dames_Scan31_FabienLetouzey\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Aide (page HTML et captures d'écran), ouverte dans le navigateur par le bouton Aide ou F1 -->
+    <None Update="Aide\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Update="Resources\CadreGrisSansPriseTransparent.png">
