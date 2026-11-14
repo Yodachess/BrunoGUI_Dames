@@ -513,7 +513,7 @@ public static class Scenario
             ["BrunoOuverture.pdn"] = 1, ["BrunoVsScan31.pdn"] = 11, ["Championnat de France 2021.pdn"] = 58, ["ChapionnatSurinam2025.pdn"] = 98,
             ["Match Samb-Buggy2.pdn"] = 6, ["Mini.pdn"] = 6, ["Moby_vs_Programs.pdn"] = 9, ["Montpellier Open Serie A.pdn"] = 56,
             ["Montpellier Open Serie B.pdn"] = 49, ["Partie_avec_FEN1.pdn"] = 4, ["Sijbrands_vs_Andreiko.pdn"] = 20, ["test.pdn"] = 2,
-            ["TOURNOI DES CHAMPION REGIONAUX.pdn"] = 12, ["Van der Wal_vs_Wiersma.pdn"] = 20, ["World Title Match Women 2024.pdn"] = 2
+            ["TOURNOI DES CHAMPION REGIONAUX.pdn"] = 12, ["Van der Wal_vs_Wiersma.pdn"] = 20, ["World Title Match Women 2024.pdn"] = 2, ["Nulle_25_coups_49_demi_coups.pdn"] = 1
         };
         // Parties qui ne se rejouent pas, par fichier (numéros à partir de 1). La partie 11 de BrunoVsScan31.pdn est un export de
         // l'application : balises d'une autre partie (Championnat de France 2021, dont les coups sont tout autres dès le coup 2), et
@@ -549,6 +549,24 @@ public static class Scenario
         }
         Verifie("Ensemble des fichiers d'exemple : toutes les parties lues, toutes rejouées sauf une", totalParties == partiesAttendues.Values.Sum() && totalRejouees == totalParties - 1,
                 $"{totalRejouees}/{totalParties} parties rejouées, {totalCoups} coups");
+
+        // Exemple de nulle : 49 demi-coups de dames (FEN de départ), un 50e fait une nulle (par les 25 coups de dames, ou par répétition si le coup recrée une position déjà vue deux fois)
+        string? fichierNulle = fichiers.FirstOrDefault(f => Path.GetFileName(f) == "Nulle_25_coups_49_demi_coups.pdn");
+        if (fichierNulle == null)
+        {
+            Verifie("Exemple de nulle : fichier Nulle_25_coups_49_demi_coups.pdn présent", false, "absent du dossier des exemples");
+        }
+        else
+        {
+            RejeuPdn rejeuNulle = LecturePdn.LireFichier(fichierNulle)[0].Rejouer();
+            Position derniereNulle = rejeuNulle.Positions[^1];
+            Coup? cinquantieme = ReglesDames.CoupsLegaux(derniereNulle).FirstOrDefault(c => !c.EstPrise && Position.EstDame(derniereNulle[c.Depart]));
+            List<Position> avecCinquantieme = [.. rejeuNulle.Positions];
+            if (cinquantieme != null) avecCinquantieme.Add(ReglesDames.Jouer(derniereNulle, cinquantieme));
+            Verifie("Exemple de nulle : 49 demi-coups de dames, pas encore nulle ; un 50e : nulle",
+                    rejeuNulle.Erreur == null && rejeuNulle.Coups.Count == 49 && NullesDames.Detecte(rejeuNulle.Positions) == RaisonNulle.Aucune && cinquantieme != null && NullesDames.Detecte(avecCinquantieme) != RaisonNulle.Aucune,
+                    rejeuNulle.Erreur ?? $"{rejeuNulle.Coups.Count} demi-coups, 50e : {NullesDames.Detecte(avecCinquantieme)}");
+        }
 
         // ═══════════════ Perft ═══════════════
         // Nombre de positions atteintes après n demi-coups depuis la position initiale : valeurs de référence de la littérature
