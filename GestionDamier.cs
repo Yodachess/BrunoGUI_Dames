@@ -65,10 +65,6 @@ namespace BrunoGUI_Dames
             TypePiece = typePiece;
             CouleurPiece = couleurPiece;
         }
-        public bool EstVide()
-        {
-            return TypePiece == TypePiece.Vide;
-        }
     }
 
     public static class GestionDamier
@@ -85,17 +81,6 @@ namespace BrunoGUI_Dames
         public static Position PositionCourante = new Position();
 
         // --- Conversions entre les types de pièces de l'affichage et ceux de Position ---
-        public static Piece PieceDe(TypePiece typePiece)
-        {
-            switch (typePiece)
-            {
-                case TypePiece.PionBlanc: return Piece.PionBlanc;
-                case TypePiece.PionNoir: return Piece.PionNoir;
-                case TypePiece.DameBlanche: return Piece.DameBlanche;
-                case TypePiece.DameNoire: return Piece.DameNoire;
-                default: return Piece.Vide;
-            }
-        }
         public static TypePiece TypeDe(Piece piece)
         {
             switch (piece)
@@ -168,15 +153,6 @@ namespace BrunoGUI_Dames
         public static (int ligne, int colonne) IndiceVersCoordonnees(int indiceBox)
         {   // --- Retourne la ligne et la colonne de la case indiceBox ---
             return (indiceBox / 10, indiceBox % 10);
-        }
-        public static int CoordonneesVersIndice(int ligne, int colonne)
-        {   // --- Retourne l'indiceBox située à la ligne, colonne ---
-            return ligne * 10 + colonne;
-        }
-        public static bool EstNumeroPictureBoxValide(int numeroPictureBox)
-        {   // Verifie si le numeroPictureBox est dans les limites du damier ---
-            var (ligne, colonne) = GestionDamier.IndiceVersCoordonnees(numeroPictureBox);
-            return ligne >= 0 && ligne < 10 && colonne >= 0 && colonne < 10;
         }
         public static bool EstCaseManouryValide(int numeroCaseManoury)              
         {   // --- Vérifie si une case Manoury est valide ---

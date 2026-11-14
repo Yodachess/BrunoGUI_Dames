@@ -141,12 +141,6 @@ namespace BrunoGUI_Dames
                 Journal.Ecrit($"ERREUR enregistrement du PDN : {ex}");
             }
         }
-        private void AffichePdn_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            e.Cancel = true;  // Annule la fermeture de la fenêtre
-            this.Hide();      // Masque la fenêtre au lieu de la fermer;
-        }
-
         [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(ZoneAffichage), nameof(MasqueAffichePdn), nameof(AffichePdnFr), nameof(AfficheFen),
                                                        nameof(AfficheListeHub2), nameof(EnregistrerPdn), nameof(EnregistrerFichierPdn))]
         private void InitializeComponent()

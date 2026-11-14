@@ -10,7 +10,6 @@
 using System;
 using System.Media;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -522,7 +521,7 @@ namespace BrunoGUI_Dames
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
             var couleurPiece = pieceSource.CouleurPiece;
             ListeCasesCoupSelectionne.Add(GestionDamier.PictureBoxVersManoury[indexSourceBox]);     // Ajoute la case source au suivi des coups
-            // Vérification si promotion en Dame : IL FAUDRAIT S'ASSURER QUE LA PIECE N'EST PAS DEJA UNE DAME !!!!!!!!!!!!!!!!!!!
+            // Promotion en dame si le pion arrive sur la dernière rangée (pour une dame, c'est sans effet)
             if (derniereRangeeBlanche.Contains(destinationManoury) && pieceSource.CouleurPiece == CouleurPiece.Noir)
             {
                 pieceSource.TypePiece = TypePiece.DameNoire; // Promotion en Dame noire
@@ -849,7 +848,7 @@ namespace BrunoGUI_Dames
                         {
                             CaseDamier[indexPrise].BackColor = CouleurCasePrise;
                             CaseDamier[indexArrivee].Image = CadreGrisSansPrise;
-                            CaseDamier[indexArrivee].BackColor = CouleurCaseEtape;    // A enlever si on ne veut que les cases pièces prises !!!!
+                            CaseDamier[indexArrivee].BackColor = CouleurCaseEtape;    // Les cases d'arrivée de chaque étape sont colorées en plus des pièces prises
                             // Sauvegarder les cases pour les étapes ultérieures
                             ListeCasesMouvementPrecedent.Add(prise);
                             ListeCasesMouvementPrecedent.Add(arrivee);
@@ -1680,7 +1679,7 @@ namespace BrunoGUI_Dames
                 }
                 else
                 {
-                    Debug.WriteLine($"Conflit détecté : nouvelIndex {nouvelIndex} déjà attribué !");
+                    Journal.Ecrit($"ERREUR retournement du damier : l'index {nouvelIndex} est attribué deux fois");
                 }
             }
             // Mise à jour finale du dictionnaire

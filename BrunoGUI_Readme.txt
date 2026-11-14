@@ -1,92 +1,138 @@
-BrunoGUI_dames V1.xx Copyright 2024-2025 Bruno Courtois
+BrunoGUI Dames
 
-Ce projet est une interface graphique sous Windows permettant de jouer aux dames internationales (10x10).
-C'est une application Winforms développé en langage C# 7.3 sous .NET 4.7 avec Visual Studio 2022.
+BrunoGUI Dames v1.10 - Copyright 2024-2026 Bruno Courtois - licence GPL 3.0 ou ultérieure (voir LICENSE.txt)
 
-Connaissant la qualité des logiciels de Fabien Letouzey (Fruit, Seipan, ...), je me suis tourné pour le 
-moteur vers son logiciel de dames SCAN dans sa version 3.1 (la dernière à ma conaissance), qui utilise 
-un protocole hub2 similaire au protocole UCI des echecs (github.com/rhalbersma/scan ).
+Interface graphique Windows pour jouer et analyser des parties de **dames internationales** (damier 10x10, notation Manoury).
+Application WinForms en C# 14 sous .NET 10 (Visual Studio 2022), composants Krypton.
 
-Mon projet comporte un damier complet prêt à jouer au lancement (utilisation et affichage notation Manoury), 
-l'utilisateur clique sur le pion qu'il veut jouer et l'application lui montre les déplacements possibles (s'il y en a)
-Une série de boutons sur la droite permet de sélectionner des options, sauf pendant la réflexion du moteur.
+Pour le moteur, je me suis tourné vers le logiciel de dames **Scan 3.1** de Fabien Letouzey (Fruit, Seipan, ...), dont je connais la qualité.
+Scan utilise le protocole Hub2, proche du protocole UCI des échecs (github.com/rhalbersma/scan).
+
+Installation
+
+Téléchargez l'archive `BrunoGUI_Dames-vX.YY.zip` de la dernière version sur la page des Releases
+(github.com/Yodachess/BrunoGUI_Dames/releases).
+Avant de la décompresser : clic droit sur le zip > Propriétés > « Débloquer ». Décompressez, puis lancez `BrunoGUI_Dames.exe`.
+Rien d'autre à installer : .NET et le moteur Scan 3.1 sont inclus. Windows peut afficher un avertissement SmartScreen
+(le programme n'est pas signé) : « Informations complémentaires » puis « Exécuter quand même ».
+L'aide s'ouvre par le bouton « Aide (F1) » ou la touche F1.
+
+Fonctions
+
+Le damier est prêt à jouer au lancement. On clique sur la pièce à jouer, le programme montre ses déplacements possibles,
+on clique sur la case d'arrivée. Les règles sont celles des dames internationales : les pions prennent en avant et en arrière,
+les dames sont volantes, la prise est obligatoire et majoritaire. Quand plusieurs rafles de mêmes départ et arrivée prennent
+des pièces différentes, une fenêtre laisse choisir en montrant les pièces prises de chacune.
+Une série de boutons à droite donne accès aux options (sauf pendant la réflexion du moteur).
 
 Boutons disponibles :
 * "Nouvelle Partie" : démarre une nouvelle partie
 * "Ordinateur joue" : lance la réflexion du moteur et joue son coup sur le damier
-* "Retour Arrière" : recule la partie d'un demi coup
-* "Tourner damier" : fait pivoter le damier de 180°, par défaut vue côté blancs 
+* "Retour Arrière" : recule la partie d'un demi-coup
+* "Tourner damier" : fait pivoter le damier de 180° (par défaut, vue côté blancs)
 * "Analyse position" : lance la réflexion du moteur et donne le résultat SANS jouer le coup sur le damier
-* "Liste des coups" : Affiche la liste des coups joués, aux formats Pdn, FEN et Hub2
-* "Parcours partie" : boutons permettant de parcourir la partie 
-* "Charger parties" : lecture de fichiers au format Pdn et affichage de la liste des partie(s) 
-* "Masquer partie" : bouton cachant/affichant la liste des partie(s) 
-* "Sauve partie" : Sauvegarde de la partie au format Pdn, peut être ajouté à la fin d'un fichier existant
-* "Charge position" : lecture de fichier au format FEN et mise en place de la position 
-* "Sauve position" : Sauvegarde de la position au format FEN
-* "Protocole" : affiche les échanges protocole hub2 entre l'interface graphique et le moteur
-* "A propos" : Version ddu logiciel et du moteur
+* "Liste des coups" : affiche la liste des coups joués, aux formats PDN, FEN et Hub2
+* "Parcours partie" (Début, Préc., Suiv., Fin) : parcourt la partie coup par coup
+* "Charge Parties" : lecture d'un fichier PDN et affichage de la liste de ses parties (double-clic pour dérouler une partie)
+* "Masque parties" : cache ou montre la liste des parties
+* "Sauve Partie" : sauvegarde de la partie au format PDN, peut être ajoutée à la fin d'un fichier existant
+* "Charge position" : lecture d'un fichier FEN et mise en place de la position
+* "Sauve position" : sauvegarde de la position au format FEN
+* "Protocole" : affiche les échanges du protocole Hub2 entre l'interface et le moteur
+* "A propos de BIG" : version du logiciel et du moteur
+* "Aide (F1)" : ouvre l'aide
 * "Quitter"
 
-Il est possible de jouer entre humains, en décochant le bouton "Ordinateur"
-Si le bouton "Son" est coché, un son est émis lorsque le moteur a joué
-Il est possible de définir la fin/résultat de la partie (cocher 1-0, 0-1 ou 1/2-1/2), 
-la liste de coups Pdn sera mis à jour avec le résultat.
-Le temps de réflexion du moteur est réglable de 1 à 25 secondes (défaut = 5 secondes)
+On peut jouer entre humains en décochant "Ordinateur". Si "Son" est coché, un son est émis lorsque le moteur a joué.
+Le temps de réflexion du moteur se règle de 1 à 25 secondes (5 par défaut).
+Un bandeau en haut de la fenêtre indique le statut (trait aux blancs ou aux noirs, résultat éventuel) ;
+sous le bandeau, le score estimé (en centipions) et la ligne du moteur. Les noms des joueurs sont modifiables et repris dans le PDN.
 
-Un bandeau en haut de fenêtre indique le statut (trait aux blanc, trait aux noirs, gain éventuel, ...)
-Sous le bandeau, le score estimé (en centipions) et la ligne du moteur sont affichés
-Les noms des joueurs peuvent être édités et sont mis à jour dans la liste de coups Pdn.
+Fin de partie : le programme détecte le gain (plus de pièce, ou plus aucun coup possible) et les nulles par répétition (trois fois la même
+position), par 25 coups de dames de chaque joueur, et par les finales à peu de pièces (16 et 5 coups, règles FMJD 6.3 et 6.4).
+La nulle par accord, l'abandon, etc. se saisissent en cochant le résultat (1-0, 0-1, 1/2-1/2) : il est ajouté à la liste des coups PDN.
 
-Améliorations possibles :
-* robustesse de l'expérience utilisateur (quelques bugs encore possible  ...)
-* Mise en place de position pour étudier des problèmes (déjà possible avec format FEN)
+Les préférences (temps de réflexion, noms, son, ordinateur, sens du damier, durée d'animation, couleurs du damier) sont retenues
+dans `BrunoGUI_Dames.preferences.ini` à côté du programme. Les anomalies sont notées dans `Journal.log`.
 
-Toute remarque ou signalement de bug est bienvenue
+Compiler les sources
 
-English version :
+Il faut le SDK .NET 10 sous Windows. Les tests vérifient les règles (dont un perft de profondeur 7), le PDN, les nulles et le dialogue avec le vrai Scan.
 
-BrunoGUI_dames V1.xx - Copyright 2024-2025 Bruno Courtois
-This project is a Windows graphical interface for playing international draughts (10x10).
-It is a WinForms application developed in C# 7.3 under .NET 4.7 using Visual Studio 2022.
+    dotnet build BrunoGUI_Dames.sln
+    dotnet run --project BrunoGUI_Dames.csproj
+    dotnet test Tests
 
-Knowing the quality of Fabien Letouzey's software (Fruit, Seipan, ...), 
-I chose to use his draughts engine SCAN 3.1 (the latest version to my knowledge).
-SCAN uses the Hub2 protocol, which is similar to the UCI protocol in chess (github.com/rhalbersma/scan).
+Les parties PDN et positions FEN d'exemple sont dans `Dames_PartiesPdn_FEN`. Le moteur Scan, avec ses sources et sa licence, est dans `Dames_Scan31_FabienLetouzey`.
+
+Toute remarque ou signalement d'anomalie est bienvenu (joindre `Journal.log` s'il existe).
+
+---
+
+English version
+
+BrunoGUI Dames v1.10 - Copyright 2024-2026 Bruno Courtois - GPL 3.0 or later license (see LICENSE.txt)
+
+A Windows graphical interface for playing and analysing **international draughts** (10x10 board, Manoury notation).
+WinForms application written in C# 14 on .NET 10 (Visual Studio 2022), with Krypton components.
+
+Knowing the quality of Fabien Letouzey's software (Fruit, Seipan, ...), I chose his draughts engine **Scan 3.1**.
+Scan uses the Hub2 protocol, which is similar to the UCI protocol in chess (github.com/rhalbersma/scan).
+
+Installation
+
+Download `BrunoGUI_Dames-vX.YY.zip` of the latest version from the Releases page (github.com/Yodachess/BrunoGUI_Dames/releases).
+Before extracting: right-click the zip > Properties > “Unblock”. Extract it, then run `BrunoGUI_Dames.exe`.
+Nothing else to install: .NET and the Scan 3.1 engine are included. Windows may show a SmartScreen warning
+(the program is not signed): “More info”, then “Run anyway”.
+The help (in French) opens with the "Aide (F1)" button or the F1 key.
 
 Features
-The application starts with a fully set up draughts board (using Manoury notation for display).
-The player clicks on a piece, and the application highlights possible moves (if any).
-A series of buttons on the right allows selecting various options, except during the engine's thinking time.
+
+The board is ready to play at startup. Click on the piece to play, the program shows its possible moves, then click on the destination square.
+The rules are those of international draughts: men capture forwards and backwards, kings are flying, capturing is mandatory and
+the maximum number of pieces must be taken. When several captures with the same start and end squares take different pieces, a dialog
+lets you choose, showing the captured pieces of each one.
+A series of buttons on the right gives access to the options (except while the engine is thinking).
 
 Available buttons:
-"New Game": Starts a new game.
-"Computer plays": Starts the engine's calculation and plays the move on the board.
-"Undo move": Reverts the game by half a move.
-"Rotate board": Rotates the board 180° (default: White's perspective).
-"Analyze position": Runs the engine’s calculation but does not play the move on the board.
-"Move list": Displays the move history in Pdn, FEN, and Hub2 formats.
-"Game navigation": Buttons to navigate through the game.
-"Load games": Reads Pdn files and displays the list of available games.
-"Hide games": Hides or shows the list of games.
-"Save game": Saves the game in Pdn format, with the option to append it to an existing file.
-"Load position": Reads a FEN file and sets up the board position.
-"Save position": Saves the current board position in FEN format.
-"Protocol": Displays Hub2 protocol exchanges between the GUI and the engine.
-"About": Shows the software and engine version.
-"Quit"
+* "Nouvelle Partie" (New game): starts a new game
+* "Ordinateur joue" (Computer plays): starts the engine's calculation and plays its move on the board
+* "Retour Arrière" (Undo): reverts the game by half a move
+* "Tourner damier" (Rotate board): rotates the board by 180° (default: White's perspective)
+* "Analyse position" (Analyse position): runs the engine's calculation but does NOT play the move on the board
+* "Liste des coups" (Move list): displays the moves played in PDN, FEN and Hub2 formats
+* "Parcours partie" (Début, Préc., Suiv., Fin): steps through the game move by move
+* "Charge Parties" (Load games): reads a PDN file and displays the list of its games (double-click to play a game back)
+* "Masque parties" (Hide games): hides or shows the list of games
+* "Sauve Partie" (Save game): saves the game in PDN format, with the option to append it to an existing file
+* "Charge position" (Load position): reads a FEN file and sets up the position
+* "Sauve position" (Save position): saves the current position in FEN format
+* "Protocole" (Protocol): displays the Hub2 protocol exchanges between the GUI and the engine
+* "A propos de BIG" (About): software and engine versions
+* "Aide (F1)" (Help): opens the help
+* "Quitter" (Quit)
 
-Additional Features
-Human vs. Human play is possible by unchecking the "Computer plays" button.
-If the "Sound" button is checked, a sound is played when the engine moves.
-You can manually set the game result (1-0, 0-1, or ½-½). The result is updated in the Pdn move list.
-Engine thinking time can be adjusted between 1 and 25 seconds (default: 5 seconds).
-A status bar at the top indicates whose turn it is (White or Black), possible wins, etc.
-Below the status bar, the engine's evaluation (in centipawns) and PV (best line) are displayed.
-Player names are editable and updated in the Pdn move list.
+Human vs. human play is possible by unchecking "Ordinateur". If "Son" is checked, a sound is played when the engine moves.
+Engine thinking time can be set from 1 to 25 seconds (default: 5).
+A status bar at the top shows whose turn it is and the result, if any; below it, the engine's evaluation (in centipawns) and its best line.
+Player names are editable and used in the PDN.
 
-Possible improvements:
-Better user experience & stability (some bugs may still exist...).
-Position setup for problem-solving (already possible using FEN format).
+End of game: the program detects wins (no pieces left, or no legal move) and draws by repetition (same position three times),
+by 25 king moves per player, and by few-piece endings (16 and 5 moves, FMJD rules 6.3 and 6.4). A draw by agreement, a resignation, etc.
+are entered by ticking the result (1-0, 0-1, 1/2-1/2): it is added to the PDN move list.
 
-Any remark or bug input is welcome
+Preferences (thinking time, names, sound, computer, board orientation, animation speed, board colours) are kept in
+`BrunoGUI_Dames.preferences.ini` next to the program. Anomalies are logged in `Journal.log`.
+
+Building from source
+
+You need the .NET 10 SDK on Windows. The tests check the rules (including a depth-7 perft), PDN, draws and the dialogue with the real Scan.
+
+    dotnet build BrunoGUI_Dames.sln
+    dotnet run --project BrunoGUI_Dames.csproj
+    dotnet test Tests
+
+Sample PDN games and FEN positions are in `Dames_PartiesPdn_FEN`. The Scan engine, with its sources and license, is in `Dames_Scan31_FabienLetouzey`.
+
+Any remark or bug report is welcome (please attach `Journal.log` if it exists).
