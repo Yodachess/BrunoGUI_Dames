@@ -473,6 +473,29 @@ public static class Scenario
                 rejeuPartiel.Erreur != null && rejeuPartiel.Coups.Count == 5 && rejeuPartiel.Positions.Count == 6 && rejeuPartiel.Erreur.StartsWith("Coup 6 "), rejeuPartiel.Erreur ?? "(pas d'erreur)");
         Verifie("Rejeu : un coup absurde (« 0-0 ») est une erreur de partie, pas une exception", new PartiePdn { Coups = { "0-0" } }.Rejouer(premierSiAmbigu: true).Erreur != null, "0-0");
 
+        // Deux rafles de 44 vers 24 (par 39, 18, 19 ou par 39, 12, 19) : la notation écrite est la complète, et elle désigne chacune sans ambiguïté
+        Position positionDeuxRafles = Position.DepuisFen("W:WK44:B12,18,19,39");
+        List<Coup> toutesLesRafles = ReglesDames.CoupsLegaux(positionDeuxRafles);       // 6 rafles : 2 vers 24, 2 vers 30, 2 vers 35
+        List<Coup> deuxRaflesMemeArrivee = toutesLesRafles.Where(c => c.Arrivee == 24).ToList();
+        string[] notationsEcrites = deuxRaflesMemeArrivee.Select(c => ReglesDames.NotationPdn(toutesLesRafles, c)).ToArray();
+        Verifie("PDN : deux rafles de même départ et même arrivée s'écrivent avec leur chemin complet, différent pour chacune",
+                deuxRaflesMemeArrivee.Count == 2 && notationsEcrites.All(n => n.Count(ch => ch == 'x') >= 2) && notationsEcrites.Distinct().Count() == 2, string.Join(" ; ", notationsEcrites));
+        Verifie("PDN : chaque notation complète relue désigne exactement la rafle d'origine",
+                deuxRaflesMemeArrivee.All(c => ReferenceEquals(ReglesDames.TrouverCoupPdn(positionDeuxRafles, c.PdnComplet()), c) || ReglesDames.TrouverCoupPdn(positionDeuxRafles, c.PdnComplet())?.Hub2() == c.Hub2()),
+                string.Join(" ; ", deuxRaflesMemeArrivee.Select(c => c.PdnComplet() + " -> " + ReglesDames.TrouverCoupPdn(positionDeuxRafles, c.PdnComplet())?.Hub2())));
+        PartiePdn partieComplete = new PartiePdn { Fen = "W:WK44:B12,18,19,39" };
+        partieComplete.Coups.Add(deuxRaflesMemeArrivee[1].PdnComplet());
+        PartiePdn relueComplete = LecturePdn.LireTexte(partieComplete.VersTexte())[0];
+        RejeuPdn rejeuComplet = relueComplete.Rejouer();
+        Verifie("PDN : une rafle écrite avec son chemin complet se relit et se rejoue, et c'est bien la seconde rafle, pas la première",
+                relueComplete.Coups.Count == 1 && relueComplete.Coups[0] == deuxRaflesMemeArrivee[1].PdnComplet() && rejeuComplet.Erreur == null && rejeuComplet.Coups[0].Hub2() == deuxRaflesMemeArrivee[1].Hub2(),
+                relueComplete.Coups.Count > 0 ? relueComplete.Coups[0] : "(aucun coup)");
+        Position positionSansAmbiguite = Position.DepuisFen("W:W28:B22");
+        List<Coup> coupsSansAmbiguite = ReglesDames.CoupsLegaux(positionSansAmbiguite);
+        Verifie("PDN : une rafle sans ambiguïté et un déplacement simple gardent la notation abrégée",
+                ReglesDames.NotationPdn(coupsSansAmbiguite, coupsSansAmbiguite[0]) == "28x17" && ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.Initiale()), ReglesDames.CoupsLegaux(Position.Initiale())[0]).Contains('-'),
+                ReglesDames.NotationPdn(coupsSansAmbiguite, coupsSansAmbiguite[0]));
+
         // ═══════════════ PDN : fichiers d'exemple du projet ═══════════════
         Console.WriteLine("── PDN : fichiers d'exemple ──");
 

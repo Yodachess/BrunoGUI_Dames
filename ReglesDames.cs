@@ -42,6 +42,10 @@ namespace BrunoGUI_Dames
         // --- Notation PDN abrégée : « 32-28 », ou « 28x19 » (case de départ et case d'arrivée seulement). ---
         public string Pdn() => EstPrise ? $"{Depart}x{Arrivee}" : $"{Depart}-{Arrivee}";
 
+        // --- Notation PDN complète d'une rafle : « 44x37x24 » (départ puis chaque case où la pièce se pose) ; pour un déplacement simple, comme Pdn(). ---
+        // Elle départage deux rafles de même départ et même arrivée qui ne prennent pas les mêmes pièces.
+        public string PdnComplet() => EstPrise ? $"{Depart}x{string.Join("x", Chemin)}" : Pdn();
+
         public override string ToString() => Hub2();
     }
 
@@ -55,6 +59,15 @@ namespace BrunoGUI_Dames
         {
             List<Coup> prises = Rafles(position);
             return prises.Count > 0 ? prises : Deplacements(position);
+        }
+
+        // --- La notation PDN à écrire pour ce coup parmi les coups légaux de sa position : l'abrégée « 28x19 », ou la complète « 28x37x19 » quand une autre rafle
+        // légale part de la même case, arrive sur la même case et prend d'autres pièces (l'abrégée serait alors ambiguë à la relecture). ---
+        public static string NotationPdn(IEnumerable<Coup> coupsLegaux, Coup coup)
+        {
+            bool ambigu = coup.EstPrise && coupsLegaux.Any(autre => autre.EstPrise && autre.Depart == coup.Depart && autre.Arrivee == coup.Arrivee
+                                                                  && !autre.Prises.OrderBy(n => n).SequenceEqual(coup.Prises.OrderBy(n => n)));      // Une autre rafle, qui prend d'autres pièces
+            return ambigu ? coup.PdnComplet() : coup.Pdn();
         }
 
         // --- Le camp au trait n'a plus aucun coup (plus de pièce, ou toutes bloquées) : il a perdu. ---

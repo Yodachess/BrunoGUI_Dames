@@ -216,9 +216,17 @@ namespace BrunoGUI_Dames
                             {
                                 // --- ReglesDames décide si le coup est légal et quelle rafle est jouée ---
                                 List<Coup> candidats = coupsLegauxPieceSelectionnee?.Where(c => c.Arrivee == CaseDestinationManoury).ToList() ?? new List<Coup>();    // Vide si le calcul a échoué : le coup est refusé
-                                if (candidats.Count > 1)    // Plusieurs rafles de même départ et même arrivée qui ne prennent pas les mêmes pièces : on joue la première
-                                    Journal.Ecrit($"AMBIGU {RecupereFEN()} : {string.Join(" ou ", candidats.Select(c => c.Hub2()))}, joué : {candidats[0].Hub2()}");
                                 Coup? coupJoue = candidats.FirstOrDefault();
+                                if (candidats.Count > 1)
+                                {   // Plusieurs rafles de même départ et même arrivée qui ne prennent pas les mêmes pièces : le joueur choisit, en voyant les pièces prises de chaque option
+                                    coupJoue = ChoisitRafle(candidats);
+                                    if (coupJoue == null)
+                                    {   // Choix annulé : la pièce revient sur sa case et le damier retrouve ses indications
+                                        DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
+                                        AnalyseCoupObligatoire(CouleurAuTrait);
+                                        return;     // Le finally remet l'état de sélection à zéro
+                                    }
+                                }
                                 if (coupJoue == null)
                                 {   // Le coup n'est pas légal, on remet la pièce sur sa case d'origine
                                     DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece, pieceCouleurSource.CouleurPiece);
@@ -229,7 +237,7 @@ namespace BrunoGUI_Dames
                                     List<(int casePrise, int caseArrivee)> rafleAJouer = coupJoue.Prises.Zip(coupJoue.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
                                     var indexSourceBox = GestionDamier.ManouryVersIndexPictureBox[CaseSourceManoury - 1];   // Index PictureBox initial
                                     (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexSourceBox);
-                                    await AnimerEtExecuterRafle(indexSourceBox, rafleAJouer, GestionDamier.DamierContenu[ligne, colonne]);
+                                    await AnimerEtExecuterRafle(indexSourceBox, rafleAJouer, GestionDamier.DamierContenu[ligne, colonne], ReglesDames.NotationPdn(coupsLegauxPieceSelectionnee ?? new List<Coup>(), coupJoue));
                                     EnregistrePositionApresCoupHumain();
                                 }
                                 else
@@ -336,7 +344,8 @@ namespace BrunoGUI_Dames
                     if (coupMoteur.EstPrise)
                     {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
                         List<(int casePrise, int caseArrivee)> rafleDuMoteur = coupMoteur.Prises.Zip(coupMoteur.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
-                        await AnimerEtExecuterRafle(indexSourceBox, rafleDuMoteur, pieceDuMoteur);
+                        string notationDuMoteur = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.DepuisHub2(positionHub2)), coupMoteur);
+                        await AnimerEtExecuterRafle(indexSourceBox, rafleDuMoteur, pieceDuMoteur, notationDuMoteur);
                     }
                     else
                     {   // Un déplacement simple
@@ -539,7 +548,7 @@ namespace BrunoGUI_Dames
             ActiveCouleurDamier(couleurPiece.ToString(), false);
             VerifierGain();
         }
-        public async Task AnimerEtExecuterRafle(int indexSourceBox, List<(int casePrise, int caseArrivee)> rafle, ContenuCase pieceSource)
+        public async Task AnimerEtExecuterRafle(int indexSourceBox, List<(int casePrise, int caseArrivee)> rafle, ContenuCase pieceSource, string? notationPdn = null)
         {   // --- Execute une rafle complète avec une animation à la vitesse DureeAnimation, ne prend les pièces qu'à la fin de la rafle ---
             ActiveDamier(false); // Désactiver les interactions pendant l'animation
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
@@ -597,7 +606,8 @@ namespace BrunoGUI_Dames
                 await Task.Delay(DureeAnimation);
             }
             boxesAEffacerFinRafle.Clear();
-            string coupEffectue = GestionDamier.PictureBoxVersManoury[indexSourceBox] + "x"  + derniereCaseRafle;
+            // Notation PDN du coup : abrégée « 28x19 », ou complète si une autre rafle de même départ et même arrivée existe (notationPdn)
+            string coupEffectue = notationPdn ?? GestionDamier.PictureBoxVersManoury[indexSourceBox] + "x"  + derniereCaseRafle;
             CaseDamier[GestionDamier.ObtenirIndicePictureBox(derniereCaseRafle)].BackColor = CouleurCaseArrivee;
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
             if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
@@ -1067,6 +1077,27 @@ namespace BrunoGUI_Dames
             LabelInformationJoueur.Text = "Partie nulle : " + motif;
             MessageBox.Show("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+        private void MetEnEvidenceRafle(Coup rafle)
+        {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---
+            CouleurToutesCasesManoury(CouleurCasesombre);
+            CaseDamier[GestionDamier.ManouryVersIndexPictureBox[CaseSourceManoury - 1]].BackColor = CouleurCaseDepart;
+            foreach (int caseDuChemin in rafle.Chemin)
+                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[caseDuChemin - 1]].BackColor = CouleurCaseEtape;
+            CaseDamier[GestionDamier.ManouryVersIndexPictureBox[rafle.Arrivee - 1]].BackColor = CouleurCaseArrivee;
+            foreach (int prise in rafle.Prises)
+                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[prise - 1]].BackColor = Color.Red;
+        }
+        private Coup? ChoisitRafle(List<Coup> options)
+        {   // --- Fenêtre de choix entre plusieurs rafles de même départ et même arrivée (les pièces prises de chaque option sont mises en évidence) ; null si le joueur annule ---
+            using ChoixRafleForm dialogue = new ChoixRafleForm(options, MetEnEvidenceRafle);
+            Rectangle zone = Screen.FromControl(this).WorkingArea;
+            int x = Right + 8 + dialogue.Width <= zone.Right ? Right + 8 : Math.Max(zone.Left, Left - dialogue.Width - 8);      // À côté de la fenêtre, pour ne pas cacher le damier
+            dialogue.StartPosition = FormStartPosition.Manual;
+            dialogue.Location = new Point(x, Top + 120);
+            dialogue.ShowDialog(this);
+            CouleurToutesCasesManoury(CouleurCasesombre);       // Efface la mise en évidence
+            return dialogue.Choisie;
+        }
         private bool EstCaseValide(int caseDestinationManoury)
         {   // C'est une case valide si un coup légal de la pièce sélectionnée (selon ReglesDames) y arrive
             return coupsLegauxPieceSelectionnee != null && coupsLegauxPieceSelectionnee.Any(coup => coup.Arrivee == caseDestinationManoury);
@@ -1407,7 +1438,8 @@ namespace BrunoGUI_Dames
                     if (coupPdn.EstPrise)       // Prise (rafle)
                     {
                         List<(int casePrise, int caseArrivee)> rafle = coupPdn.Prises.Zip(coupPdn.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
-                        await AnimerEtExecuterRafle(indexSourceBox, rafle, pieceSource);
+                        string notationRejeu = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.DepuisFen(RecupereFEN())), coupPdn);
+                        await AnimerEtExecuterRafle(indexSourceBox, rafle, pieceSource, notationRejeu);
                         ChangerCouleurTrait();
                     }
                     else                        // Déplacement simple
