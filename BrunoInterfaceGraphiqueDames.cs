@@ -211,8 +211,9 @@ namespace BrunoGUI_Dames
                         try
                         {   // Le try-catch récupère l'exception qui se produit lorsque que l'on clique sur une case inactive
                             CaseDestinationManoury = GestionDamier.PictureBoxVersManoury.TryGetValue(indexCase100, out int caseCliquee) ? caseCliquee : 0;     // 0 : case claire, non jouable (la pièce revient)
-                            // Il faut que la case destination soit une case Manoury, soit valide et != de la source
-                            if (GestionDamier.EstCaseManouryValide(CaseDestinationManoury) && EstCaseValide(CaseDestinationManoury) && CaseDestinationManoury != CaseSourceManoury)
+                            // Il faut que la case destination soit une case Manoury et qu'un coup légal de la pièce y arrive. Elle peut être la case de départ elle-même :
+                            // une rafle peut revenir sur sa case (un tour complet) ; sans telle rafle, cliquer sa propre case n'est pas un coup et la pièce revient
+                            if (GestionDamier.EstCaseManouryValide(CaseDestinationManoury) && EstCaseValide(CaseDestinationManoury))
                             {
                                 // --- ReglesDames décide si le coup est légal et quelle rafle est jouée ---
                                 List<Coup> candidats = coupsLegauxPieceSelectionnee?.Where(c => c.Arrivee == CaseDestinationManoury).ToList() ?? new List<Coup>();    // Vide si le calcul a échoué : le coup est refusé
@@ -406,9 +407,13 @@ namespace BrunoGUI_Dames
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[rafle.Depart - 1]].BackColor = CouleurCaseDepart;
                 foreach (int arrivee in rafle.Chemin)
                 {   // Colorier chaque case d'arrivée avec le cadre gris
-                    CaseDamier[GestionDamier.ManouryVersIndexPictureBox[arrivee - 1]].BackColor = CouleurCaseArrivee;
-                    CaseDamier[GestionDamier.ManouryVersIndexPictureBox[arrivee - 1]].Image = CadreGrisSansPrise;
-                    ListeCasesDestination.Add(arrivee);     // Ajouter la case d'arrivée à la liste des cases de destination
+                    PictureBox caseArrivee = CaseDamier[GestionDamier.ManouryVersIndexPictureBox[arrivee - 1]];
+                    caseArrivee.BackColor = CouleurCaseArrivee;
+                    if (caseArrivee.Image == null)
+                    {   // Pas de cadre sur une case qui porte une pièce : une rafle qui revient sur sa case de départ passe par la case de la pièce qui prend, qui doit rester visible
+                        caseArrivee.Image = CadreGrisSansPrise;
+                        ListeCasesDestination.Add(arrivee);     // Ajouter la case d'arrivée à la liste des cases de destination (dont l'image sera effacée)
+                    }
                 }
             }
             foreach (int caseActivable in casesActivables)      // Parcourir toutes les cases activables
