@@ -287,6 +287,11 @@ namespace BrunoGUI_Dames
 
         private async Task LancementReflexionMoteur(string positionHub2, int tempsReflexion)
         {   // --- Laancement du moteur SCAN pour réfléchir à un coup sur la position "positionHub2" pendant "tempsReflexion" ---
+            if (!analyseEnCours && !PartieTerminee && NulleActuelle() != RaisonNulle.Aucune)
+            {   // La partie est nulle : inutile d'interroger le moteur
+                FinPartieParNulle(NulleActuelle());
+                return;
+            }
             if (!analyseEnCours && (PartieTerminee || ReglesDames.EstTerminee(Position.DepuisHub2(positionHub2))))
             {   // La partie est déjà finie, ou le camp du moteur n'a plus aucun coup (il a perdu) : inutile d'interroger le moteur
                 FinPartieParBlocage(positionHub2[0] == 'W' ? "Blanc" : "Noir");      // Sans effet si la partie est déjà finie (plus de pièces)
@@ -371,6 +376,12 @@ namespace BrunoGUI_Dames
             if (aucunCoup && nombrePieces > 0 && !PartieTerminee)
             {   // Le camp au trait a encore des pièces mais plus aucun coup : il a perdu (les cases restent désactivées)
                 FinPartieParBlocage(couleur);
+                return;
+            }
+            RaisonNulle nulle = NulleActuelle();
+            if (nulle != RaisonNulle.Aucune && !PartieTerminee)
+            {   // La partie est nulle (répétition, 25 coups de dames) : elle est terminée (les cases restent désactivées)
+                FinPartieParNulle(nulle);
                 return;
             }
             if (prises.Count == 0)              // S'il n'y a pas de rafles possibles, on réactive toutes les cases
@@ -1011,7 +1022,7 @@ namespace BrunoGUI_Dames
                 MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
-            // TODO : Chercher quels sont les cas de partie nulle ? (répétition de position, règle des 25 coups de dames…)
+            // Les parties nulles (répétition, coups de dames) : NulleActuelle et FinPartieParNulle ; pas détectées : finales à peu de pièces
         }
         private void FinPartieParBlocage(string couleurBloquee)
         {   // --- Le camp de couleurBloquee (« Blanc » ou « Noir »), au trait, ne peut plus jouer : il perd la partie ---
@@ -1030,6 +1041,31 @@ namespace BrunoGUI_Dames
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de coup possible";
                 MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+        private static RaisonNulle NulleActuelle()
+        {   // --- Les règles de nulle (NullesDames) appliquées à l'historique de la partie : ListeCoupsHub2 contient la position de départ puis celle après chaque demi-coup ---
+            try
+            {
+                List<Position> positions = Partie.ListeCoupsHub2.Select(Position.DepuisHub2).ToList();
+                return NullesDames.Detecte(positions);
+            }
+            catch (FormatException ex)
+            {
+                Journal.Ecrit("Nulles : historique illisible : " + ex.Message);
+                return RaisonNulle.Aucune;
+            }
+        }
+        private void FinPartieParNulle(RaisonNulle raison)
+        {   // --- La partie est nulle (répétition de position ou coups de dames) : on l'annonce et on la termine (résultat 1/2-1/2) ---
+            if (PartieTerminee)
+                return;
+            string motif = raison == RaisonNulle.Repetition
+                ? "la même position s'est présentée trois fois"
+                : $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise";
+            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
+            RadioNulle.Checked = PartieTerminee = FinPartie = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
+            LabelInformationJoueur.Text = "Partie nulle : " + motif;
+            MessageBox.Show("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private bool EstCaseValide(int caseDestinationManoury)
         {   // C'est une case valide si un coup légal de la pièce sélectionnée (selon ReglesDames) y arrive

@@ -207,6 +207,65 @@ public static class Scenario
         Verifie("Camp au trait sans aucune pièce : partie terminée", ReglesDames.EstTerminee(Position.DepuisFen("W:W:B1")), "W:W:B1");
         Verifie("Camp au trait dont toutes les pièces sont bloquées : partie terminée", ReglesDames.EstTerminee(Position.DepuisFen("W:W6:B1")), "W:W6:B1 (le pion 6 est bloqué par le pion 1)");
 
+        // ═══════════════ Parties nulles ═══════════════
+        Console.WriteLine("── Parties nulles ──");
+
+        // Deux dames qui font l'aller-retour sans jamais s'aligner : 47-42, 4-9, 42-47, 9-4
+        List<Position> allerRetour = [Position.DepuisFen("W:WK47:BK4")];
+        bool allerRetourLegal = true;
+        for (int tour = 0; tour < 2; tour++)
+            foreach (string notation in new[] { "47-42", "4-9", "42-47", "9-4" })
+            {
+                Coup? coupAllerRetour = ReglesDames.TrouverCoup(allerRetour[^1], notation);
+                if (coupAllerRetour == null) { allerRetourLegal = false; break; }
+                allerRetour.Add(ReglesDames.Jouer(allerRetour[^1], coupAllerRetour));
+            }
+        Verifie("Nulles : l'aller-retour de deux dames est légal sur 8 demi-coups", allerRetourLegal && allerRetour.Count == 9, $"{allerRetour.Count - 1} demi-coups");
+        Verifie("Nulles : la même position deux fois (4 demi-coups) n'est pas encore nulle", NullesDames.Detecte(allerRetour.Take(5).ToList()) == RaisonNulle.Aucune, "2 occurrences");
+        Verifie("Nulles : la même position pour la 3e fois, même trait (8 demi-coups) : nulle par répétition", NullesDames.Detecte(allerRetour) == RaisonNulle.Repetition, "3 occurrences");
+        Verifie("Nulles : une position qui se répète mais pas la dernière n'est pas une nulle", NullesDames.Detecte(allerRetour.Take(8).ToList()) == RaisonNulle.Aucune, "la position actuelle n'a eu lieu qu'une fois");
+        Position pieceBlancsAuTrait = Position.DepuisFen("W:WK47:BK4"), piecesNoirsAuTrait = Position.DepuisFen("B:WK47:BK4");
+        Verifie("Nulles : les mêmes pièces avec un autre trait ne sont pas la même position (la dernière n'est présente que 2 fois)",
+                NullesDames.Detecte([pieceBlancsAuTrait, piecesNoirsAuTrait, pieceBlancsAuTrait, piecesNoirsAuTrait]) == RaisonNulle.Aucune
+                && NullesDames.Detecte([pieceBlancsAuTrait, piecesNoirsAuTrait, pieceBlancsAuTrait, piecesNoirsAuTrait, pieceBlancsAuTrait]) == RaisonNulle.Repetition,
+                "le trait fait partie de la position");
+        // Déplacement de dame sans prise, de pion, prise, promotion
+        Verifie("Nulles : un déplacement de dame sans prise est un coup de dame simple", NullesDames.EstCoupDeDameSimple(Position.DepuisFen("W:WK47:BK4"), Position.DepuisFen("B:WK42:BK4")), "47-42");
+        Verifie("Nulles : un déplacement de pion n'en est pas un", !NullesDames.EstCoupDeDameSimple(Position.DepuisFen("W:W31,K47:BK4"), Position.DepuisFen("B:W26,K47:BK4")), "31-26");
+        Verifie("Nulles : une prise n'en est pas un", !NullesDames.EstCoupDeDameSimple(Position.DepuisFen("W:WK46:B37,K4"), Position.DepuisFen("B:WK32:BK4")), "46x32 prend 37");
+        Verifie("Nulles : une promotion n'en est pas un", !NullesDames.EstCoupDeDameSimple(Position.DepuisFen("W:W6,K47:BK40"), Position.DepuisFen("B:WK1,K47:BK40")), "6-1 devient dame");
+
+        // 25 coups de dames de chaque joueur (50 demi-coups) sans pion ni prise, sans jamais présenter une position 3 fois
+        // Cherche (en profondeur, avec retour arrière) une suite de demi-coups légaux où seules des dames bougent sans prendre, sauf au demi-coup plyPion où c'est un pion qui bouge,
+        // et où aucune position ne se présente plus de 2 fois ; null si aucune n'existe
+        List<Position>? MarcheDeDames(List<Position> historique, int demiCoups, int plyPion = -1)
+        {
+            int ply = historique.Count - 1;
+            if (ply == demiCoups)
+                return historique;
+            foreach (Coup coup in ReglesDames.CoupsLegaux(historique[^1]))
+            {
+                bool dame = Position.EstDame(historique[^1][coup.Depart]);
+                if (coup.EstPrise || (ply == plyPion ? dame : !dame))
+                    continue;
+                Position suivante = ReglesDames.Jouer(historique[^1], coup);
+                if (historique.Count(p => p.Equals(suivante)) >= 2)
+                    continue;
+                historique.Add(suivante);
+                List<Position>? trouvee = MarcheDeDames(historique, demiCoups, plyPion);
+                if (trouvee != null)
+                    return trouvee;
+                historique.RemoveAt(historique.Count - 1);
+            }
+            return null;
+        }        List<Position> cinquanteDemiCoups = MarcheDeDames([Position.DepuisFen("W:WK47:BK4")], 50) ?? [];
+        Verifie("Nulles : la marche de 50 demi-coups de dames a pu être construite", cinquanteDemiCoups.Count == 51, cinquanteDemiCoups.Count == 0 ? "aucune suite trouvée" : $"{cinquanteDemiCoups.Count - 1} demi-coups");
+        Verifie("Nulles : 49 demi-coups de dames ne suffisent pas", NullesDames.Detecte(cinquanteDemiCoups.Take(50).ToList()) == RaisonNulle.Aucune, "24 coups et demi");
+        Verifie("Nulles : 25 coups de dames de chaque joueur (50 demi-coups) : nulle", NullesDames.Detecte(cinquanteDemiCoups) == RaisonNulle.CoupsDeDames, "50 demi-coups");
+        List<Position> avecPion = MarcheDeDames([Position.DepuisFen("W:W31,K47:BK4")], 60, plyPion: 20) ?? [];
+        Verifie("Nulles : un déplacement de pion remet le compteur à zéro (60 demi-coups dont un de pion : pas nulle)", avecPion.Count == 61 && NullesDames.Detecte(avecPion) == RaisonNulle.Aucune, avecPion.Count == 0 ? "aucune suite trouvée" : $"{avecPion.Count - 1} demi-coups");
+        Verifie("Nulles : une partie sans coup ou avec une seule position n'est jamais nulle", NullesDames.Detecte([]) == RaisonNulle.Aucune && NullesDames.Detecte([Position.Initiale()]) == RaisonNulle.Aucune, "");
+
         // ═══════════════ Partie réelle de Scan ═══════════════
         Console.WriteLine("── Partie de Scan ──");
 
