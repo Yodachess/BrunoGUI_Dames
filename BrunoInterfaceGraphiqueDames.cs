@@ -60,6 +60,9 @@ namespace BrunoGUI_Dames
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn PartieCourante = new FichierPartiePdn.PartieDamesPdn();
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
+        private const int DiviseurAnimationRejeu = 6;
+        // --- La durée de chaque attente de l'animation : DureeAnimation, ou son sixième pendant le déroulé d'une partie PDN chargée ---
+        private int DelaiAnimation => rejeuPdnEnCours ? DureeAnimation / DiviseurAnimationRejeu : DureeAnimation;
         public static bool ExisteFENDebut, VisuCoteNoir;          // True quand les Noirs sont en bas de l'écran
         public static bool AfficheNumeroBox, AfficheCaseLogique, PartieEnCours, PartieTerminee, FinPartie, EmetUnSon;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
@@ -235,15 +238,14 @@ namespace BrunoGUI_Dames
                                 }
                                 else if (coupJoue.EstPrise)
                                 {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
-                                    List<(int casePrise, int caseArrivee)> rafleAJouer = coupJoue.Prises.Zip(coupJoue.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
                                     var indexSourceBox = GestionDamier.ManouryVersIndexPictureBox[CaseSourceManoury - 1];   // Index PictureBox initial
                                     (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexSourceBox);
-                                    await AnimerEtExecuterRafle(indexSourceBox, rafleAJouer, GestionDamier.DamierContenu[ligne, colonne], ReglesDames.NotationPdn(coupsLegauxPieceSelectionnee ?? new List<Coup>(), coupJoue));
+                                    await AnimerEtExecuterRafle(indexSourceBox, coupJoue, GestionDamier.DamierContenu[ligne, colonne], ReglesDames.NotationPdn(coupsLegauxPieceSelectionnee ?? new List<Coup>(), coupJoue));
                                     EnregistrePositionApresCoupHumain();
                                 }
                                 else
                                 {   // Un déplacement simple
-                                    ExecuteDeplacement(indexSourceBox: IndexPictureBoxSource100, destinationManoury: CaseDestinationManoury, pieceSource: pieceCouleurSource, piecePrise: false, 0);
+                                    ExecuteDeplacement(IndexPictureBoxSource100, coupJoue, pieceCouleurSource);
                                     EnregistrePositionApresCoupHumain();
                                 }
                                 LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
@@ -341,13 +343,12 @@ namespace BrunoGUI_Dames
                     ContenuCase pieceDuMoteur = GestionDamier.ContenuCaseCaseManoury(coupMoteur.Depart);
                     if (coupMoteur.EstPrise)
                     {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
-                        List<(int casePrise, int caseArrivee)> rafleDuMoteur = coupMoteur.Prises.Zip(coupMoteur.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
                         string notationDuMoteur = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.DepuisHub2(positionHub2)), coupMoteur);
-                        await AnimerEtExecuterRafle(indexSourceBox, rafleDuMoteur, pieceDuMoteur, notationDuMoteur);
+                        await AnimerEtExecuterRafle(indexSourceBox, coupMoteur, pieceDuMoteur, notationDuMoteur);
                     }
                     else
                     {   // Un déplacement simple
-                        ExecuteDeplacement(indexSourceBox, coupMoteur.Arrivee, pieceDuMoteur, false, 0);
+                        ExecuteDeplacement(indexSourceBox, coupMoteur, pieceDuMoteur);
                     }
                     string fenPosition = RecupereFEN();                      // On met à jour les listes de coups
                     Partie.ListeCoupsFen.Add(fenPosition);                          // pour les FEN et Hub2, pour les Pdn
@@ -453,12 +454,14 @@ namespace BrunoGUI_Dames
                 ActiveCouleurDamier(CouleurAuTrait == "Blanc" ? "Noir" : "Blanc", false);
 
                 Position position = Position.DepuisFen(contenu);        // Lève FormatException si le FEN n'est pas valide
+                GestionDamier.PositionCourante = position.Copie();      // La position du jeu : celle du FEN
                 for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
-                {   // Dessiner chaque pièce : DessinePiece met aussi à jour DamierContenu et GestionDamier.PositionCourante
+                {   // Dessiner chaque pièce : DessinePiece met à jour DamierContenu et l'image
                     Piece piece = position[numeroCase];
                     if (piece != Piece.Vide)
                         DessinePiece(GestionDamier.ObtenirIndicePictureBox(numeroCase), GestionDamier.TypeDe(piece), GestionDamier.CouleurDe(piece));
                 }
+                AfficheListesPieces();
             }
             else
             {
@@ -512,18 +515,15 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Mouvements  divers
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
-        public void ExecuteDeplacement(int indexSourceBox, int destinationManoury, ContenuCase pieceSource, bool piecePrise, int casePrise = 0)
-        {   // --- Execute un déplacement simple en vérifiant la promotion ---
+        // --- Execute un déplacement simple (coup sans prise) en vérifiant la promotion ---
+        // Le damier affiché (DamierContenu et images) est mis à jour pendant le coup ; la position (PositionCourante) l'est une seule fois, à la fin, par ReglesDames.Jouer
+        public void ExecuteDeplacement(int indexSourceBox, Coup coup, ContenuCase pieceSource)
+        {
+            int destinationManoury = coup.Arrivee;
             ActiveDamier(false); // Désactiver les interactions pendant le déplacement
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
             var couleurPiece = pieceSource.CouleurPiece;
             ListeCasesCoupSelectionne.Add(GestionDamier.PictureBoxVersManoury[indexSourceBox]);     // Ajoute la case source au suivi des coups
-            if (piecePrise && casePrise > 0)
-            {   // Efface la pièce prise
-                EffacePiece(GestionDamier.ManouryVersIndexPictureBox[casePrise - 1], true);
-                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[casePrise - 1]].BackColor = CouleurTrajetSuivi;
-                ListeCasesCoupSelectionne.Add(casePrise); // Ajoute la case prise
-            }
             // Vérification si promotion en Dame : IL FAUDRAIT S'ASSURER QUE LA PIECE N'EST PAS DEJA UNE DAME !!!!!!!!!!!!!!!!!!!
             if (derniereRangeeBlanche.Contains(destinationManoury) && pieceSource.CouleurPiece == CouleurPiece.Noir)
             {
@@ -538,18 +538,34 @@ namespace BrunoGUI_Dames
             EffacePiece(indexSourceBox, true);                  // Efface la pièce source
             CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;      // mais on la colorie pour suivre le trajet
             ListeCasesCoupSelectionne.Add(destinationManoury);  // Ajoute la destinationManoury au suivi des coups
-            string coupEffectue = piecePrise
-                ? $"{GestionDamier.PictureBoxVersManoury[indexSourceBox]}x{destinationManoury}"
-                : $"{GestionDamier.PictureBoxVersManoury[indexSourceBox]}-{destinationManoury}";
+            string coupEffectue = $"{GestionDamier.PictureBoxVersManoury[indexSourceBox]}-{destinationManoury}";
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
             if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
+            AppliqueCoupALaPosition(coup);
             ActiveDamier(true);         // Réactiver les interactions après le déplacement
             ActiveCouleurDamier(couleurPiece.ToString(), false);
             VerifierGain();
         }
-        public async Task AnimerEtExecuterRafle(int indexSourceBox, List<(int casePrise, int caseArrivee)> rafle, ContenuCase pieceSource, string? notationPdn = null)
-        {   // --- Execute une rafle complète avec une animation à la vitesse DureeAnimation, ne prend les pièces qu'à la fin de la rafle ---
+        // --- Met la position à jour avec le coup qui vient d'être joué sur le damier (une seule fois par coup, par ReglesDames.Jouer) ---
+        private static void AppliqueCoupALaPosition(Coup coup)
+        {
+            GestionDamier.PositionCourante = ReglesDames.Jouer(GestionDamier.PositionCourante, coup);
+            AfficheListesPieces();
+            for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
+            {   // Le damier affiché et la position doivent dire la même chose ; sinon, c'est une anomalie à noter (la position fait foi)
+                if (GestionDamier.PieceDe(GestionDamier.ContenuCaseCaseManoury(numeroCase).TypePiece) != GestionDamier.PositionCourante[numeroCase])
+                {
+                    Journal.Ecrit($"INCOHERENCE après le coup {coup.Hub2()} : la case {numeroCase} du damier affiché ne correspond pas à la position ({GestionDamier.PositionCourante.VersFen()})");
+                    break;
+                }
+            }
+        }
+        // --- Execute une rafle complète avec une animation à la vitesse DureeAnimation, ne prend les pièces qu'à la fin de la rafle ---
+        // (le coup donne les étapes : une pièce prise et une case d'arrivée par prise)
+        public async Task AnimerEtExecuterRafle(int indexSourceBox, Coup coup, ContenuCase pieceSource, string? notationPdn = null)
+        {
+            List<(int casePrise, int caseArrivee)> rafle = coup.Prises.Zip(coup.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
             ActiveDamier(false); // Désactiver les interactions pendant l'animation
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
             List<int> boxesAEffacerFinRafle = new List<int>();
@@ -575,13 +591,13 @@ namespace BrunoGUI_Dames
                 CaseDamier[indexSourceBoxActuel].Image = imagePiece;  // Afficher la pièce source
 
                 // Attendre un peu pour l'effet visuel de la prise
-                await Task.Delay(DureeAnimation);
+                await Task.Delay(DelaiAnimation);
  
                 boxesAEffacerFinRafle.Add(indexPriseBox);                   // On enregistre la pièce qu'il faudra prendre, mais on ne l'efface pas encore
                 EffacePiece(indexSourceBoxActuel, true);                    // On efface la pièce qui prend sur la case de départ
                 DessinePiece(indexArriveeBox, typePiece, couleurPiece);     // ON place la pièce qui prend sur sa case d'arrivée
                 // Attendre un peu avant de continuer avec la prochaine prise
-                await Task.Delay(DureeAnimation);
+                await Task.Delay(DelaiAnimation);
 
                 indexSourceBoxActuel = indexArriveeBox;                     // Mettre à jour l'indice de la source pour le prochain déplacement
                 derniereCaseRafle = caseArrivee;                            // Enregistrer la dernière case de la rafle pour vérifier la promotion
@@ -603,7 +619,7 @@ namespace BrunoGUI_Dames
             foreach (var index in boxesAEffacerFinRafle)
             {
                 EffacePiece(index, true);
-                await Task.Delay(DureeAnimation);
+                await Task.Delay(DelaiAnimation);
             }
             boxesAEffacerFinRafle.Clear();
             // Notation PDN du coup : abrégée « 28x19 », ou complète si une autre rafle de même départ et même arrivée existe (notationPdn)
@@ -612,6 +628,7 @@ namespace BrunoGUI_Dames
             ListeCoupsPdn.Add(coupEffectue);            // Ajoute le mouvement dans la liste des coups au format pdn.
             if (!jeuMoteurEnCours)                      // Et on l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
+            AppliqueCoupALaPosition(coup);
             ActiveDamier(true); // Réactiver les interactions après l'animation
             ActiveCouleurDamier(couleurPiece.ToString(), false);
             VerifierGain();
@@ -816,15 +833,14 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 
         public static void DessinePiece(int indexPictureBox, TypePiece pieceType, CouleurPiece pieceCouleur)
-        {   // --- Dessin de la pièce passée en paramètre sur la case PictureBox en paramètre + mise à jour de DamierContenu et de PositionCourante ---
+        {   // --- Dessin de la pièce passée en paramètre sur la case PictureBox en paramètre + mise à jour de DamierContenu (l'affichage) ---
+            // La position (PositionCourante) n'est pas touchée ici : elle change à la mise en place d'un FEN et une fois par coup (AppliqueCoupALaPosition)
             try
             {   // Traduire l'index linéaire 0-99 en coordonnées (ligne, colonne) pour DamierContenu
                 (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexPictureBox);
                 // Mettre à jour DamierContenu
                 GestionDamier.DamierContenu[ligne, colonne].CouleurPiece = pieceCouleur;
                 GestionDamier.DamierContenu[ligne, colonne].TypePiece = pieceType;
-                GestionDamier.PositionCourante[GestionDamier.ObtenirCaseManoury(indexPictureBox)] = GestionDamier.PieceDe(pieceType);   // Mettre à jour la position
-                AfficheListesPieces();
                 if (pieceType == TypePiece.Vide)
                 {   // Si la case est vide, on efface l'image
                     CaseDamier[indexPictureBox].Image = null;
@@ -845,14 +861,12 @@ namespace BrunoGUI_Dames
             }
         }
         public static void EffacePiece(int indexPictureBox, bool damier)
-        {   // --- Efface la pièce située à indexPictureBox, et actualise DamierContenu et PositionCourante si damier est vrai ---
+        {   // --- Efface la pièce située à indexPictureBox, et actualise DamierContenu (l'affichage) si damier est vrai ; PositionCourante n'est pas touchée ---
             if (damier)
             {
                 (int ligne, int colonne) = GestionDamier.IndiceVersCoordonnees(indexPictureBox);
                 GestionDamier.DamierContenu[ligne, colonne].TypePiece = TypePiece.Vide;
                 GestionDamier.DamierContenu[ligne, colonne].CouleurPiece = CouleurPiece.Vide;
-                GestionDamier.PositionCourante[GestionDamier.ObtenirCaseManoury(indexPictureBox)] = Piece.Vide;     // Retirer la pièce de la position
-                AfficheListesPieces();
             }
             CaseDamier[indexPictureBox].Image = null;
         }
@@ -1425,7 +1439,7 @@ namespace BrunoGUI_Dames
             try
             {
                 CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
-                await Task.Delay(DureeAnimation);
+                await Task.Delay(DelaiAnimation);
                 foreach (Coup coupPdn in coupsDeLaPartie)
                 {
                     CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
@@ -1433,16 +1447,15 @@ namespace BrunoGUI_Dames
                     ContenuCase pieceSource = GestionDamier.ContenuCaseCaseManoury(coupPdn.Depart);
                     if (coupPdn.EstPrise)       // Prise (rafle)
                     {
-                        List<(int casePrise, int caseArrivee)> rafle = coupPdn.Prises.Zip(coupPdn.Chemin, (prise, arrivee) => (prise, arrivee)).ToList();
                         string notationRejeu = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.DepuisFen(RecupereFEN())), coupPdn);
-                        await AnimerEtExecuterRafle(indexSourceBox, rafle, pieceSource, notationRejeu);
+                        await AnimerEtExecuterRafle(indexSourceBox, coupPdn, pieceSource, notationRejeu);
                         ChangerCouleurTrait();
                     }
                     else                        // Déplacement simple
                     {
-                        ExecuteDeplacement(indexSourceBox, coupPdn.Arrivee, pieceSource, false);
+                        ExecuteDeplacement(indexSourceBox, coupPdn, pieceSource);
                         ChangerCouleurTrait();
-                        await Task.Delay(DureeAnimation);       // Attendre un peu pour l'effet visuel du déplacement
+                        await Task.Delay(DelaiAnimation);       // Attendre un peu pour l'effet visuel du déplacement
                     }
                     string positionFEN = RecupereFEN();
                     ListeCoupsFen.Add(positionFEN);   // Ajouter la position FEN après le coup

@@ -82,7 +82,8 @@ namespace BrunoGUI_Dames
         public static ContenuCase[,] DamierContenu = new ContenuCase[10, 10]; // Tableau de [10*10] décrivant les contenu de chaque avec [Type de pièce, Couleur de pièce]
 
         // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier). Elle est tenue à jour avec DamierContenu
-        // par DessinePiece et EffacePiece ; le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
+        // à la mise en place d'une position (MiseenplaceFen, InitialiserDamier, ViderDamier) et une fois par coup, à la fin du coup (AppliqueCoupALaPosition,
+        // par ReglesDames.Jouer) ; DessinePiece et EffacePiece ne touchent qu'à DamierContenu et aux images. Le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
         public static Position PositionCourante = new Position();
 
         // --- Conversions entre les types de pièces de l'affichage et ceux de Position ---
