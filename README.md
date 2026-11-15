@@ -45,6 +45,8 @@ Boutons disponibles :
 
 On peut jouer entre humains en décochant "Ordinateur". Si "Son" est coché, un son est émis lorsque le moteur a joué.
 Le temps de réflexion du moteur se règle de 1 à 25 secondes (5 par défaut).
+Une pendule est proposée avec les cadences de la FMJD (1 h 20 + 30 s, 90 min/45 coups, 2 h/50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s) :
+désactivée par défaut, elle démarre au premier coup (non décompté) et le joueur dont le drapeau tombe perd la partie, le moteur y compris.
 Un bandeau en haut de la fenêtre indique le statut (trait aux blancs ou aux noirs, résultat éventuel) ;
 sous le bandeau, le score estimé (en centipions) et la ligne du moteur. Les noms des joueurs sont modifiables et repris dans le PDN.
 
@@ -52,7 +54,7 @@ Fin de partie : le programme détecte le gain (plus de pièce, ou plus aucun cou
 position), par 25 coups de dames de chaque joueur, et par les finales à peu de pièces (16 et 5 coups, règles FMJD 6.3 et 6.4).
 La nulle par accord, l'abandon, etc. se saisissent en cochant le résultat (1-0, 0-1, 1/2-1/2) : il est ajouté à la liste des coups PDN.
 
-Les préférences (temps de réflexion, noms, son, ordinateur, sens du damier, durée d'animation, couleurs du damier) sont retenues
+Les préférences (temps de réflexion, noms, son, ordinateur, cadence de la pendule, sens du damier, durée d'animation, couleurs du damier) sont retenues
 dans `BrunoGUI_Dames.preferences.ini` à côté du programme. Les anomalies sont notées dans `Journal.log`.
 
 ## Compiler les sources
@@ -117,6 +119,8 @@ Available buttons:
 
 Human vs. human play is possible by unchecking "Ordinateur". If "Son" is checked, a sound is played when the engine moves.
 Engine thinking time can be set from 1 to 25 seconds (default: 5).
+A game clock is available with FMJD time controls (1 h 20 + 30 s, 90 min/45 moves, 2 h/50 moves, rapid 15 min + 5 s, blitz 5 min + 3 s):
+off by default, it starts at the first move (not counted) and the player whose flag falls loses the game, the engine included.
 A status bar at the top shows whose turn it is and the result, if any; below it, the engine's evaluation (in centipawns) and its best line.
 Player names are editable and used in the PDN.
 
@@ -124,7 +128,7 @@ End of game: the program detects wins (no pieces left, or no legal move) and dra
 by 25 king moves per player, and by few-piece endings (16 and 5 moves, FMJD rules 6.3 and 6.4). A draw by agreement, a resignation, etc.
 are entered by ticking the result (1-0, 0-1, 1/2-1/2): it is added to the PDN move list.
 
-Preferences (thinking time, names, sound, computer, board orientation, animation speed, board colours) are kept in
+Preferences (thinking time, names, sound, computer, clock time control, board orientation, animation speed, board colours) are kept in
 `BrunoGUI_Dames.preferences.ini` next to the program. Anomalies are logged in `Journal.log`.
 
 ## Building from source

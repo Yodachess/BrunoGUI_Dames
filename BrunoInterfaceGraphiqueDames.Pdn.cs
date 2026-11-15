@@ -126,6 +126,7 @@ namespace BrunoGUI_Dames
             finally
             {
                 rejeuPdnEnCours = false;
+                ReinitialisePendule();      // La partie chargée est rejouée sans pendule ; si on la continue, elle part de son temps de base
             }
         }
         public async Task GenerationListesCoups(IReadOnlyList<Coup> coupsDeLaPartie)

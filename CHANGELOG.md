@@ -4,12 +4,14 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- Mise en page : le coup joué, les rafles possibles, les compteurs, les cases Ordinateur et Son, le cadre du temps de réflexion et le résultat sont au-dessus du damier, sous la ligne du moteur ; la colonne de boutons est régulièrement espacée.
+- Pendule avec les cadences de la FMJD (1 h 20 + 30 s, 90 min pour 45 coups, 2 h pour 50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s), désactivée par défaut : choix de la cadence dans le cadre « Pendule et temps de réflexion », temps des blancs et des noirs en haut à droite, drapeau tombé = partie perdue au temps, moteur compris (son temps de réflexion est limité par ce qui lui reste). La cadence est retenue dans les préférences.
 - Style du code décrit dans `.editorconfig` ; les avertissements de compilation font échouer la compilation (`Directory.Build.props`).
 - Dependabot surveille les paquets NuGet et les actions GitHub ; xunit 2.9.3, Microsoft.NET.Test.Sdk 18.12.0 et xunit.runner.visualstudio 4.0.1 (projet de tests seulement).
 - README : un seul fichier (`BrunoGUI_Readme.txt` supprimé) ; documents du moteur dans `Docs`.
 - Suppression de deux icônes non utilisées.
 - Le sens du damier (« Tourner damier ») est décrit par une classe testée (`OrientationDamier`) au lieu de deux tables recalculées à la main ; le clic trouve sa case par sa place à l'écran.
-- Le formulaire principal est découpé en six fichiers (classe partielle : clics, moteur et préférences, dessin, boutons, PDN), sans changement de comportement.
+- Le formulaire principal est découpé en fichiers (classe partielle : clics, moteur et préférences, dessin, boutons, PDN, pendule), sans changement de comportement.
 - L'historique de la partie est tenu par une classe testée (`SessionPartie`) au lieu de trois listes à synchroniser à la main. Au passage : « Retour arrière » pendant un parcours de partie replace le parcours sur la dernière position, et affiche le coup retiré (et non le résultat) quand la partie était finie.
 
 ## 1.10 (2026-11-14)

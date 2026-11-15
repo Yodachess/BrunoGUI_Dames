@@ -73,6 +73,7 @@ namespace BrunoGUI_Dames
                             // Combine toutes les chaînes en une seule avec un saut de ligne entre chaque liste
                             LabelPrisesPossibles.Text = raflesDeLaPiece.Count + " Rafles possibles de " + elementsParRafle + " pièces\n" + string.Join("\n", raflesText);
                             clickCaseSource = false;
+                            pieceEnMain = true;
                         }
                         else
                         {
@@ -83,6 +84,7 @@ namespace BrunoGUI_Dames
                     {   // --- Déplacement d'une pièce ---
                         EffaceMouvements();
                         Cursor = Cursors.Default;       // On revient au curseur "normal"
+                        pieceEnMain = false;
                         try
                         {   // Le try-catch récupère l'exception qui se produit lorsque que l'on clique sur une case inactive
                             CaseDestinationManoury = GestionDamier.Orientation.CaseManoury(indexCase100);     // 0 : case claire, non jouable (la pièce revient)
@@ -107,6 +109,11 @@ namespace BrunoGUI_Dames
                                 {   // Le coup n'est pas légal, on remet la pièce sur sa case d'origine
                                     DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
                                     CaseDamier[IndexPictureBoxSource100].BackColor = CouleurTrajetSuivi;
+                                }
+                                else if (!PenduleCoupJoue())
+                                {   // Le coup est décidé : la pendule le décompte (sans pendule, toujours vrai). Faux : le drapeau était tombé, la partie est perdue au temps et le coup n'est pas joué
+                                    DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
+                                    return;     // Le finally remet l'état de sélection à zéro
                                 }
                                 else if (coupJoue.EstPrise)
                                 {   // Une rafle : une étape (pièce prise, case d'arrivée) par pièce prise
@@ -176,6 +183,8 @@ namespace BrunoGUI_Dames
                 FinPartieParBlocage(positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir);      // Sans effet si la partie est déjà finie (plus de pièces)
                 return;
             }
+            if (!analyseEnCours && pendule != null)
+                tempsReflexion = pendule.TempsConseille(positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir, tempsReflexion);     // Avec une pendule, jamais plus que le réglage, moins quand il reste peu de temps
             BloqueBoutons(true);
             jeuMoteurEnCours = true;
             ActiveCouleurDamier(CouleurAuTrait, false);
@@ -194,7 +203,7 @@ namespace BrunoGUI_Dames
                     LabelInformationJoueur.Text = "Le moteur n'a aucun coup à jouer";
                 }
             }
-            else if (!analyseEnCours)    // On execute les coups si ce n'est pas une analyse
+            else if (!analyseEnCours && !PartieTerminee)    // On execute les coups si ce n'est pas une analyse (ni une partie finie pendant sa réflexion : drapeau tombé)
             {
                 LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion;
                 if (EmetUnSon)
@@ -206,8 +215,8 @@ namespace BrunoGUI_Dames
                 {   // Le coup de Scan n'a pas été retrouvé dans les coups légaux (c'est noté dans le journal) : rien n'est joué
                     LabelInformationJoueur.Text = "Coup du moteur non reconnu : " + reponse.Coup;
                 }
-                else
-                {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur
+                else if (PenduleCoupJoue())
+                {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur ; la pendule l'a décompté (sinon son drapeau est tombé : il perd, rien n'est joué)
                     int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupMoteur.Depart);
                     CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;
                     ContenuCase pieceDuMoteur = GestionDamier.ContenuCaseCaseManoury(coupMoteur.Depart);
@@ -228,7 +237,8 @@ namespace BrunoGUI_Dames
             }
             OrdinateurActif = true;
             jeuMoteurEnCours = false;
-            ActiveCouleurDamier(CouleurAuTrait, true);
+            if (!PartieTerminee)
+                ActiveCouleurDamier(CouleurAuTrait, true);
             BloqueBoutons(false);
         }
         private void AnalyseCoupObligatoire(Couleur couleur)

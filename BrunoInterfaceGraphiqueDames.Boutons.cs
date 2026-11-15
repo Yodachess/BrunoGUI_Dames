@@ -40,6 +40,7 @@ namespace BrunoGUI_Dames
             AfficheListesPieces();
             InitialiserEtatMouvement();
             LabelCoupJoue.Text = "";
+            ReinitialisePendule();
         }
         private void NettoyageRapide()
         {   // --- Nettoyage rapide du damier, labels et boutons  ---
@@ -240,6 +241,7 @@ namespace BrunoGUI_Dames
             PartieCourante.White =PartieCourante.Black = PartieCourante.Result = PartieCourante.Round = PartieCourante.Site = PartieCourante.Event = "?";
             MiseenplaceFen(contenuFichier, true);   // Met en place la position
             AfficheListesPieces();
+            ReinitialisePendule();
             AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
         }        private void SauvePositionFen_Click(object sender, EventArgs e)
         {   // --- Sauvegarde la position au format FEN dans un fichier texte ---
@@ -319,6 +321,7 @@ namespace BrunoGUI_Dames
             PartieCourante.Result = resultat.Trim(); 
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             PartieTerminee = true;
+            ArretePendule();                // Le temps s'arrête
         }
         private void BoutonRetourArriere_Click(object sender, EventArgs e)
         {   // --- Retour en arrière d'un coup : la session retire le dernier coup (et le résultat s'il y en a un), la position précédente est remise sur le damier ---
@@ -334,6 +337,7 @@ namespace BrunoGUI_Dames
             MiseenplaceFen(session.Fen(session.IndexAffiche), false);       // Met en place la nouvelle dernière position
             AfficheListesPieces();
             NettoyageRapide();
+            ArmePendule();      // La pendule garde les temps et attend le prochain coup
             LabelCoupJoue.Text = $"Mouvement effacé = {coupEfface}"; // Met à jour le label avec le mouvement.
             AnalyseCoupObligatoire(CouleurAuTrait);
             OrdinateurActif = false;

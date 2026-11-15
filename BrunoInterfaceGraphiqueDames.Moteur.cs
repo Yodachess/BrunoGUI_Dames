@@ -174,6 +174,7 @@ namespace BrunoGUI_Dames
             nomNoirPrefere = BoxNomJoueurNoir.Text;
             SonEmis.Checked = preferences.SonEmis;
             OrdinateurBosse.Checked = preferences.OrdinateurJoue;
+            SelectionneCadence(preferences.CadenceId);      // Sans pendule par défaut
         }
         private void EnregistrePreferences()
         {   // --- Écrit les préférences personnelles dans BrunoGUI_Dames.preferences.ini, à côté de l'exe ---
@@ -185,6 +186,7 @@ namespace BrunoGUI_Dames
                 NomJoueurBlanc = nomBlancPrefere,
                 NomJoueurNoir = nomNoirPrefere,
                 SonEmis = SonEmis.Checked,
+                CadenceId = CadenceChoisieId,
                 OrdinateurJoue = moteurDisponible ? OrdinateurBosse.Checked : preferencesChargees.OrdinateurJoue     // Sans moteur la case est grisée : on garde le choix précédent
             };
             aEnregistrer.Couleurs["CaseSombre"] = VersRgb(CouleurCaseSombre);
@@ -217,6 +219,7 @@ namespace BrunoGUI_Dames
             base.OnFormClosing(e);
             if (!e.Cancel)
             {
+                minuteriePendule.Stop();
                 EnregistrePreferences();
                 MoteurDamesScan.Quitte();
             }

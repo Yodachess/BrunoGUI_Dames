@@ -46,8 +46,8 @@
     <li><b>Le damier</b> (à gauche) : les cases jouables portent les numéros de 1 à 50 de la notation Manoury (de 1, en haut du côté des noirs, à 50, en bas du côté des blancs).</li>
     <li><b>Le bandeau du haut</b> : le nom du joueur blanc et du joueur noir (modifiables), et au centre le statut : « Trait aux Blancs », « Trait aux Noirs », la fin de partie éventuelle.</li>
     <li><b>Sous le bandeau</b> : le <b>score</b> estimé par le moteur et sa <b>ligne</b> de jeu (la suite de coups qu'il prévoit), pendant ou après sa réflexion.</li>
-    <li><b>En bas</b> : le dernier coup joué (« Mouvement »), les <b>prises possibles</b> (les rafles qu'il faut jouer, case de la pièce prise et case d'arrivée), le décompte des pions et des dames de chaque couleur, le groupe <b>Résultat</b>, les cases <b>Ordinateur</b> et <b>Son</b>, et le réglage du <b>temps de réflexion</b>.</li>
-    <li><b>La colonne de boutons</b> (à droite) : voir les sections suivantes. Pendant que le moteur réfléchit, les boutons qui changeraient la partie sont inactifs.</li>
+    <li><b>Entre cette ligne et le damier</b> : le dernier coup joué (« Mouvement »), les <b>prises possibles</b> (les rafles qu'il faut jouer, case de la pièce prise et case d'arrivée), le décompte des pions et des dames de chaque couleur, le groupe <b>Résultat</b>, les cases <b>Ordinateur</b> et <b>Son</b>, et le réglage du <b>temps de réflexion</b>.</li>
+    <li><b>La colonne de boutons</b> (à droite, sous les deux temps de la pendule quand elle est active) : voir les sections suivantes. Pendant que le moteur réfléchit, les boutons qui changeraient la partie sont inactifs.</li>
 </ul>
 <table>
     <tr><th>Bouton</th><th>Rôle</th></tr>
@@ -92,6 +92,15 @@
     <li><span class="bouton">Analyse position</span> : le moteur réfléchit sur la position affichée et en donne le score (en centipions) et la meilleure suite, <b>sans rien jouer</b>. On peut s'en servir sur n'importe quelle position, y compris en parcourant une partie.</li>
     <li><b>Son</b> : coché, un son est émis quand le moteur a joué.</li>
 </ul>
+<h3>La pendule</h3>
+<p>Le cadre <b>Pendule et temps de réflexion</b> contient, à gauche, la liste qui choisit la <b>cadence</b> de la pendule. Par défaut, <b>Sans pendule</b> : la partie n'a pas de limite de temps et les deux cadres en haut à droite de la fenêtre affichent « --:-- ». Avec une cadence, ils montrent le temps restant de <b>B</b> (blancs) et de <b>N</b> (noirs) ; celui du joueur au trait est en vert et passe en rouge sous 20 secondes. Les cadences viennent des annexes de la FMJD :</p>
+<ul>
+    <li><b>1 h 20 + 30 s</b> : le défaut des compétitions FMJD, 1 h 20 par joueur plus 30 secondes gagnées à chaque coup ;</li>
+    <li><b>90 min/45 coups</b> : 90 minutes pour les 45 premiers coups de chaque joueur, puis 30 minutes de plus, et 30 secondes gagnées à chaque coup à partir du 46<sup>e</sup> ;</li>
+    <li><b>2 h/50 coups</b> : l'ancien standard, 2 heures pour 50 coups, puis 1 heure de plus pour chaque série de 25 coups (le temps non utilisé est gardé) ;</li>
+    <li><b>15 min + 5 s</b> (rapide) et <b>5 min + 3 s</b> (blitz) : la FMJD définit le rapide de 15 à 30 minutes et le blitz de 5 à 15 minutes par joueur ; les 5 et 3 secondes gagnées par coup sont celles des championnats du monde.</li>
+</ul>
+<p>La pendule démarre au <b>premier coup</b> de la partie, qui n'est pas décompté : le temps s'écoule ensuite pour le camp au trait, et seulement pour lui. Quand le <b>drapeau tombe</b>, ce joueur perd la partie, au temps, et le résultat est écrit comme pour un gain par prises. Contre le moteur, son temps de réflexion compte sur sa pendule : il ne réfléchit jamais plus que le réglage du temps de réflexion, et moins quand il lui reste peu de temps. Changer de cadence, <span class="bouton">Nouvelle Partie</span>, charger une position ou une partie remettent les temps à zéro ; <span class="bouton">Retour Arrière</span> garde les temps (un joueur dont le drapeau était tombé reprend avec 30 secondes). Cocher soi-même un résultat arrête la pendule. Le survol des temps et de la liste affiche une bulle d'aide.</p>
 <div class="note">Le moteur est Scan 3.1, de Fabien Letouzey. Le bouton <span class="bouton">Protocole</span> ouvre une fenêtre qui montre ce que le programme et le moteur s'envoient : utile pour comprendre ou pour signaler un problème.</div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -99,6 +108,7 @@
 <p>Le programme termine la partie tout seul dans ces cas, en annonçant le résultat et en l'écrivant dans le groupe <b>Résultat</b> :</p>
 <ul>
     <li><b>Gain</b> : un joueur n'a plus de pièce, ou il a encore des pièces mais ne peut plus jouer aucun coup (il est bloqué) : il perd.</li>
+    <li><b>Temps</b> : avec une pendule, le joueur dont le drapeau tombe perd la partie.</li>
     <li><b>Répétition</b> : la même position se présente pour la <b>troisième fois</b>, avec le même joueur au trait. Nulle.</li>
     <li><b>Coups de dames</b> : pendant <b>25 coups de chaque joueur</b> (50 demi-coups de suite), seules des dames ont bougé, sans déplacement de pion ni prise. Nulle.</li>
     <li><b>Finales à peu de pièces</b> : quand un joueur n'a plus qu'une seule dame contre, selon le cas,
@@ -141,7 +151,7 @@
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <h2 id="preferences">10. Préférences</h2>
-<p>À la fermeture, le programme retient le temps de réflexion, les noms des joueurs, les cases Ordinateur et Son, et le sens du damier. Il les retrouve au lancement suivant. Elles sont écrites dans le fichier <code>BrunoGUI_Dames.preferences.ini</code>, à côté du programme.</p>
+<p>À la fermeture, le programme retient le temps de réflexion, les noms des joueurs, les cases Ordinateur et Son, la cadence de la pendule et le sens du damier. Il les retrouve au lancement suivant. Elles sont écrites dans le fichier <code>BrunoGUI_Dames.preferences.ini</code>, à côté du programme.</p>
 <p>Ce fichier (texte, une ligne <code>Cle=Valeur</code> par réglage) permet aussi de changer, à la main, la <b>durée de l'animation</b> (<code>DureeAnimation</code>, en millisecondes, 900 par défaut ; 0 pour jouer sans animation) et les <b>huit couleurs du damier</b> (cases sombres, claires, de départ, du trajet, du pivot, de la prise, de l'arrivée, d'étape), écrites <code>#RRGGBB</code>. Une valeur absente ou invalide est ignorée et remplacée par la valeur par défaut. Fermez le programme avant de modifier le fichier.</p>
 <p>Les noms des joueurs d'une partie PDN chargée ne deviennent pas des préférences.</p>
 

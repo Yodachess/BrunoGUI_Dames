@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace BrunoGUI_Dames
@@ -29,6 +30,7 @@ namespace BrunoGUI_Dames
         public bool OrdinateurJoue { get; set; } = true;                // Le moteur répond aux coups du joueur
         public int DureeAnimation { get; set; } = 900;                  // Millisecondes par étape de l'animation d'un coup (0 à 10000)
         public bool VueCoteNoir { get; set; }                           // Le damier est vu du côté des noirs
+        public string? CadenceId { get; set; }                          // La cadence de la pendule (Id d'une Cadence) ; null : pas de pendule
         public static readonly string[] NomsCouleurs = { "CaseSombre", "CaseClaire", "CaseDepart", "TrajetSuivi", "CasePivot", "CasePrise", "CaseArrivee", "CaseEtape" };
         public Dictionary<string, int> Couleurs { get; } = new Dictionary<string, int>();   // Couleurs du damier changées ou à enregistrer : nom (de NomsCouleurs) -> 0xRRGGBB ; absent = couleur par défaut
         public List<string> Avertissements { get; } = new List<string>();   // Ce que la lecture n'a pas compris (lignes ignorées, valeurs refusées)
@@ -99,6 +101,14 @@ namespace BrunoGUI_Dames
                         if (LitBooleen(valeur, out bool vueNoire)) preferences.VueCoteNoir = vueNoire;
                         else preferences.Avertissements.Add($"VueCoteNoir refusée (0 ou 1 attendu) : {valeur}");
                         break;
+                    case "cadence":
+                        if (valeur.Length == 0 || string.Equals(valeur, "sans", StringComparison.OrdinalIgnoreCase))
+                            preferences.CadenceId = null;
+                        else if (Cadence.Trouve(valeur) is Cadence cadence)
+                            preferences.CadenceId = cadence.Id;
+                        else
+                            preferences.Avertissements.Add($"Cadence refusée (« sans » ou un des noms : {string.Join(", ", Cadence.Officielles.Select(c => c.Id))}) : {valeur}");
+                        break;
                     default:
                         string? nomCouleur = cle.StartsWith("Couleur", StringComparison.OrdinalIgnoreCase)
                             ? Array.Find(NomsCouleurs, nom => string.Equals("Couleur" + nom, cle, StringComparison.OrdinalIgnoreCase)) : null;
@@ -146,6 +156,7 @@ namespace BrunoGUI_Dames
             texte.Append("OrdinateurJoue=").Append(OrdinateurJoue ? "1" : "0").Append(Environment.NewLine);
             texte.Append("DureeAnimation=").Append(DureeAnimation.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             texte.Append("VueCoteNoir=").Append(VueCoteNoir ? "1" : "0").Append(Environment.NewLine);
+            texte.Append("Cadence=").Append(CadenceId ?? "sans").Append(Environment.NewLine);
             foreach (string nom in NomsCouleurs)
                 if (Couleurs.TryGetValue(nom, out int rgb))
                     texte.Append("Couleur").Append(nom).Append("=#").Append((rgb & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture)).Append(Environment.NewLine);

@@ -861,6 +861,120 @@ public static class Scenario
                 sessionNulle.Positions.Count == 9 && NullesDames.Detecte(sessionNulle.Positions) == RaisonNulle.Repetition,
                 $"{sessionNulle.Positions.Count} positions, {NullesDames.Detecte(sessionNulle.Positions)}");
 
+        // ═══════════════ Pendule et cadences ═══════════════
+        Console.WriteLine("── Pendule ──");
+
+        TimeSpan maintenant = TimeSpan.Zero;        // L'heure de la pendule, avancée à la main : aucun test n'attend vraiment
+        Pendule Nouvelle(string idCadence)
+        {
+            maintenant = TimeSpan.Zero;
+            return new Pendule(Cadence.Trouve(idCadence)!, () => maintenant);
+        }
+        string Temps(Pendule p, Couleur c) => Pendule.Formate(p.TempsRestant(c));
+
+        Verifie("Cadences : cinq cadences aux noms différents, retrouvées sans tenir compte des majuscules ni des espaces",
+                Cadence.Officielles.Count == 5 && Cadence.Officielles.Select(c => c.Id).Distinct().Count() == 5 && Cadence.Trouve(" BLITZ ")?.Id == "blitz",
+                string.Join(", ", Cadence.Officielles.Select(c => c.Id)));
+        Verifie("Cadences : un nom inconnu ou absent ne donne rien", Cadence.Trouve("quantique") == null && Cadence.Trouve(null) == null && Cadence.Trouve("") == null, "");
+        Verifie("Cadences : le défaut FMJD est 1 h 20 + 30 s, le rapide est dans 15 à 30 minutes et le blitz dans 5 à 15 minutes",
+                Cadence.Trouve("classique")!.Base == TimeSpan.FromMinutes(80) && Cadence.Trouve("classique")!.Increment == TimeSpan.FromSeconds(30)
+                && Cadence.Trouve("rapide")!.Base >= TimeSpan.FromMinutes(15) && Cadence.Trouve("rapide")!.Base <= TimeSpan.FromMinutes(30)
+                && Cadence.Trouve("blitz")!.Base >= TimeSpan.FromMinutes(5) && Cadence.Trouve("blitz")!.Base <= TimeSpan.FromMinutes(15), "");
+
+        Pendule penduleClassique = Nouvelle("classique");
+        Verifie("Pendule : armée au départ, 1 h 20 pour chaque camp, trait aux blancs",
+                penduleClassique.Etat == EtatPendule.Armee && penduleClassique.Trait == Couleur.Blanc && Temps(penduleClassique, Couleur.Blanc) == "1:20:00" && Temps(penduleClassique, Couleur.Noir) == "1:20:00", "");
+        maintenant += TimeSpan.FromMinutes(10);
+        Verifie("Pendule : tant qu'aucun coup n'est joué, le temps ne s'écoule pas", Temps(penduleClassique, Couleur.Blanc) == "1:20:00" && penduleClassique.Verifie() == null, "10 minutes passées");
+        Verifie("Pendule : le premier coup est accepté sans être décompté, ni gagner d'incrément ; les noirs commencent",
+                penduleClassique.CoupJoue() && Temps(penduleClassique, Couleur.Blanc) == "1:20:00" && penduleClassique.Etat == EtatPendule.EnMarche && penduleClassique.Trait == Couleur.Noir && penduleClassique.CoupsJoues(Couleur.Blanc) == 1, "");
+        maintenant += TimeSpan.FromSeconds(40);
+        Verifie("Pendule : seul le temps du camp au trait s'écoule (noirs 40 s de moins, blancs inchangés)",
+                Temps(penduleClassique, Couleur.Noir) == "1:19:20" && Temps(penduleClassique, Couleur.Blanc) == "1:20:00", $"{Temps(penduleClassique, Couleur.Noir)} / {Temps(penduleClassique, Couleur.Blanc)}");
+        penduleClassique.CoupJoue();
+        Verifie("Pendule : un coup gagne l'incrément (1 h 19 min 20 s + 30 s) et passe la main aux blancs",
+                Temps(penduleClassique, Couleur.Noir) == "1:19:50" && penduleClassique.Trait == Couleur.Blanc, Temps(penduleClassique, Couleur.Noir));
+        penduleClassique.CoupJoue();       // Les blancs jouent tout de suite : l'incrément du deuxième coup des blancs
+        Verifie("Pendule : le deuxième coup des blancs, joué tout de suite, leur rend 30 s", Temps(penduleClassique, Couleur.Blanc) == "1:20:30", Temps(penduleClassique, Couleur.Blanc));
+
+        Pendule blitz = Nouvelle("blitz");
+        blitz.CoupJoue();
+        maintenant += TimeSpan.FromMinutes(4) + TimeSpan.FromSeconds(59);
+        Verifie("Pendule : une seconde avant la fin, le drapeau n'est pas tombé", blitz.Verifie() == null && Temps(blitz, Couleur.Noir) == "00:01", Temps(blitz, Couleur.Noir));
+        maintenant += TimeSpan.FromSeconds(2);
+        Couleur? tombe = blitz.Verifie();
+        Verifie("Pendule : le drapeau tombé fait perdre ce camp, la pendule s'arrête, il reste 0:00",
+                tombe == Couleur.Noir && blitz.Perdant == Couleur.Noir && blitz.Etat == EtatPendule.Arretee && Temps(blitz, Couleur.Noir) == "00:00", "");
+        Verifie("Pendule : après la chute du drapeau, un coup n'est plus accepté et le perdant reste le même", !blitz.CoupJoue() && blitz.Perdant == Couleur.Noir && blitz.Verifie() == null, "");
+
+        Pendule tardif = Nouvelle("blitz");
+        tardif.CoupJoue();
+        maintenant += TimeSpan.FromMinutes(6);
+        Verifie("Pendule : un coup joué après la fin du temps n'est pas accepté (le drapeau était tombé) et pas d'incrément", !tardif.CoupJoue() && tardif.Perdant == Couleur.Noir && tardif.Etat == EtatPendule.Arretee, "");
+
+        Pendule retour = Nouvelle("blitz");
+        retour.CoupJoue();
+        maintenant += TimeSpan.FromMinutes(1);
+        retour.CoupJoue();      // Les noirs ont joué : 4 min + 3 s
+        maintenant += TimeSpan.FromMinutes(6);
+        retour.Verifie();       // Le drapeau des blancs est tombé
+        retour.Armer(Couleur.Blanc);
+        Verifie("Pendule : après un retour arrière, la pendule est armée, le camp dont le drapeau était tombé reprend avec 30 s et l'autre garde son temps",
+                retour.Etat == EtatPendule.Armee && retour.Perdant == null && Temps(retour, Couleur.Blanc) == "00:30" && Temps(retour, Couleur.Noir) == "04:03", $"{Temps(retour, Couleur.Blanc)} / {Temps(retour, Couleur.Noir)}");
+        Verifie("Pendule : armée, le temps ne s'écoule pas jusqu'au prochain coup", Temps(retour, Couleur.Blanc) == "00:30" && retour.Verifie() == null, "");
+        retour.Reinitialiser(Couleur.Noir);
+        Verifie("Pendule : Reinitialiser rend le temps de base aux deux camps, le trait demandé et zéro coup",
+                Temps(retour, Couleur.Blanc) == "05:00" && Temps(retour, Couleur.Noir) == "05:00" && retour.Trait == Couleur.Noir && retour.CoupsJoues(Couleur.Blanc) == 0 && retour.Perdant == null, "");
+
+        Pendule finie = Nouvelle("classique");
+        finie.CoupJoue();
+        maintenant += TimeSpan.FromMinutes(1);
+        finie.Arreter();
+        string tempsArrete = Temps(finie, Couleur.Noir);
+        maintenant += TimeSpan.FromMinutes(30);
+        Verifie("Pendule : Arreter garde le temps décompté jusque-là et le fige", tempsArrete == "1:19:00" && Temps(finie, Couleur.Noir) == tempsArrete && finie.Etat == EtatPendule.Arretee && finie.Verifie() == null, tempsArrete);
+
+        // Les contrôles de temps (autant de coups que voulu joués par chaque camp, sans qu'une seconde ne s'écoule)
+        void Joue(Pendule p, int nombreDeCoupsDesDeuxCamps) { for (int i = 0; i < nombreDeCoupsDesDeuxCamps; i++) p.CoupJoue(); }
+        Pendule comite = Nouvelle("comite");
+        Joue(comite, 90);       // 45 coups de chaque camp
+        Verifie("Cadence « comité » : au 45e coup de chaque camp, 30 minutes sont ajoutées (90 + 30) ; pas encore d'incrément",
+                Temps(comite, Couleur.Blanc) == "2:00:00" && Temps(comite, Couleur.Noir) == "2:00:00", $"{Temps(comite, Couleur.Blanc)} / {Temps(comite, Couleur.Noir)}");
+        Joue(comite, 2);        // Le 46e coup de chaque camp
+        Verifie("Cadence « comité » : l'incrément de 30 s commence au 46e coup", Temps(comite, Couleur.Blanc) == "2:00:30" && Temps(comite, Couleur.Noir) == "2:00:30", $"{Temps(comite, Couleur.Blanc)} / {Temps(comite, Couleur.Noir)}");
+
+        Pendule ancien = Nouvelle("ancien");
+        Joue(ancien, 98);       // 49 coups de chaque camp
+        string avantControle = Temps(ancien, Couleur.Noir);
+        Joue(ancien, 2);        // Le 50e : 1 h de plus
+        Verifie("Cadence « ancien standard » : 2 h, puis 1 h ajoutée au 50e coup de chaque camp (sans incrément)", avantControle == "2:00:00" && Temps(ancien, Couleur.Blanc) == "3:00:00" && Temps(ancien, Couleur.Noir) == "3:00:00", avantControle);
+        Joue(ancien, 48);       // 74 coups de chaque camp
+        string avant75 = Temps(ancien, Couleur.Blanc);
+        Joue(ancien, 2);        // Le 75e
+        Joue(ancien, 50);       // Le 100e
+        Verifie("Cadence « ancien standard » : 1 h de plus tous les 25 coups (75e, 100e)", avant75 == "3:00:00" && Temps(ancien, Couleur.Blanc) == "5:00:00" && Temps(ancien, Couleur.Noir) == "5:00:00", $"{avant75} puis {Temps(ancien, Couleur.Blanc)}");
+
+        Pendule conseil = Nouvelle("classique");
+        Verifie("Pendule : au début d'une partie à 1 h 20, le temps conseillé au moteur est le réglage du joueur (5 s)", conseil.TempsConseille(Couleur.Blanc, 5) == 5, conseil.TempsConseille(Couleur.Blanc, 5).ToString());
+        Pendule presse = Nouvelle("blitz");
+        presse.CoupJoue();
+        maintenant += TimeSpan.FromSeconds(290);        // Il reste 10 s aux noirs
+        Verifie("Pendule : à 10 s de la fin, le moteur réfléchit au plus 2 s (un vingtième du temps et presque tout l'incrément), jamais plus que le réglage",
+                presse.TempsConseille(Couleur.Noir, 30) == 2 && presse.TempsConseille(Couleur.Noir, 1) == 1, presse.TempsConseille(Couleur.Noir, 30).ToString());
+        maintenant += TimeSpan.FromMilliseconds(9500);  // Il reste une demi-seconde
+        Verifie("Pendule : presque sans temps, le moteur réfléchit quand même 1 s au moins", presse.TempsConseille(Couleur.Noir, 30) == 1, "");
+
+        Verifie("Affichage : « 1:20:00 », « 01:19 », arrondi à la seconde supérieure, jamais de temps négatif",
+                Pendule.Formate(TimeSpan.FromMinutes(80)) == "1:20:00" && Pendule.Formate(TimeSpan.FromSeconds(79)) == "01:19" && Pendule.Formate(TimeSpan.FromMilliseconds(200)) == "00:01"
+                && Pendule.Formate(TimeSpan.Zero) == "00:00" && Pendule.Formate(TimeSpan.FromSeconds(-5)) == "00:00" && Pendule.Formate(TimeSpan.FromSeconds(3599)) == "59:59" && Pendule.Formate(TimeSpan.FromHours(1)) == "1:00:00", "");
+
+        Preferences sansPendule = new Preferences();
+        Verifie("Préférences : pas de pendule par défaut, écrit « Cadence=sans »", sansPendule.CadenceId == null && sansPendule.VersTexte().Contains("Cadence=sans") && Preferences.DepuisTexte(sansPendule.VersTexte()).CadenceId == null, "");
+        Verifie("Préférences : la cadence est écrite puis relue (sans tenir compte des majuscules)",
+                Preferences.DepuisTexte(new Preferences { CadenceId = "blitz" }.VersTexte()).CadenceId == "blitz" && Preferences.DepuisTexte("Cadence=CLASSIQUE").CadenceId == "classique", "");
+        Preferences cadenceInconnue = Preferences.DepuisTexte("Cadence=quantique\r\n");
+        Verifie("Préférences : une cadence inconnue garde « sans pendule » et est signalée", cadenceInconnue.CadenceId == null && cadenceInconnue.Avertissements.Count == 1 && Preferences.DepuisTexte("Cadence=sans").Avertissements.Count == 0, string.Join(" | ", cadenceInconnue.Avertissements));
+
         return verifications;
     }
 

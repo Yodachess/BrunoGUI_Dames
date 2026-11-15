@@ -117,9 +117,11 @@ namespace BrunoGUI_Dames
             ActiveDamier(true);
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;
             BoxNomJoueurNoir.Text = NomJoueurNoir;
+            CreePendule();                      // Les temps et le choix de la cadence (BrunoInterfaceGraphiqueDames.Pendule.cs), avant les préférences qui choisissent la cadence
             AppliquePreferences();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);          // Position initiale
             AfficheListesPieces();
+            ReinitialisePendule();              // Sans pendule choisie, sans effet
             if (preferencesChargees.VueCoteNoir)
                 BoutonTournerDamier_Click(this, EventArgs.Empty);       // Le damier est vu du côté des noirs, comme à la dernière fermeture
             if (CouleurAuTrait == Couleur.Blanc)
