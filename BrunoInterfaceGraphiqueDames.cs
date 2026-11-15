@@ -53,7 +53,7 @@ namespace BrunoGUI_Dames
         public static Color CouleurCasePrise = Color.DarkOliveGreen;                        
         public static Color CouleurCaseArrivee = Color.OliveDrab;
         public static Color CouleurCaseEtape = Color.Orange;        // Cases d'arrivée intermédiaires d'une rafle
-        public static string CouleurAuTrait = "";
+        public static Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn PartieCourante = new FichierPartiePdn.PartieDamesPdn();
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
@@ -103,7 +103,7 @@ namespace BrunoGUI_Dames
             ListeBitmapsPiece.Add(TypePiece.CadreRouge, CadreRouge);
             ListeBitmapsPiece.Add(TypePiece.CadreMarron, CadreMarron);
             // les variables
-            CouleurAuTrait = "Blanc";
+            CouleurAuTrait = Couleur.Blanc;
             VisuCoteNoir = false;                       // On commence avec la vue côté Blanc
             OrdinateurActif = true;
             AfficheNumeroBox = ExisteFENDebut = analyseEnCours = false;
@@ -125,14 +125,14 @@ namespace BrunoGUI_Dames
             AfficheListesPieces();
             if (preferencesChargees.VueCoteNoir)
                 BoutonTournerDamier_Click(this, EventArgs.Empty);       // Le damier est vu du côté des noirs, comme à la dernière fermeture
-            if (CouleurAuTrait == "Blanc")
+            if (CouleurAuTrait == Couleur.Blanc)
             {
-                ActiveCouleurDamier("Noir", false);
+                ActiveCouleurDamier(Couleur.Noir, false);
                 LabelInformationJoueur.Text = "Trait aux Blancs";
             }
             else
             {
-                ActiveCouleurDamier("Blanc", false);
+                ActiveCouleurDamier(Couleur.Blanc, false);
                 LabelInformationJoueur.Text = "Trait aux Noirs";
             }
             cheminMoteur = Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
@@ -293,7 +293,7 @@ namespace BrunoGUI_Dames
             }
             if (!analyseEnCours && (PartieTerminee || ReglesDames.EstTerminee(Position.DepuisHub2(positionHub2))))
             {   // La partie est déjà finie, ou le camp du moteur n'a plus aucun coup (il a perdu) : inutile d'interroger le moteur
-                FinPartieParBlocage(positionHub2[0] == 'W' ? "Blanc" : "Noir");      // Sans effet si la partie est déjà finie (plus de pièces)
+                FinPartieParBlocage(positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir);      // Sans effet si la partie est déjà finie (plus de pièces)
                 return;
             }
             BloqueBoutons(true);
@@ -351,10 +351,10 @@ namespace BrunoGUI_Dames
             ActiveCouleurDamier(CouleurAuTrait, true);
             BloqueBoutons(false);
         }
-        private void AnalyseCoupObligatoire(string couleur)
+        private void AnalyseCoupObligatoire(Couleur couleur)
         {   // --- Analyse pour toutes les pièces des coups obligatoires (prise la + longue) pour la couleur donnée, selon ReglesDames ---
             ActiveDamier(false);            // Désactiver les interactions pendant l'analyse
-            int nombrePieces = GestionDamier.NombreDePieces(couleur == "Blanc" ? Couleur.Blanc : Couleur.Noir);
+            int nombrePieces = GestionDamier.NombreDePieces(couleur);
             if (nombrePieces > 0)
                 VerifierGain();             // Vérifier si la partie n'est pas finie ?
             List<Coup> prises = new List<Coup>();
@@ -427,16 +427,8 @@ namespace BrunoGUI_Dames
             if (debutIndex >= 0 && finIndex > debutIndex)
             {   // Extraire le texte entre les guillemets
                 string contenu = fenAutiliser.Substring(debutIndex, finIndex - debutIndex);
-                string[] champsFen = contenu.Split(':');           // On récupère les 3 champs du FEN dans un tableau
-                // Le champ 0 est la couleur qui doit jouer le prochain coup
-                CouleurAuTrait = (champsFen[0] == "W") ? "Blanc" : (champsFen[0] == "B") ? "Noir" : "Inconnu";
-                // Active les cases pour la couleur actuelle
-                ActiveCouleurDamier(CouleurAuTrait, true);
-                // Désactive les cases de l'autre couleur
-                ActiveCouleurDamier(CouleurAuTrait == "Blanc" ? "Noir" : "Blanc", false);
-
                 Position position = Position.DepuisFen(contenu);        // Lève FormatException si le FEN n'est pas valide
-                if (commenceLaPartie)
+                CouleurAuTrait = position.Trait;                        // Le premier champ du FEN : la couleur qui joue le prochain coup                if (commenceLaPartie)
                     Partie.Courante.Commencer(position);                // La partie repart de zéro (historique, résultat, parcours) à cette position
                 GestionDamier.PositionCourante = position.Copie();      // La position du jeu : celle du FEN
                 for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
@@ -460,7 +452,7 @@ namespace BrunoGUI_Dames
         private static Position PositionDuDamier()
         {
             Position position = GestionDamier.PositionCourante.Copie();
-            position.Trait = CouleurAuTrait == "Blanc" ? Couleur.Blanc : Couleur.Noir;
+            position.Trait = CouleurAuTrait;
             return position;
         }
         private List<Coup>? coupsLegauxPieceSelectionnee;   // Coups légaux de la pièce sélectionnée selon ReglesDames ; null si le calcul a échoué
@@ -530,7 +522,7 @@ namespace BrunoGUI_Dames
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
             AppliqueCoupALaPosition(coup);
             ActiveDamier(true);         // Réactiver les interactions après le déplacement
-            ActiveCouleurDamier(couleurPiece.ToString(), false);
+            ActiveCouleurDamier(couleurPiece, false);
             VerifierGain();
             return coupEffectue;
         }
@@ -609,7 +601,7 @@ namespace BrunoGUI_Dames
                 LabelCoupJoue.Text = "Coup joué : " + coupEffectue;
             AppliqueCoupALaPosition(coup);
             ActiveDamier(true); // Réactiver les interactions après l'animation
-            ActiveCouleurDamier(couleurPiece.ToString(), false);
+            ActiveCouleurDamier(couleurPiece, false);
             VerifierGain();
             return coupEffectue;
         }
@@ -927,16 +919,16 @@ namespace BrunoGUI_Dames
         }
         public void ChangerCouleurTrait()
         {   // Inverse la valeur de CouleurAuTrait
-            CouleurAuTrait = CouleurAuTrait == "Blanc" ? "Noir" : "Blanc";
+            CouleurAuTrait = Position.Adversaire(CouleurAuTrait);
             // Active les cases pour la couleur actuelle
             ActiveCouleurDamier(CouleurAuTrait, true);
             // Désactive les cases de l'autre couleur
-            ActiveCouleurDamier(CouleurAuTrait == "Blanc" ? "Noir" : "Blanc", false);
+            ActiveCouleurDamier(Position.Adversaire(CouleurAuTrait), false);
             LabelInformationJoueur.Text = "Aux " + CouleurAuTrait + "s de jouer";
         }
-        public static string CouleurPasAuTrait()
-        {   // Vérifie la valeur de CouleurAuTrait et retourne l'opposé
-            return CouleurAuTrait == "Blanc" ? "Noir" : "Blanc";
+        public static Couleur CouleurPasAuTrait()
+        {   // Retourne l'opposé de CouleurAuTrait
+            return Position.Adversaire(CouleurAuTrait);
         }
         public static void ActiveDamier(bool statut)
         {   // --- Active (statut = true) ou désactive (statut = false) les cases du damier ---
@@ -947,12 +939,15 @@ namespace BrunoGUI_Dames
                         CaseDamier[i].Enabled = statut;
             }
         }
-        public static void ActiveCouleurDamier(string couleur, bool statut)
-        {   // Couleur : "Blanc" ou "Noir", active (statut = true) ou désactive les cases qui portent une pièce de cette couleur dans la position
+        public static void ActiveCouleurDamier(Couleur couleur, bool statut)
+        {   // Active (statut = true) ou désactive les cases qui portent une pièce de cette couleur dans la position
+            ActiveCouleurDamier(GestionDamier.CouleurAffichee(couleur), statut);
+        }
+        public static void ActiveCouleurDamier(CouleurPiece couleur, bool statut)
+        {   // Idem avec la couleur de l'affichage (celle de la pièce jouée)
             for (int i = 0; i <= 99; i++)
             {
-                CouleurPiece couleurDeLaPiece = GestionDamier.ContenuCaseIndice(i).CouleurPiece;
-                if (string.Equals(couleurDeLaPiece.ToString(), couleur, StringComparison.OrdinalIgnoreCase))
+                if (GestionDamier.ContenuCaseIndice(i).CouleurPiece == couleur)
                 {
                     CaseDamier[i].Enabled = statut;
                 }
@@ -994,12 +989,12 @@ namespace BrunoGUI_Dames
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
             // Les parties nulles (répétition, coups de dames) : NulleActuelle et FinPartieParNulle ; pas détectées : finales à peu de pièces
         }
-        private void FinPartieParBlocage(string couleurBloquee)
-        {   // --- Le camp de couleurBloquee (« Blanc » ou « Noir »), au trait, ne peut plus jouer : il perd la partie ---
+        private void FinPartieParBlocage(Couleur couleurBloquee)
+        {   // --- Le camp de couleurBloquee, au trait, ne peut plus jouer : il perd la partie ---
             if (PartieTerminee)
                 return;
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            if (couleurBloquee == "Blanc")
+            if (couleurBloquee == Couleur.Blanc)
             {
                 RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de coup possible";

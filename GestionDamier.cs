@@ -98,6 +98,11 @@ namespace BrunoGUI_Dames
             if (Position.EstNoire(piece)) return CouleurPiece.Noir;
             return CouleurPiece.Vide;
         }
+        // --- La couleur de l'affichage correspondant à la couleur du jeu (le trait, par exemple) ---
+        public static CouleurPiece CouleurAffichee(Couleur couleur)
+        {
+            return couleur == Couleur.Blanc ? CouleurPiece.Blanc : CouleurPiece.Noir;
+        }
         // --- Nombre de pièces (pions et dames) d'une couleur ---
         public static int NombreDePieces(Couleur couleur)
         {
