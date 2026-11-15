@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -26,6 +26,33 @@ namespace BrunoGUI_Dames
     public partial class BrunoInterfaceGraphiqueDames
     {
         // Clics sur le damier, coups humains, prises obligatoires, déplacements et dialogue avec le moteur pour jouer un coup.
+        // --- Le curseur « pièce en main » : l'icône (HICON) que crée GetHicon appartient à l'appelant, qui doit la détruire (sinon un handle GDI fuit à chaque sélection) ---
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool DestroyIcon(IntPtr hicon);
+        private Cursor? curseurPiece;
+        private IntPtr iconeCurseurPiece = IntPtr.Zero;
+        private void PoseCurseurPiece(Image imagePiece)
+        {
+            RendLeCurseur();
+            using (Bitmap source = new Bitmap(imagePiece))
+            using (Bitmap miniature = (Bitmap)source.GetThumbnailImage(150, 150, null, IntPtr.Zero))
+            {
+                iconeCurseurPiece = miniature.GetHicon();
+                curseurPiece = new Cursor(iconeCurseurPiece);
+            }
+            Cursor = curseurPiece;
+        }
+        private void RendLeCurseur()
+        {   // Curseur normal, et libération du curseur de la pièce s'il y en avait un
+            Cursor = Cursors.Default;
+            curseurPiece?.Dispose();
+            curseurPiece = null;
+            if (iconeCurseurPiece != IntPtr.Zero)
+            {
+                DestroyIcon(iconeCurseurPiece);
+                iconeCurseurPiece = IntPtr.Zero;
+            }
+        }
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Gestion du click de la souris
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
@@ -53,11 +80,7 @@ namespace BrunoGUI_Dames
                         Image? imageCase = CaseDamier[indexCase100].Image;
                         if (imageCase != null)
                         {   // Si la case cliquée contient bien une pièce ou un pion, on va utiliser le thumbnail de la pièce comme curseur :-)
-                            using (Bitmap Piece = new Bitmap(imageCase))
-                            {   // Quand on bouge la souris, on bouge le thumbnail de la pièce comme un curseur :-)
-                                Bitmap thumbnail = (Bitmap)Piece.GetThumbnailImage(150, 150, null, IntPtr.Zero);
-                                Cursor = new Cursor(thumbnail.GetHicon());
-                            }
+                            PoseCurseurPiece(imageCase);    // Quand on bouge la souris, on bouge le thumbnail de la pièce comme un curseur :-)
                             EffacePiece(indexCase100);       // On efface l'image de la case d'origine ; la pièce reste dans la position jusqu'à la fin du coup
                             CaseDamier[indexCase100].BackColor = CouleurTrajetSuivi;
                             List<Coup> coupsDeLaPiece = coupsLegauxPieceSelectionnee ?? new List<Coup>();
@@ -80,7 +103,7 @@ namespace BrunoGUI_Dames
                     else
                     {   // --- Déplacement d'une pièce ---
                         EffaceMouvements();
-                        Cursor = Cursors.Default;       // On revient au curseur "normal"
+                        RendLeCurseur();                // On revient au curseur "normal"
                         pieceEnMain = false;
                         try
                         {   // Le try-catch récupère l'exception qui se produit lorsque que l'on clique sur une case inactive

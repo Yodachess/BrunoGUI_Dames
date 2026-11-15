@@ -223,6 +223,19 @@ public static class ScenarioInterface
                 enMain && BrunoInterfaceGraphiqueDames.PartieTerminee && ImagePresente(17) && !Champ<bool>(fenetre, "pieceEnMain") && Statique<bool>("clickCaseSource") && fenetre.Cursor == Cursors.Default,
                 $"enMain avant : {enMain}, image : {ImagePresente(17)}");
 
+        // Le curseur « pièce en main » ne fait pas fuir de handle GDI (150 sélections suivies d'un clic qui repose la pièce)
+        Nouvelle();
+        Clique(32); Clique(32);                 // Un premier tour, pour que les caches soient en place
+        int objetsGdiAvant = ObjetsGdi();
+        for (int i = 0; i < 150; i++)
+        {
+            Clique(32);                         // Sélection : un curseur est créé
+            Clique(32);                         // Clic sur sa propre case : la pièce revient, le curseur est libéré
+        }
+        int objetsGdiApres = ObjetsGdi();
+        verifie("Interface : 150 sélections de pièce ne laissent pas de handle GDI (le curseur de la pièce est libéré)", objetsGdiApres - objetsGdiAvant < 20 && fenetre.Cursor == Cursors.Default,
+                $"{objetsGdiAvant} puis {objetsGdiApres} objets GDI");
+
         // Retour arrière : les temps sont gardés, la pendule attend le prochain coup
         Nouvelle(5);
         Joue(32, 28);
@@ -361,6 +374,11 @@ public static class ScenarioInterface
         Appelle(fenetre, "NouvellePartie_Click", null, EventArgs.Empty);      // Remet aussi la pendule à zéro, même si la cadence n'a pas changé
         Pompe(30);
     }
+
+    // Le nombre d'objets GDI (bitmaps, icônes, pinceaux…) du processus
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern uint GetGuiResources(IntPtr processus, uint type);
+    private static int ObjetsGdi() => (int)GetGuiResources(System.Diagnostics.Process.GetCurrentProcess().Handle, 0);
 
     // Un clic de souris sur la case Manoury : le chemin du vrai clic (CaseMouseDown)
     private static void Clique(int caseManoury)

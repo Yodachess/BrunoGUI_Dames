@@ -162,7 +162,7 @@ namespace BrunoGUI_Dames
             if (pieceEnMain)
             {   // Une pièce était sélectionnée (son image est sur le curseur) : elle revient sur sa case
                 pieceEnMain = false;
-                Cursor = Cursors.Default;
+                RendLeCurseur();
                 EffaceMouvements();
                 DessinePiece(IndexPictureBoxSource100, pieceSelectionnee);
                 CouleurToutesCasesManoury(CouleurCaseSombre);
