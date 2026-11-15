@@ -964,6 +964,54 @@ public static class Scenario
         maintenant += TimeSpan.FromMilliseconds(9500);  // Il reste une demi-seconde
         Verifie("Pendule : presque sans temps, le moteur réfléchit quand même 1 s au moins", presse.TempsConseille(Couleur.Noir, 30) == 1, "");
 
+        // Le branchement : le formulaire dit à la pendule QUI joue (le camp de la position jouée), même si ce n'est pas le camp qu'elle croyait au trait
+        Pendule decalee = Nouvelle("classique");
+        decalee.CoupJoue(Couleur.Blanc);                // Les blancs jouent leur premier coup (non décompté) : les noirs sont au trait
+        maintenant += TimeSpan.FromSeconds(10);
+        bool accepte = decalee.CoupJoue(Couleur.Blanc); // Mais ce sont de nouveau les blancs qui jouent (position parcourue, par exemple)
+        Verifie("Pendule branchée : si c'est l'autre camp qui joue, c'est lui qui est décompté (10 s) et gagne l'incrément ; le camp que la pendule croyait au trait ne perd rien",
+                accepte && Temps(decalee, Couleur.Blanc) == "1:20:20" && Temps(decalee, Couleur.Noir) == "1:20:00" && decalee.CoupsJoues(Couleur.Blanc) == 2 && decalee.CoupsJoues(Couleur.Noir) == 0 && decalee.Trait == Couleur.Noir,
+                $"{Temps(decalee, Couleur.Blanc)} / {Temps(decalee, Couleur.Noir)}");
+
+        Pendule noirsD = Nouvelle("classique");
+        bool premierDesNoirs = noirsD.CoupJoue(Couleur.Noir);      // La pendule attendait les blancs, ce sont les noirs qui jouent en premier
+        Verifie("Pendule branchée : un premier coup joué par les noirs est gratuit, les blancs sont ensuite au trait",
+                premierDesNoirs && noirsD.Etat == EtatPendule.EnMarche && noirsD.Trait == Couleur.Blanc && noirsD.CoupsJoues(Couleur.Noir) == 1
+                && Temps(noirsD, Couleur.Noir) == "1:20:00" && Temps(noirsD, Couleur.Blanc) == "1:20:00", "");
+
+        Pendule drapeauDuJoueur = Nouvelle("blitz");
+        drapeauDuJoueur.CoupJoue(Couleur.Blanc);        // Les noirs sont au trait
+        maintenant += TimeSpan.FromMinutes(6);
+        bool accepteApresTemps = drapeauDuJoueur.CoupJoue(Couleur.Blanc);     // Mais ce sont les blancs qui jouent : c'est leur temps qui s'est écoulé
+        Verifie("Pendule branchée : c'est le drapeau du camp qui joue réellement qui tombe (les blancs), pas celui que la pendule croyait au trait",
+                !accepteApresTemps && drapeauDuJoueur.Perdant == Couleur.Blanc && Temps(drapeauDuJoueur, Couleur.Noir) == "05:00", $"perdant : {drapeauDuJoueur.Perdant}");
+
+        Pendule fini = Nouvelle("blitz");
+        fini.Arreter();
+        Verifie("Pendule branchée : une fois arrêtée, un coup est sans effet quel que soit le camp, sauf si un drapeau est tombé",
+                fini.CoupJoue(Couleur.Noir) && fini.Etat == EtatPendule.Arretee && fini.CoupsJoues(Couleur.Noir) == 0 && !tardif.CoupJoue(Couleur.Noir), "");
+
+        // Une partie humain / moteur : les blancs jouent le premier coup (gratuit) puis, cinq fois, les noirs en 2 s et les blancs en 5 s
+        Pendule alternance = Nouvelle("blitz");
+        alternance.CoupJoue(Couleur.Blanc);
+        for (int k = 0; k < 4; k++)
+        {
+            maintenant += TimeSpan.FromSeconds(2);
+            alternance.CoupJoue(Couleur.Noir);
+            maintenant += TimeSpan.FromSeconds(5);
+            alternance.CoupJoue(Couleur.Blanc);
+        }
+        Verifie("Pendule branchée : en alternance, chaque camp est décompté de son temps et gagne 3 s par coup (blancs 4 × (−5 + 3), noirs 4 × (−2 + 3))",
+                Temps(alternance, Couleur.Blanc) == "04:52" && Temps(alternance, Couleur.Noir) == "05:04" && alternance.CoupsJoues(Couleur.Blanc) == 5 && alternance.CoupsJoues(Couleur.Noir) == 4 && alternance.Trait == Couleur.Noir,
+                $"{Temps(alternance, Couleur.Blanc)} / {Temps(alternance, Couleur.Noir)}");
+
+        FinAuTemps blancsPerdent = Pendule.FinDePartie(Couleur.Blanc);
+        FinAuTemps noirsPerdent = Pendule.FinDePartie(Couleur.Noir);
+        Verifie("Fin au temps : les blancs perdent, les noirs gagnent ; le statut et le message le disent",
+                blancsPerdent.Gagnant == Couleur.Noir && blancsPerdent.Statut == "Les Noirs gagnent au temps" && blancsPerdent.Message.Contains("Noirs") && blancsPerdent.Message.Contains("des blancs"), blancsPerdent.Statut);
+        Verifie("Fin au temps : les noirs perdent, les blancs gagnent ; le statut et le message le disent",
+                noirsPerdent.Gagnant == Couleur.Blanc && noirsPerdent.Statut == "Les Blancs gagnent au temps" && noirsPerdent.Message.Contains("Blancs") && noirsPerdent.Message.Contains("des noirs"), noirsPerdent.Statut);
+
         Verifie("Affichage : « 1:20:00 », « 01:19 », arrondi à la seconde supérieure, jamais de temps négatif",
                 Pendule.Formate(TimeSpan.FromMinutes(80)) == "1:20:00" && Pendule.Formate(TimeSpan.FromSeconds(79)) == "01:19" && Pendule.Formate(TimeSpan.FromMilliseconds(200)) == "00:01"
                 && Pendule.Formate(TimeSpan.Zero) == "00:00" && Pendule.Formate(TimeSpan.FromSeconds(-5)) == "00:00" && Pendule.Formate(TimeSpan.FromSeconds(3599)) == "59:59" && Pendule.Formate(TimeSpan.FromHours(1)) == "1:00:00", "");

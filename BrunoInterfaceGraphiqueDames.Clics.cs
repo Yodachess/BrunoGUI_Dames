@@ -110,7 +110,7 @@ namespace BrunoGUI_Dames
                                     DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
                                     CaseDamier[IndexPictureBoxSource100].BackColor = CouleurTrajetSuivi;
                                 }
-                                else if (!PenduleCoupJoue())
+                                else if (!PenduleCoupJoue(CouleurAuTrait))
                                 {   // Le coup est décidé : la pendule le décompte (sans pendule, toujours vrai). Faux : le drapeau était tombé, la partie est perdue au temps et le coup n'est pas joué
                                     DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
                                     return;     // Le finally remet l'état de sélection à zéro
@@ -183,8 +183,9 @@ namespace BrunoGUI_Dames
                 FinPartieParBlocage(positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir);      // Sans effet si la partie est déjà finie (plus de pièces)
                 return;
             }
+            Couleur campDuMoteur = positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir;     // Le trait de la position envoyée (pendant la réflexion, CouleurAuTrait est celui de l'humain)
             if (!analyseEnCours && pendule != null)
-                tempsReflexion = pendule.TempsConseille(positionHub2[0] == 'W' ? Couleur.Blanc : Couleur.Noir, tempsReflexion);     // Avec une pendule, jamais plus que le réglage, moins quand il reste peu de temps
+                tempsReflexion = pendule.TempsConseille(campDuMoteur, tempsReflexion);     // Avec une pendule, jamais plus que le réglage, moins quand il reste peu de temps
             BloqueBoutons(true);
             jeuMoteurEnCours = true;
             ActiveCouleurDamier(CouleurAuTrait, false);
@@ -215,7 +216,7 @@ namespace BrunoGUI_Dames
                 {   // Le coup de Scan n'a pas été retrouvé dans les coups légaux (c'est noté dans le journal) : rien n'est joué
                     LabelInformationJoueur.Text = "Coup du moteur non reconnu : " + reponse.Coup;
                 }
-                else if (PenduleCoupJoue())
+                else if (PenduleCoupJoue(campDuMoteur))
                 {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur ; la pendule l'a décompté (sinon son drapeau est tombé : il perd, rien n'est joué)
                     int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupMoteur.Depart);
                     CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;

@@ -94,10 +94,11 @@ namespace BrunoGUI_Dames
             pendule?.Arreter();
             MetAJourAffichagePendule();
         }
-        // --- Le camp au trait vient de jouer : à appeler quand le coup est décidé, avant son animation. Faux si son drapeau était tombé : la partie est perdue au temps et le coup n'est pas joué ---
-        private bool PenduleCoupJoue()
+        // --- Le camp « joueur » vient de jouer : à appeler quand le coup est décidé, avant son animation (joueur : CouleurAuTrait pour un coup humain, le trait de la position envoyée pour le moteur).
+        // Faux si son drapeau était tombé : la partie est perdue au temps et le coup n'est pas joué ---
+        private bool PenduleCoupJoue(Couleur joueur)
         {
-            if (pendule == null || pendule.CoupJoue())
+            if (pendule == null || pendule.CoupJoue(joueur))
             {
                 MetAJourAffichagePendule();
                 return true;
@@ -166,14 +167,13 @@ namespace BrunoGUI_Dames
             }
             ActiveDamier(false);
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            string gagnant = perdante == Couleur.Blanc ? "Noirs" : "Blancs";
-            string drapeau = perdante == Couleur.Blanc ? "des blancs" : "des noirs";
-            if (perdante == Couleur.Blanc)
+            FinAuTemps fin = Pendule.FinDePartie(perdante);     // Le gagnant et les textes viennent de la logique testée
+            if (fin.Gagnant == Couleur.Noir)
                 RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
             else
                 RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
-            LabelInformationJoueur.Text = $"Les {gagnant} gagnent au temps";
-            MessageBox.Show($"Les {gagnant} gagnent !\nLe drapeau {drapeau} est tombé.", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            LabelInformationJoueur.Text = fin.Statut;
+            MessageBox.Show(fin.Message, "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

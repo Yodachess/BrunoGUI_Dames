@@ -79,6 +79,9 @@ namespace BrunoGUI_Dames
         Arretee     // La partie est finie (ou le drapeau est tombé)
     }
 
+    // --- Ce qu'on annonce quand un drapeau tombe : le gagnant, la ligne de statut et le message de la boîte de dialogue ---
+    public sealed record FinAuTemps(Couleur Gagnant, string Statut, string Message);
+
     // --- La pendule d'une partie : le temps restant de chaque camp, qui est au trait, les drapeaux tombés ---
     public sealed class Pendule
     {
@@ -142,10 +145,17 @@ namespace BrunoGUI_Dames
             return true;
         }
 
-        // --- Le camp au trait vient de jouer : son temps est décompté, il gagne l'incrément et le temps des contrôles, l'autre camp commence.
-        // Rend faux si son drapeau était déjà tombé : le coup ne compte pas et il perd (Perdant). Le premier coup d'une pendule armée n'est pas décompté ---
-        public bool CoupJoue()
+        // --- Le camp au trait vient de jouer (voir CoupJoue(Couleur)) ---
+        public bool CoupJoue() => CoupJoue(Trait);
+
+        // --- Le camp « joueur » vient de jouer : son temps est décompté, il gagne l'incrément et le temps des contrôles, l'autre camp commence.
+        // Si ce n'est pas le camp que la pendule croyait au trait (on a joué depuis une position parcourue, par exemple), c'est lui qui est décompté : le temps
+        // écoulé depuis le dernier coup lui revient, l'autre camp n'a rien perdu. Rend faux si son drapeau était déjà tombé : le coup ne compte pas et il perd (Perdant).
+        // Le premier coup d'une pendule armée n'est pas décompté ---
+        public bool CoupJoue(Couleur joueur)
         {
+            if (Etat != EtatPendule.Arretee)
+                Trait = joueur;
             int i = Indice(Trait);
             if (Etat == EtatPendule.Arretee)
                 return Perdant == null;
@@ -182,6 +192,15 @@ namespace BrunoGUI_Dames
             Perdant = Trait;
             Etat = EtatPendule.Arretee;
             return Trait;
+        }
+
+        // --- La fin de partie au temps : le camp qui gagne, la ligne de statut et le message annoncés quand le drapeau de « perdante » est tombé ---
+        public static FinAuTemps FinDePartie(Couleur perdante)
+        {
+            Couleur gagnante = Position.Adversaire(perdante);
+            string gagnants = gagnante == Couleur.Blanc ? "Blancs" : "Noirs";
+            string drapeau = perdante == Couleur.Blanc ? "des blancs" : "des noirs";
+            return new FinAuTemps(gagnante, $"Les {gagnants} gagnent au temps", $"Les {gagnants} gagnent !\nLe drapeau {drapeau} est tombé.");
         }
 
         // --- La partie est finie : le temps s'arrête ---
