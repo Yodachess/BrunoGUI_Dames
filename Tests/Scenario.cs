@@ -734,6 +734,89 @@ public static class Scenario
             }
         }
 
+        // ═══════════════ Session de partie (historique, parcours, retour arrière, résultat) ═══════════════
+        Console.WriteLine("── Session de partie ──");
+
+        // Trois demi-coups joués depuis la position initiale, par les règles
+        List<Position> positionsSession = [Position.Initiale()];
+        List<string> coupsSession = [];
+        for (int i = 0; i < 3; i++)
+        {
+            List<Coup> legaux = ReglesDames.CoupsLegaux(positionsSession[^1]);
+            Coup choisi = legaux[0];
+            coupsSession.Add(ReglesDames.NotationPdn(legaux, choisi));
+            positionsSession.Add(ReglesDames.Jouer(positionsSession[^1], choisi));
+        }
+        SessionPartie session = new SessionPartie();
+        Verifie("Session : avant Commencer, la partie est vide", session.EstVide && session.Positions.Count == 0 && session.Resultat == null, "");
+        session.Commencer(positionsSession[0]);
+        Verifie("Session : Commencer met la position de départ à l'indice 0, sans coup ni résultat",
+                session.Positions.Count == 1 && session.CoupsPdn.Count == 0 && session.IndexAffiche == 0 && session.CoupAffiche == null && session.Resultat == null,
+                $"{session.Positions.Count} position, {session.CoupsPdn.Count} coup");
+        for (int i = 0; i < 3; i++)
+            session.AjouteCoup(coupsSession[i], positionsSession[i + 1]);
+        Verifie("Session : trois coups ajoutés donnent quatre positions et trois coups, le parcours est sur la dernière",
+                session.Positions.Count == 4 && session.CoupsPdn.Count == 3 && session.IndexAffiche == 3 && session.CoupAffiche == coupsSession[2]
+                && session.DernierePosition.Equals(positionsSession[3]), $"{session.Positions.Count} positions, indice {session.IndexAffiche}");
+        Verifie("Session : le FEN enrobé et le Hub2 d'une position viennent de la position",
+                session.Fen(0) == "[FEN \"" + positionsSession[0].VersFen() + "\"]" && session.Hub2(3) == positionsSession[3].VersHub2()
+                && Position.DepuisFen(session.Fen(2)).Equals(positionsSession[2]) && Position.DepuisHub2(session.Hub2(2)).Equals(positionsSession[2]),
+                session.Fen(2));
+        Verifie("Session : le trait de chaque position suit l'alternance (blancs, noirs, blancs, noirs)",
+                session.Positions.Select(p => p.Trait).SequenceEqual([Couleur.Blanc, Couleur.Noir, Couleur.Blanc, Couleur.Noir]), "");
+
+        // Parcours : Précédent, Suivant, Début, Fin ne sortent jamais de la partie
+        Verifie("Session : Suivant à la fin ne bouge pas", !session.Suivant() && session.IndexAffiche == 3, "");
+        Verifie("Session : Précédent recule d'un cran, puis Suivant revient au même cran (le premier appel après le changement de sens agit)",
+                session.Precedent() && session.IndexAffiche == 2 && session.Suivant() && session.IndexAffiche == 3 && session.Precedent() && session.IndexAffiche == 2,
+                $"indice {session.IndexAffiche}");
+        Verifie("Session : Début mène à la position de départ, sans coup affiché ; Précédent n'y bouge plus",
+                session.Debut() && session.IndexAffiche == 0 && session.CoupAffiche == null && !session.Precedent() && !session.Debut(), $"indice {session.IndexAffiche}");
+        Verifie("Session : Fin mène à la dernière position et affiche son coup ; Suivant n'y bouge plus",
+                session.Fin() && session.IndexAffiche == 3 && session.CoupAffiche == coupsSession[2] && !session.Suivant() && !session.Fin(), $"indice {session.IndexAffiche}");
+        Verifie("Session : la position montrée est celle de l'indice du parcours", session.Debut() && session.PositionAffichee.Equals(positionsSession[0]) && session.Fin() && session.PositionAffichee.Equals(positionsSession[3]), "");
+
+        // Résultat et retour arrière
+        session.FixeResultat("1-0");
+        Verifie("Session : le résultat se note, et les coups PDN suivis du résultat gardent l'espace devant (format de PartiePdn.Creer)",
+                session.Resultat == "1-0" && session.CoupsPdnAvecResultat().Count == 4 && session.CoupsPdnAvecResultat()[3] == " 1-0" && session.CoupsPdn.Count == 3, string.Join("|", session.CoupsPdnAvecResultat()));
+        session.FixeResultat(" 1/2-1/2");
+        Verifie("Session : un second résultat remplace le premier (sans espace superflu)", session.Resultat == "1/2-1/2" && session.CoupsPdnAvecResultat().Count == 4, session.Resultat ?? "");
+        string? retire = session.RetireDernierCoup();
+        Verifie("Session : le retour arrière retire le dernier coup, sa position et le résultat, et renvoie le coup retiré",
+                retire == coupsSession[2] && session.Positions.Count == 3 && session.CoupsPdn.Count == 2 && session.Resultat == null && session.DernierePosition.Equals(positionsSession[2]),
+                $"retiré {retire}");
+        session.Debut();
+        retire = session.RetireDernierCoup();
+        Verifie("Session : le retour arrière pendant un parcours replace le parcours sur la nouvelle dernière position (avant, l'indice se décalait)",
+                retire == coupsSession[1] && session.IndexAffiche == 1 && session.PositionAffichee.Equals(positionsSession[1]), $"indice {session.IndexAffiche}");
+        session.RetireDernierCoup();
+        Verifie("Session : sans aucun coup, le retour arrière ne retire rien (le départ reste) et renvoie null",
+                session.RetireDernierCoup() == null && session.Positions.Count == 1 && session.IndexAffiche == 0, $"{session.Positions.Count} position");
+        Verifie("Session : sans coup, Début, Précédent, Suivant et Fin ne bougent pas", !session.Debut() && !session.Precedent() && !session.Suivant() && !session.Fin(), "");
+        session.AjouteCoup(coupsSession[0], positionsSession[1]);
+        session.FixeResultat("0-1");
+        session.Commencer(positionsSession[2]);
+        Verifie("Session : Commencer repart de zéro (historique, résultat et parcours) et copie la position donnée",
+                session.Positions.Count == 1 && session.CoupsPdn.Count == 0 && session.Resultat == null && session.IndexAffiche == 0 && session.DernierePosition.Equals(positionsSession[2])
+                && !ReferenceEquals(session.DernierePosition, positionsSession[2]), "");
+        bool refuse = false;
+        try { new SessionPartie().AjouteCoup("32-28", Position.Initiale()); }
+        catch (InvalidOperationException) { refuse = true; }
+        Verifie("Session : un coup ajouté avant Commencer est refusé", refuse, "InvalidOperationException");
+        // Les nulles se lisent directement dans les positions de la session (plus de relecture de chaînes Hub2)
+        SessionPartie sessionNulle = new SessionPartie();
+        sessionNulle.Commencer(Position.DepuisFen("W:WK47:BK4"));
+        foreach (string aller in new[] { "47-42", "4-9", "42-47", "9-4", "47-42", "4-9", "42-47", "9-4" })
+        {
+            Position avantAller = sessionNulle.DernierePosition;
+            Coup? coupNulle = ReglesDames.TrouverCoup(avantAller, aller);
+            if (coupNulle != null) sessionNulle.AjouteCoup(aller, ReglesDames.Jouer(avantAller, coupNulle));
+        }
+        Verifie("Session : les positions de la session alimentent NullesDames (répétition après deux allers-retours)",
+                sessionNulle.Positions.Count == 9 && NullesDames.Detecte(sessionNulle.Positions) == RaisonNulle.Repetition,
+                $"{sessionNulle.Positions.Count} positions, {NullesDames.Detecte(sessionNulle.Positions)}");
+
         return verifications;
     }
 

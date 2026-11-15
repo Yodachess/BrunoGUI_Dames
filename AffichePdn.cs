@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.NetworkInformation;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace BrunoGUI_Dames
@@ -36,26 +35,15 @@ namespace BrunoGUI_Dames
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
             FichierPartiePdn.PartieDamesPdn courante = BrunoInterfaceGraphiqueDames.PartieCourante;
             PartiePdn partie = PartiePdn.Creer(courante.Event, courante.Site, courante.Date, courante.Round, courante.White, courante.Black,
-                                               courante.Result, FenDepartPartie(), Partie.ListeCoupsPdn);
+                                               courante.Result, FenDepartPartie(), Partie.Courante.CoupsPdnAvecResultat());
             return partie.VersTexte();
         }
         private static string? FenDepartPartie()
         {   // --- Le FEN de la position de départ s'il diffère de la position initiale (partie chargée d'un PDN ou d'un fichier FEN), sinon null ---
-            if (Partie.ListeCoupsFen.Count == 0) return null;
-            string fen = Partie.ListeCoupsFen[0];       // Enrobé : [FEN "W:W31-50:B1-20"]
-            Match enrobe = Regex.Match(fen, "\"([^\"]*)\"");
-            if (enrobe.Success) fen = enrobe.Groups[1].Value;
-            try
-            {
-                Position depart = Position.DepuisFen(fen);
-                return depart.Equals(Position.Initiale()) ? null : depart.VersFen();
-            }
-            catch (FormatException)
-            {
-                return null;
-            }
-        }
-        public void AffichePdnDansZone()
+            if (Partie.Courante.EstVide) return null;
+            Position depart = Partie.Courante.Positions[0];
+            return depart.Equals(Position.Initiale()) ? null : depart.VersFen();
+        }        public void AffichePdnDansZone()
         {
             afficheZone.Show();
             afficheZone.ZoneAffichage.Text = GenerationPdn();
@@ -68,20 +56,20 @@ namespace BrunoGUI_Dames
         private void ListeFenAffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
-            string contenuFen = "Nombre de 1/2 coups = " + Partie.ListeCoupsFen.Count + "\n";
-            for (int i = 0; i < Partie.ListeCoupsFen.Count; i++)     // Parcours de la liste des FEN
+            string contenuFen = "Nombre de 1/2 coups = " + Partie.Courante.Positions.Count + "\n";
+            for (int i = 0; i < Partie.Courante.Positions.Count; i++)     // Parcours de la liste des FEN
             {
-                contenuFen = contenuFen + "  [" + i + "]: \"" + Partie.ListeCoupsFen[i] + "\"" + " \n";
+                contenuFen = contenuFen + "  [" + i + "]: \"" + Partie.Courante.Fen(i) + "\"" + " \n";
             }
             afficheZone.ZoneAffichage.Text = contenuFen;
         }
         private void ListeHub2AffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
-            string contenuHub2 = "Nombre de 1/2 coups = " + Partie.ListeCoupsHub2.Count + "\n";
-            for (int i = 0; i < Partie.ListeCoupsHub2.Count; i++)     // Parcours de la liste des FEN
+            string contenuHub2 = "Nombre de 1/2 coups = " + Partie.Courante.Positions.Count + "\n";
+            for (int i = 0; i < Partie.Courante.Positions.Count; i++)     // Parcours de la liste des FEN
             {
-                contenuHub2 = contenuHub2 + "  [" + i + "]: \"" + Partie.ListeCoupsHub2[i] + "\"" + " \n";
+                contenuHub2 = contenuHub2 + "  [" + i + "]: \"" + Partie.Courante.Hub2(i) + "\"" + " \n";
             }
             afficheZone.ZoneAffichage.Text = contenuHub2;
         }
