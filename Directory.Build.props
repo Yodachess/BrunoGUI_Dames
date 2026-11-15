@@ -1,0 +1,6 @@
+<Project>
+  <!-- Réglages communs à l'application et au projet de tests : le zéro avertissement est imposé par la compilation -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

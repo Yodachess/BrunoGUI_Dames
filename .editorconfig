@@ -1,0 +1,26 @@
+# Style du projet (VS 2022 et l'éditeur de code l'appliquent). Les identifiants sont en français sans accents,
+# les commentaires et les textes affichés en ont ; fichiers en UTF-8 et fins de ligne CRLF (voir aussi .gitattributes).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,sln,resx,yml,md,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_style_namespace_declarations = block_scoped
+csharp_prefer_braces = when_multiline:suggestion
+dotnet_sort_system_directives_first = true

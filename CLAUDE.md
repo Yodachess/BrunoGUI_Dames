@@ -104,8 +104,9 @@ dotnet test Tests
 
 **Code**
 - Pas de commentaires XML (`/// <summary>`) : commenter avec des `//` simples, dans le style du projet (`// --- Description ---` au-dessus de la méthode ou de la propriété, ou plusieurs lignes `//`).
-- Zéro avertissement de compilation ; une fois activés, les types nullables restent à zéro avertissement.
-- Fichiers du projet en CRLF (imposé par `.gitattributes`, comme dans BrunoGUI_GenII).
+- Zéro avertissement de compilation, imposé : `Directory.Build.props` active `TreatWarningsAsErrors` pour l'application et les tests (un avertissement fait échouer la compilation et la CI) ; les types nullables restent à zéro avertissement.
+- Fichiers du projet en CRLF (imposé par `.gitattributes`, comme dans BrunoGUI_GenII) ; `.editorconfig` décrit le style (UTF-8, CRLF, 4 espaces, accolades à la ligne).
+- `.github\dependabot.yml` : une pull request hebdomadaire quand un paquet NuGet (Krypton, xUnit…) ou une action GitHub a une nouvelle version.
 - La logique (règles, notation, PDN, moteur) n'utilise ni Windows Forms ni Krypton : elle ne montre jamais de fenêtre ni de message, et elle est testée (projet `Tests` : une console qui affiche les vérifications et un test xUnit par vérification, perft compris pour le générateur de coups). L'interface n'a pas de tests : la vérifier à la main.
 - La position du jeu dans un objet que l'on peut copier, et les calculs « pour voir » faits sur une copie, jamais sur la partie.
 - Le thread du moteur ne modifie jamais l'état de la partie : passage au thread de l'interface par un `Invoke` protégé ; chaque demande au moteur est numérotée et toute action qui change la partie abandonne la réflexion en cours.
