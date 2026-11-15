@@ -9,6 +9,7 @@ Une section par version publiée, la plus récente en premier. Les changements q
 - README : un seul fichier (`BrunoGUI_Readme.txt` supprimé) ; documents du moteur dans `Docs`.
 - Suppression de deux icônes non utilisées.
 - Le sens du damier (« Tourner damier ») est décrit par une classe testée (`OrientationDamier`) au lieu de deux tables recalculées à la main ; le clic trouve sa case par sa place à l'écran.
+- Le formulaire principal est découpé en six fichiers (classe partielle : clics, moteur et préférences, dessin, boutons, PDN), sans changement de comportement.
 - L'historique de la partie est tenu par une classe testée (`SessionPartie`) au lieu de trois listes à synchroniser à la main. Au passage : « Retour arrière » pendant un parcours de partie replace le parcours sur la dernière position, et affiche le coup retiré (et non le résultat) quand la partie était finie.
 
 ## 1.10 (2026-11-14)
