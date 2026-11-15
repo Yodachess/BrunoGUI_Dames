@@ -1,0 +1,28 @@
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
+// █ Copyright (C) 2026 Bruno COURTOIS                                      █
+// █ SPDX-License-Identifier: GPL-3.0-or-later                              █
+// █ See the LICENSE file in the project root for full license information. █
+// █ Use of SCAN 3.1 engine from Fabien Letouzey via Hub2's protocol        █
+// █ Scan is available at : github.com/rhalbersma/scan                      █
+// └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
+
+// Les points par lesquels les tests (projet Tests, ScenarioInterface.cs) pilotent la vraie fenêtre : ce qu'ils remplacent, le programme normal ne le touche
+// jamais. Les valeurs par défaut sont celles de l'usage normal.
+
+using System;
+using System.Windows.Forms;
+
+namespace BrunoGUI_Dames
+{
+    internal static class ReglagesDeTest
+    {
+        // --- Toutes les boîtes de message du formulaire passent par là (un test les enregistre au lieu d'attendre qu'on clique) ---
+        internal static Func<string, string, MessageBoxButtons, MessageBoxIcon, DialogResult> Message =
+            (texte, titre, boutons, icone) => MessageBox.Show(texte, titre, boutons, icone);
+
+        internal static Func<TimeSpan>? HorlogePendule;     // L'heure de la pendule (null : le chronomètre du système)
+        internal static string? FichierPreferences;         // Le fichier de préférences (null : à côté de l'exe)
+        internal static string? CheminMoteur;               // Le chemin de scan.exe (null : à côté de l'exe)
+    }
+}

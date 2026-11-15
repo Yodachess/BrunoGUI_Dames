@@ -200,14 +200,14 @@ namespace BrunoGUI_Dames
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
                 RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de pièces";
-                MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Les Noirs gagnent !\n Les blancs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
             {   // Vérifier si les listes noires sont vides
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
                 RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de pièces";
-                MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
             // Les parties nulles (répétition, coups de dames) : NulleActuelle et FinPartieParNulle ; pas détectées : finales à peu de pièces
@@ -221,13 +221,13 @@ namespace BrunoGUI_Dames
             {
                 RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de coup possible";
-                MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de coup possible";
-                MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private static RaisonNulle NulleActuelle()
@@ -248,7 +248,7 @@ namespace BrunoGUI_Dames
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             RadioNulle.Checked = PartieTerminee = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
             LabelInformationJoueur.Text = "Partie nulle : " + motif;
-            MessageBox.Show("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReglagesDeTest.Message("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void MetEnEvidenceRafle(Coup rafle)
         {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---

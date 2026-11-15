@@ -67,7 +67,7 @@ namespace BrunoGUI_Dames
         private Preferences preferencesChargees = new Preferences();     // Celles lues au démarrage (gardées si le moteur est absent)
         private string nomBlancPrefere = "", nomNoirPrefere = "";        // Les noms tapés par le joueur (pas ceux d'une partie PDN chargée)
         private bool nomsDepuisPartie;                                   // Vrai pendant que les noms d'une partie PDN chargée sont mis dans les zones de texte
-        private static string FichierPreferences => Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
+        private static string FichierPreferences => ReglagesDeTest.FichierPreferences ?? Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
         private static bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
         // Définir les indices des dernières rangées en notation Manoury
@@ -134,7 +134,7 @@ namespace BrunoGUI_Dames
                 ActiveCouleurDamier(Couleur.Blanc, false);
                 LabelInformationJoueur.Text = "Trait aux Noirs";
             }
-            cheminMoteur = Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
+            cheminMoteur = ReglagesDeTest.CheminMoteur ?? Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
             try
             {   // Démarrage du moteur
                 MoteurDamesScan.Demarre(cheminMoteur);

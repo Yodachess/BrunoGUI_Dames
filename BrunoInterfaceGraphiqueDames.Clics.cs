@@ -275,9 +275,12 @@ namespace BrunoGUI_Dames
             }
             if (prises.Count == 0)              // S'il n'y a pas de rafles possibles, on réactive toutes les cases
             {
-                ActiveDamier(true);     // Réactiver toutes les cases, y compris les cases vides
-                ActiveCouleurDamier(CouleurAuTrait, true);          // Réactiver les cases de la couleur au trait
-                ActiveCouleurDamier(CouleurPasAuTrait(), false);    // Désactiver les cases de la couleur pas au trait
+                ActiveDamier(true);     // Réactiver toutes les cases, y compris les cases vides (sans effet si la partie est finie)
+                if (!PartieTerminee)    // Une partie finie (au temps, par exemple, pendant que le moteur réfléchissait) garde son damier inactif
+                {
+                    ActiveCouleurDamier(CouleurAuTrait, true);          // Réactiver les cases de la couleur au trait
+                    ActiveCouleurDamier(CouleurPasAuTrait(), false);    // Désactiver les cases de la couleur pas au trait
+                }
                 return;                 // Sortir de la méthode, rien à faire de plus
             }
             CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
@@ -321,7 +324,8 @@ namespace BrunoGUI_Dames
             {   // Extraire le texte entre les guillemets
                 string contenu = fenAutiliser.Substring(debutIndex, finIndex - debutIndex);
                 Position position = Position.DepuisFen(contenu);        // Lève FormatException si le FEN n'est pas valide
-                CouleurAuTrait = position.Trait;                        // Le premier champ du FEN : la couleur qui joue le prochain coup                if (commenceLaPartie)
+                CouleurAuTrait = position.Trait;                        // Le premier champ du FEN : la couleur qui joue le prochain coup
+                if (commenceLaPartie)
                     Partie.Courante.Commencer(position);                // La partie repart de zéro (historique, résultat, parcours) à cette position
                 GestionDamier.PositionCourante = position.Copie();      // La position du jeu : celle du FEN
                 for (int numeroCase = 1; numeroCase <= 50; numeroCase++)
@@ -384,7 +388,7 @@ namespace BrunoGUI_Dames
             SessionPartie session = Partie.Courante;
             if (session.EstSurLaDernierePosition)
                 return false;
-            MessageBox.Show($"Vous parcourez la partie (position {session.IndexAffiche} sur {session.Positions.Count - 1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».",
+            ReglagesDeTest.Message($"Vous parcourez la partie (position {session.IndexAffiche} sur {session.Positions.Count - 1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».",
                             "Partie parcourue", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return true;
         }

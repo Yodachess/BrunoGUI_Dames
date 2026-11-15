@@ -39,7 +39,7 @@ namespace BrunoGUI_Dames
                     if (raison != null)
                     {   // Pas de partie avec des coups (image, position FEN…) : on le dit et on ne touche à rien
                         Journal.Ecrit($"Fichier inutilisable comme liste de parties PDN ({cheminFichier}) : {raison.Replace("\n", " ")}");
-                        MessageBox.Show($"{Path.GetFileName(cheminFichier)}\n\n{raison}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        ReglagesDeTest.Message($"{Path.GetFileName(cheminFichier)}\n\n{raison}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
                     ListePartiesPdn.Clear(); // On vide la liste des parties PDN
@@ -62,7 +62,7 @@ namespace BrunoGUI_Dames
                 catch (Exception ex)
                 {
                     Journal.Ecrit($"ERREUR chargement des parties PDN ({cheminFichier}) : {ex}");
-                    MessageBox.Show($"Le fichier PDN n'a pas pu être lu :\n{ex.Message}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ReglagesDeTest.Message($"Le fichier PDN n'a pas pu être lu :\n{ex.Message}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace BrunoGUI_Dames
         {   // --- Charge une partie depuis un fichier PDN lorsque'on double-clique ---
             if (rejeuPdnEnCours || jeuMoteurEnCours || analyseEnCours)
             {
-                MessageBox.Show("Une partie est déjà en cours de chargement, ou le moteur réfléchit.\nAttends la fin avant d'en charger une autre.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Une partie est déjà en cours de chargement, ou le moteur réfléchit.\nAttends la fin avant d'en charger une autre.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             // La partie est d'abord rejouée par les règles, sans toucher à la fenêtre : un coup illégal n'empêche plus de charger ce qui est jouable et ne fait plus tomber l'application
@@ -82,7 +82,7 @@ namespace BrunoGUI_Dames
             if (rejeu.Positions.Count == 0)
             {   // La position de départ (FEN) est invalide : rien n'est chargé et le damier n'est pas touché
                 Journal.Ecrit($"Partie PDN non chargée ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
-                MessageBox.Show($"La partie ne peut pas être chargée :\n{rejeu.Erreur}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message($"La partie ne peut pas être chargée :\n{rejeu.Erreur}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             foreach (string ambiguite in rejeu.Ambiguites ?? Array.Empty<string>())
@@ -113,13 +113,13 @@ namespace BrunoGUI_Dames
                 if (rejeu.Erreur != null)
                 {   // La partie est chargée jusqu'au dernier coup légal
                     Journal.Ecrit($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
-                    MessageBox.Show($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ReglagesDeTest.Message($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {   // Quoi qu'il arrive pendant l'animation, l'application ne tombe pas : on le dit et on rend la main
                 Journal.Ecrit($"ERREUR au rejeu d'une partie PDN ({partie.White} - {partie.Black}) : {ex}");
-                MessageBox.Show($"Le chargement de la partie s'est arrêté :\n{ex.Message}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message($"Le chargement de la partie s'est arrêté :\n{ex.Message}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 BloqueBoutons(false);
                 AnalyseCoupObligatoire(CouleurAuTrait);
             }
@@ -142,7 +142,7 @@ namespace BrunoGUI_Dames
             }
             if (coupsDeLaPartie.Count == 0)                      // Vérifier si la liste est vide
             {
-                MessageBox.Show("Aucun coup n'a été trouvé dans la partie.", "Information : Pas de coup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Aucun coup n'a été trouvé dans la partie.", "Information : Pas de coup", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LabelPrisesPossibles.Text = "Pas de coup trouvé dans la partie chargée";
                 AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
                 return;

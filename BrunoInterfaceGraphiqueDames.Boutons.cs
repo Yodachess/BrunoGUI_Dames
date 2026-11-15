@@ -34,8 +34,8 @@ namespace BrunoGUI_Dames
             GestionDamier.ViderDamier();
             GestionDamier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
             ExisteFENDebut = false;
+            NettoyageRapide();                  // Remet PartieTerminee à faux : à faire AVANT d'activer les cases (ActiveDamier(true) ne fait rien tant que la partie est finie)
             ActiveDamier(true);
-            NettoyageRapide();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);   // Position initiale : la nouvelle partie repart de zéro (historique, résultat, parcours)
             AfficheListesPieces();
             InitialiserEtatMouvement();
@@ -91,7 +91,7 @@ namespace BrunoGUI_Dames
             }
             else
             {
-                MessageBox.Show("Vous êtes au début de la partie.", "Début de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Vous êtes au début de la partie.", "Début de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private void BoutonSuivant_Click(object sender, EventArgs e)
@@ -105,7 +105,7 @@ namespace BrunoGUI_Dames
             }
             else
             {
-                MessageBox.Show("Vous êtes à la fin de la partie.", "Fin de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Vous êtes à la fin de la partie.", "Fin de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private void BoutonDebut_Click(object sender, EventArgs e)
@@ -185,7 +185,7 @@ namespace BrunoGUI_Dames
                                 "Historique :\n" +
                                 "1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n" +
                                 "1.04 : première version publiée.";
-            MessageBox.Show(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReglagesDeTest.Message(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void BoutonAide_Click(object sender, EventArgs e)
         {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur ---
@@ -193,7 +193,7 @@ namespace BrunoGUI_Dames
             if (!File.Exists(page))
             {
                 Journal.Ecrit("Aide introuvable : " + page);
-                MessageBox.Show("Le fichier d'aide est introuvable :\n" + page, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message("Le fichier d'aide est introuvable :\n" + page, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             try
@@ -203,7 +203,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {
                 Journal.Ecrit("Aide : ouverture impossible (" + ex.Message + ")");
-                MessageBox.Show("L'aide n'a pas pu être ouverte :\n" + ex.Message, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message("L'aide n'a pas pu être ouverte :\n" + ex.Message, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -234,7 +234,7 @@ namespace BrunoGUI_Dames
                 string resume = ex is FormatException ? "contenu qui n'est pas une position FEN (" + new FileInfo(ChargerFichierFen.FileName).Length + " octets)" : ex.Message;
                 Journal.Ecrit($"ERREUR position FEN non chargée ({ChargerFichierFen.FileName}) : {resume}");
                 string pourLeJoueur = ex is FormatException ? "Ce fichier ne contient pas de position FEN valide." : ex.Message;
-                MessageBox.Show($"La position n'a pas pu être chargée :\n{Path.GetFileName(ChargerFichierFen.FileName)}\n\n{pourLeJoueur}", "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message($"La position n'a pas pu être chargée :\n{Path.GetFileName(ChargerFichierFen.FileName)}\n\n{pourLeJoueur}", "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (!contenuFichier.Contains('"'))
@@ -253,13 +253,13 @@ namespace BrunoGUI_Dames
                 {
                     string fen = RecupereFEN();
                     File.WriteAllText(SauverFichierFen.FileName, fen);
-                    MessageBox.Show($"Position FEN sauvegardée avec succès\ndans le fichier : {Path.GetFileName(SauverFichierFen.FileName)} !",
+                    ReglagesDeTest.Message($"Position FEN sauvegardée avec succès\ndans le fichier : {Path.GetFileName(SauverFichierFen.FileName)} !",
                                     "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
                     Journal.Ecrit($"ERREUR sauvegarde de la position FEN ({SauverFichierFen.FileName}) : {ex.Message}");
-                    MessageBox.Show("Erreur lors de la sauvegarde : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ReglagesDeTest.Message("Erreur lors de la sauvegarde : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -331,7 +331,7 @@ namespace BrunoGUI_Dames
             string? coupEfface = session.RetireDernierCoup();
             if (coupEfface == null)
             {
-                MessageBox.Show("Impossible de revenir en arrière :\nAucun coup n'a été joué.",
+                ReglagesDeTest.Message("Impossible de revenir en arrière :\nAucun coup n'a été joué.",
                                 "Retour arrière", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }

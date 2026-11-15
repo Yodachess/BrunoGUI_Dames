@@ -28,6 +28,9 @@ namespace BrunoGUI_Dames
         private void CreePendule()
         {
             Font police = new Font("Consolas", 11F, FontStyle.Bold);
+            labelPenduleBlanc.Name = "LabelPenduleBlanc";      // Les noms permettent aux tests de retrouver les contrôles créés ici
+            labelPenduleNoir.Name = "LabelPenduleNoir";
+            comboCadence.Name = "ComboCadence";
             ConfigureLabelPendule(labelPenduleBlanc, 5, "Temps restant des blancs");      // Alignés sur les deux lignes du haut (noms des joueurs, score) et sur la colonne de boutons
             ConfigureLabelPendule(labelPenduleNoir, 31, "Temps restant des noirs");
             labelPenduleBlanc.Font = labelPenduleNoir.Font = police;
@@ -70,7 +73,7 @@ namespace BrunoGUI_Dames
         }
         private void ComboCadence_SelectedIndexChanged(object? sender, EventArgs e)
         {   // --- Une autre cadence : la pendule repart à zéro (elle attend le prochain coup) ---
-            pendule = comboCadence.SelectedIndex > 0 ? new Pendule(Cadence.Officielles[comboCadence.SelectedIndex - 1]) : null;
+            pendule = comboCadence.SelectedIndex > 0 ? new Pendule(Cadence.Officielles[comboCadence.SelectedIndex - 1], ReglagesDeTest.HorlogePendule) : null;
             ReinitialisePendule();
         }
 
@@ -173,7 +176,7 @@ namespace BrunoGUI_Dames
             else
                 RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
             LabelInformationJoueur.Text = fin.Statut;
-            MessageBox.Show(fin.Message, "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReglagesDeTest.Message(fin.Message, "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

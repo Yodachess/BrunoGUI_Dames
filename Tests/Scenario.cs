@@ -1049,6 +1049,9 @@ public static class Scenario
         Preferences cadenceInconnue = Preferences.DepuisTexte("Cadence=quantique\r\n");
         Verifie("Préférences : une cadence inconnue garde « sans pendule » et est signalée", cadenceInconnue.CadenceId == null && cadenceInconnue.Avertissements.Count == 1 && Preferences.DepuisTexte("Cadence=sans").Avertissements.Count == 0, string.Join(" | ", cadenceInconnue.Avertissements));
 
+        // ═══════════════ Interface : la vraie fenêtre, pilotée par les tests ═══════════════
+        ScenarioInterface.Executer(Verifie, complet);
+
         return verifications;
     }
 

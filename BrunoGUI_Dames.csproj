@@ -12,6 +12,10 @@
     <PackageReference Include="Krypton.Toolkit" Version="95.25.10.293" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Le projet de tests pilote la vraie fenêtre par les points de ReglagesDeTest.cs -->
+    <InternalsVisibleTo Include="BrunoGUI_Dames.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Le projet de tests a son propre .csproj : on l'exclut de l'application -->
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />

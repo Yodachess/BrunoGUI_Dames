@@ -22,7 +22,7 @@ jobs:
       - name: Compilation
         run: dotnet build BrunoGUI_Dames.sln -c Release
 
-      - name: Tests (règles, PDN, parties d'exemple, perft complets)
+      - name: Tests (règles, PDN, parties d'exemple, perft complets, vraie fenêtre avec Scan)
         run: dotnet run --project Tests -c Release --no-build -- --complet
 
       # Les mêmes vérifications vues comme tests xUnit (un test par vérification) : contrôle que le kit de test les trouve
