@@ -804,6 +804,50 @@ public static class Scenario
         try { new SessionPartie().AjouteCoup("32-28", Position.Initiale()); }
         catch (InvalidOperationException) { refuse = true; }
         Verifie("Session : un coup ajouté avant Commencer est refusé", refuse, "InvalidOperationException");
+        // ═══════════════ Orientation du damier (cases Manoury <-> places à l'écran) ═══════════════
+        Console.WriteLine("── Orientation du damier ──");
+        OrientationDamier vueBlancs = new OrientationDamier();
+        Verifie("Orientation : par défaut le damier est vu côté blancs", !vueBlancs.CoteNoir, "");
+        Verifie("Orientation côté blancs : la case 1 est à la place 1 (en haut, deuxième colonne), la case 5 à la place 9, la 6 à la place 10, la 50 à la place 98",
+                vueBlancs.IndexEcran(1) == 1 && vueBlancs.IndexEcran(5) == 9 && vueBlancs.IndexEcran(6) == 10 && vueBlancs.IndexEcran(46) == 90 && vueBlancs.IndexEcran(50) == 98,
+                $"1->{vueBlancs.IndexEcran(1)}, 5->{vueBlancs.IndexEcran(5)}, 6->{vueBlancs.IndexEcran(6)}, 46->{vueBlancs.IndexEcran(46)}, 50->{vueBlancs.IndexEcran(50)}");
+        Verifie("Orientation : une place à l'écran donne sa case Manoury, ou 0 pour une case claire ou hors du damier",
+                vueBlancs.CaseManoury(1) == 1 && vueBlancs.CaseManoury(98) == 50 && vueBlancs.CaseManoury(0) == 0 && vueBlancs.CaseManoury(11) == 0
+                && vueBlancs.CaseManoury(-1) == 0 && vueBlancs.CaseManoury(100) == 0, "");
+        OrientationDamier vueNoirs = new OrientationDamier(coteNoir: true);
+        Verifie("Orientation côté noirs : le damier est tourné de 180° (la case 1 passe à la place 98, la 50 à la place 1)",
+                vueNoirs.CoteNoir && vueNoirs.IndexEcran(1) == 98 && vueNoirs.IndexEcran(50) == 1 && vueNoirs.CaseManoury(98) == 1 && vueNoirs.CaseManoury(1) == 50 && vueNoirs.CaseManoury(0) == 0,
+                $"1->{vueNoirs.IndexEcran(1)}, 50->{vueNoirs.IndexEcran(50)}");
+        bool toutesCoherentes = true;
+        foreach (bool cote in new[] { false, true })
+        {
+            OrientationDamier vue = new OrientationDamier(cote);
+            HashSet<int> places = [];
+            for (int caseM = 1; caseM <= 50; caseM++)
+            {
+                int place = vue.IndexEcran(caseM);
+                places.Add(place);
+                int ligne = place / 10, colonne = place % 10;
+                if (vue.CaseManoury(place) != caseM || (ligne + colonne) % 2 == 0) toutesCoherentes = false;      // aller-retour, et toujours une case sombre
+            }
+            if (places.Count != 50 || Enumerable.Range(0, 100).Count(p => vue.CaseManoury(p) != 0) != 50) toutesCoherentes = false;
+        }
+        Verifie("Orientation : dans les deux sens, les 50 cases ont 50 places différentes, toutes sombres, et la correspondance est réversible", toutesCoherentes, "");
+        OrientationDamier tournee = new OrientationDamier();
+        tournee.Tourner();
+        bool memeQueNoirs = tournee.CoteNoir && Enumerable.Range(1, 50).All(c => tournee.IndexEcran(c) == vueNoirs.IndexEcran(c));
+        tournee.Tourner();
+        Verifie("Orientation : Tourner passe côté noirs, puis un second Tourner revient côté blancs",
+                memeQueNoirs && !tournee.CoteNoir && Enumerable.Range(1, 50).All(c => tournee.IndexEcran(c) == vueBlancs.IndexEcran(c)), "");
+        bool horsDamierRefuse = false;
+        try { vueBlancs.IndexEcran(0); }
+        catch (ArgumentOutOfRangeException) { horsDamierRefuse = true; }
+        try { vueBlancs.IndexEcran(51); horsDamierRefuse = false; }
+        catch (ArgumentOutOfRangeException) { }
+        Verifie("Orientation : une case Manoury hors de 1 à 50 est refusée (ArgumentOutOfRangeException)", horsDamierRefuse, "cases 0 et 51");
+        Verifie("Orientation côté blancs : les voisins diagonaux d'une case sont à 9 ou 11 places de la sienne (cohérence avec Geometrie)",
+                Enumerable.Range(1, 50).All(c => Enumerable.Range(0, 4).Select(d => Geometrie.Voisin(c, d)).Where(v => v != 0)
+                                                         .All(v => Math.Abs(vueBlancs.IndexEcran(v) - vueBlancs.IndexEcran(c)) is 9 or 11)), "50 cases, 4 directions");
         // Les nulles se lisent directement dans les positions de la session (plus de relecture de chaînes Hub2)
         SessionPartie sessionNulle = new SessionPartie();
         sessionNulle.Commencer(Position.DepuisFen("W:WK47:BK4"));

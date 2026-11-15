@@ -8,11 +8,6 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Windows.Forms;
-using static System.Windows.Forms.LinkLabel;
-using System.Linq;
 
 
 namespace BrunoGUI_Dames
@@ -69,11 +64,8 @@ namespace BrunoGUI_Dames
 
     public static class GestionDamier
     {
-        // Tableau de correspondance entre case Manoury (1-50) et indices PictureBox (0-99)
-        public static readonly int[] ManouryVersIndexPictureBox = new int[50];      // ATTENTION : Manoury commence à 1 mais le tableau ManouryVersIndexPictureBox à 0 !!
-
-        // Dictionnaire inverse : Indice PictureBox (0-99) -> Case Manoury (1-50)
-        public static Dictionary<int, int> PictureBoxVersManoury = new Dictionary<int, int>();
+        // Le sens dans lequel on voit le damier : la correspondance entre les cases Manoury (1-50) et les places à l'écran (0-99), voir OrientationDamier
+        public static OrientationDamier Orientation = new OrientationDamier();
 
         // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier) : c'est la seule description du contenu du damier.
         // Elle change à la mise en place d'une position (MiseenplaceFen, InitialiserDamier, ViderDamier) et une fois par coup, à la fin du coup
@@ -119,31 +111,6 @@ namespace BrunoGUI_Dames
             PositionCourante = new Position();
         }
 
-        public static void InitialiserCorrespondance(Control.ControlCollection controls)
-        {   // --- Crée les tables de correspondances PictureBox (0-99) <-> Case Manoury (1-50) ---
-            int indexManoury = 1; // Manoury commence à 1
-
-            for (int ligne = 0; ligne < 10; ligne++) // Parcours des lignes
-            {
-                for (int colonne = 0; colonne < 10; colonne++) // Parcours des colonnes
-                {
-                    int pictureBoxIndex = ligne * 10 + colonne;
-                    if ((ligne + colonne) % 2 != 0)           // Case foncée si (ligne + colonne) % 2 != 0
-                    {
-                        int indexPictureBox = ((ligne * 10) + colonne);
-                        string nomPictureBox = $"ContenuCase{indexPictureBox:D2}";
-                        PictureBox? pictureBox = controls.Find(nomPictureBox, true).FirstOrDefault() as PictureBox;
-                        if (pictureBox != null)
-                        {
-                            BrunoInterfaceGraphiqueDames.ManouryVersPictureBoxIndicee[indexManoury] = pictureBox;
-                        }
-                        GestionDamier.ManouryVersIndexPictureBox[indexManoury - 1] = pictureBoxIndex;
-                        GestionDamier.PictureBoxVersManoury[pictureBoxIndex] = indexManoury;
-                        indexManoury++;
-                    }
-                }
-            }
-        }
         public static ContenuCase ContenuCaseCaseManoury(int numeroCaseManoury)
         {   // --- Retourne le contenu (type et couleur de la pièce) de la case Manoury, d'après PositionCourante ---
             Piece piece = PositionCourante[numeroCaseManoury];
@@ -151,7 +118,8 @@ namespace BrunoGUI_Dames
         }
         public static ContenuCase ContenuCaseIndice(int indicePictureBox)
         {   // --- Retourne le contenu de la PictureBox : celui de sa case Manoury, ou une case inactive si la case ne sert pas au jeu (case claire) ---
-            return PictureBoxVersManoury.TryGetValue(indicePictureBox, out int numeroCase)
+            int numeroCase = Orientation.CaseManoury(indicePictureBox);
+            return numeroCase != 0
                 ? ContenuCaseCaseManoury(numeroCase)
                 : new ContenuCase(TypePiece.Inactive, CouleurPiece.Inactive);
         }
@@ -164,16 +132,15 @@ namespace BrunoGUI_Dames
             return numeroCaseManoury >= 1 && numeroCaseManoury <= 50;
         }
         public static int ObtenirIndicePictureBox(int caseManoury)
-        {   // --- Obtenir PictureBox à partir de la caseManoury ---
-            if (caseManoury < 1 || caseManoury > 50)
-                throw new ArgumentOutOfRangeException(nameof(caseManoury), "Case Manoury doit être entre 1 et 50.");
-            return ManouryVersIndexPictureBox[caseManoury - 1];
+        {   // --- Obtenir la place à l'écran (index de PictureBox) à partir de la caseManoury (ArgumentOutOfRangeException hors de 1 à 50) ---
+            return Orientation.IndexEcran(caseManoury);
         }
         public static int ObtenirCaseManoury(int indicePictureBox)
         {   // --- Obtenir case Manoury à partir d'un indicePictureBox ---
-            if (!PictureBoxVersManoury.ContainsKey(indicePictureBox))
+            int numeroCase = Orientation.CaseManoury(indicePictureBox);
+            if (numeroCase == 0)
                 throw new ArgumentOutOfRangeException(nameof(indicePictureBox), "L'indice PictureBox ne correspond pas à une case Manoury valide.");
-            return PictureBoxVersManoury[indicePictureBox];
+            return numeroCase;
         }
     }
 }

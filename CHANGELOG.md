@@ -8,6 +8,7 @@ Une section par version publiée, la plus récente en premier. Les changements q
 - Dependabot surveille les paquets NuGet et les actions GitHub ; xunit 2.9.3, Microsoft.NET.Test.Sdk 18.12.0 et xunit.runner.visualstudio 4.0.1 (projet de tests seulement).
 - README : un seul fichier (`BrunoGUI_Readme.txt` supprimé) ; documents du moteur dans `Docs`.
 - Suppression de deux icônes non utilisées.
+- Le sens du damier (« Tourner damier ») est décrit par une classe testée (`OrientationDamier`) au lieu de deux tables recalculées à la main ; le clic trouve sa case par sa place à l'écran.
 - L'historique de la partie est tenu par une classe testée (`SessionPartie`) au lieu de trois listes à synchroniser à la main. Au passage : « Retour arrière » pendant un parcours de partie replace le parcours sur la dernière position, et affiche le coup retiré (et non le résultat) quand la partie était finie.
 
 ## 1.10 (2026-11-14)
