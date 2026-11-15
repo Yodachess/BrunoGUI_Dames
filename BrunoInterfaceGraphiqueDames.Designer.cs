@@ -84,7 +84,7 @@
             // 
             this.Damier10x10.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.Damier10x10.Image = ((System.Drawing.Image)(resources.GetObject("Damier10x10.Image")));
-            this.Damier10x10.Location = new System.Drawing.Point(7, 60);
+            this.Damier10x10.Location = new System.Drawing.Point(7, 148);
             this.Damier10x10.Name = "Damier10x10";
             this.Damier10x10.Size = new System.Drawing.Size(640, 640);
             this.Damier10x10.TabIndex = 0;
@@ -92,7 +92,7 @@
             // 
             // BoutonQuitterApplication
             // 
-            this.BoutonQuitterApplication.Location = new System.Drawing.Point(653, 670);
+            this.BoutonQuitterApplication.Location = new System.Drawing.Point(653, 758);
             this.BoutonQuitterApplication.Name = "BoutonQuitterApplication";
             this.BoutonQuitterApplication.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonQuitterApplication.Size = new System.Drawing.Size(110, 30);
@@ -105,7 +105,7 @@
             // 
             // BoutonTournerDamier
             // 
-            this.BoutonTournerDamier.Location = new System.Drawing.Point(653, 168);
+            this.BoutonTournerDamier.Location = new System.Drawing.Point(653, 256);
             this.BoutonTournerDamier.Name = "BoutonTournerDamier";
             this.BoutonTournerDamier.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonTournerDamier.Size = new System.Drawing.Size(110, 30);
@@ -121,9 +121,9 @@
             this.LabelCoupJoue.BackColor = System.Drawing.Color.Goldenrod;
             this.LabelCoupJoue.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.LabelCoupJoue.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LabelCoupJoue.Location = new System.Drawing.Point(7, 703);
+            this.LabelCoupJoue.Location = new System.Drawing.Point(7, 60);
             this.LabelCoupJoue.Name = "LabelCoupJoue";
-            this.LabelCoupJoue.Size = new System.Drawing.Size(354, 23);
+            this.LabelCoupJoue.Size = new System.Drawing.Size(310, 23);
             this.LabelCoupJoue.TabIndex = 4;
             this.LabelCoupJoue.Text = "Mouvement : ";
             this.LabelCoupJoue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -132,9 +132,9 @@
             // 
             this.LabelPrisesPossibles.BackColor = System.Drawing.Color.NavajoWhite;
             this.LabelPrisesPossibles.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.LabelPrisesPossibles.Location = new System.Drawing.Point(7, 726);
+            this.LabelPrisesPossibles.Location = new System.Drawing.Point(7, 83);
             this.LabelPrisesPossibles.Name = "LabelPrisesPossibles";
-            this.LabelPrisesPossibles.Size = new System.Drawing.Size(354, 55);
+            this.LabelPrisesPossibles.Size = new System.Drawing.Size(310, 59);
             this.LabelPrisesPossibles.TabIndex = 6;
             this.LabelPrisesPossibles.Text = "Prises possibles";
             this.LabelPrisesPossibles.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -143,9 +143,9 @@
             // 
             this.LabelPionsNoirs.BackColor = System.Drawing.Color.NavajoWhite;
             this.LabelPionsNoirs.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.LabelPionsNoirs.Location = new System.Drawing.Point(367, 721);
+            this.LabelPionsNoirs.Location = new System.Drawing.Point(325, 78);
             this.LabelPionsNoirs.Name = "LabelPionsNoirs";
-            this.LabelPionsNoirs.Size = new System.Drawing.Size(83, 18);
+            this.LabelPionsNoirs.Size = new System.Drawing.Size(95, 18);
             this.LabelPionsNoirs.TabIndex = 10;
             this.LabelPionsNoirs.Text = "Label Pions Noirs";
             this.LabelPionsNoirs.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -154,9 +154,9 @@
             // 
             this.LabelDamesBlanches.BackColor = System.Drawing.Color.NavajoWhite;
             this.LabelDamesBlanches.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.LabelDamesBlanches.Location = new System.Drawing.Point(447, 703);
+            this.LabelDamesBlanches.Location = new System.Drawing.Point(424, 60);
             this.LabelDamesBlanches.Name = "LabelDamesBlanches";
-            this.LabelDamesBlanches.Size = new System.Drawing.Size(108, 18);
+            this.LabelDamesBlanches.Size = new System.Drawing.Size(118, 18);
             this.LabelDamesBlanches.TabIndex = 11;
             this.LabelDamesBlanches.Text = "Label Dames Blanches";
             this.LabelDamesBlanches.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -165,9 +165,9 @@
             // 
             this.LabelDamesNoires.BackColor = System.Drawing.Color.NavajoWhite;
             this.LabelDamesNoires.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.LabelDamesNoires.Location = new System.Drawing.Point(447, 721);
+            this.LabelDamesNoires.Location = new System.Drawing.Point(424, 78);
             this.LabelDamesNoires.Name = "LabelDamesNoires";
-            this.LabelDamesNoires.Size = new System.Drawing.Size(108, 18);
+            this.LabelDamesNoires.Size = new System.Drawing.Size(118, 18);
             this.LabelDamesNoires.TabIndex = 12;
             this.LabelDamesNoires.Text = "Label Dames Noires";
             this.LabelDamesNoires.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -177,16 +177,16 @@
             this.LabelPionsBlancs.BackColor = System.Drawing.Color.NavajoWhite;
             this.LabelPionsBlancs.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.LabelPionsBlancs.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LabelPionsBlancs.Location = new System.Drawing.Point(367, 703);
+            this.LabelPionsBlancs.Location = new System.Drawing.Point(325, 60);
             this.LabelPionsBlancs.Name = "LabelPionsBlancs";
-            this.LabelPionsBlancs.Size = new System.Drawing.Size(83, 18);
+            this.LabelPionsBlancs.Size = new System.Drawing.Size(95, 18);
             this.LabelPionsBlancs.TabIndex = 13;
             this.LabelPionsBlancs.Text = "Label Pions Blancs";
             this.LabelPionsBlancs.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // BoutonRetourArriere
             // 
-            this.BoutonRetourArriere.Location = new System.Drawing.Point(653, 132);
+            this.BoutonRetourArriere.Location = new System.Drawing.Point(653, 220);
             this.BoutonRetourArriere.Name = "BoutonRetourArriere";
             this.BoutonRetourArriere.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonRetourArriere.Size = new System.Drawing.Size(110, 30);
@@ -199,7 +199,7 @@
             // 
             // MontreDonneesScan
             // 
-            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 562);
+            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 650);
             this.MontreDonneesScan.Name = "MontreDonneesScan";
             this.MontreDonneesScan.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.MontreDonneesScan.Size = new System.Drawing.Size(110, 30);
@@ -212,7 +212,7 @@
             // 
             // VisualisationPdn
             // 
-            this.VisualisationPdn.Location = new System.Drawing.Point(653, 240);
+            this.VisualisationPdn.Location = new System.Drawing.Point(653, 328);
             this.VisualisationPdn.Name = "VisualisationPdn";
             this.VisualisationPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.VisualisationPdn.Size = new System.Drawing.Size(110, 30);
@@ -225,7 +225,7 @@
             // 
             // OrdinateurJoue
             // 
-            this.OrdinateurJoue.Location = new System.Drawing.Point(653, 96);
+            this.OrdinateurJoue.Location = new System.Drawing.Point(653, 184);
             this.OrdinateurJoue.Name = "OrdinateurJoue";
             this.OrdinateurJoue.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.OrdinateurJoue.Size = new System.Drawing.Size(110, 30);
@@ -249,7 +249,7 @@
             // 
             // NouvellePartie
             // 
-            this.NouvellePartie.Location = new System.Drawing.Point(653, 60);
+            this.NouvellePartie.Location = new System.Drawing.Point(653, 148);
             this.NouvellePartie.Name = "NouvellePartie";
             this.NouvellePartie.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.NouvellePartie.Size = new System.Drawing.Size(110, 30);
@@ -266,9 +266,9 @@
             this.LabelAfficheScan.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.LabelAfficheScan.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LabelAfficheScan.ForeColor = System.Drawing.Color.DarkBlue;
-            this.LabelAfficheScan.Location = new System.Drawing.Point(133, 35);
+            this.LabelAfficheScan.Location = new System.Drawing.Point(143, 35);
             this.LabelAfficheScan.Name = "LabelAfficheScan";
-            this.LabelAfficheScan.Size = new System.Drawing.Size(514, 20);
+            this.LabelAfficheScan.Size = new System.Drawing.Size(504, 20);
             this.LabelAfficheScan.TabIndex = 21;
             this.LabelAfficheScan.Text = "Label Affiche Scan";
             // 
@@ -278,9 +278,9 @@
             this.LabelScore.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.LabelScore.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LabelScore.ForeColor = System.Drawing.Color.DarkBlue;
-            this.LabelScore.Location = new System.Drawing.Point(10, 35);
+            this.LabelScore.Location = new System.Drawing.Point(7, 35);
             this.LabelScore.Name = "LabelScore";
-            this.LabelScore.Size = new System.Drawing.Size(120, 20);
+            this.LabelScore.Size = new System.Drawing.Size(130, 20);
             this.LabelScore.TabIndex = 26;
             this.LabelScore.Text = "Score";
             // 
@@ -315,9 +315,9 @@
             this.OrdinateurBosse.BackColor = System.Drawing.Color.NavajoWhite;
             this.OrdinateurBosse.Checked = true;
             this.OrdinateurBosse.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.OrdinateurBosse.Location = new System.Drawing.Point(561, 703);
+            this.OrdinateurBosse.Location = new System.Drawing.Point(561, 60);
             this.OrdinateurBosse.Name = "OrdinateurBosse";
-            this.OrdinateurBosse.Size = new System.Drawing.Size(85, 18);
+            this.OrdinateurBosse.Size = new System.Drawing.Size(86, 18);
             this.OrdinateurBosse.TabIndex = 30;
             this.OrdinateurBosse.Text = "Ordinateur";
             this.OrdinateurBosse.UseVisualStyleBackColor = false;
@@ -326,7 +326,7 @@
             // SonEmis
             // 
             this.SonEmis.BackColor = System.Drawing.Color.NavajoWhite;
-            this.SonEmis.Location = new System.Drawing.Point(561, 722);
+            this.SonEmis.Location = new System.Drawing.Point(561, 78);
             this.SonEmis.Name = "SonEmis";
             this.SonEmis.Size = new System.Drawing.Size(86, 18);
             this.SonEmis.TabIndex = 31;
@@ -340,9 +340,9 @@
             this.GroupResultat.Controls.Add(this.RadioNulle);
             this.GroupResultat.Controls.Add(this.RadioGainNoir);
             this.GroupResultat.Controls.Add(this.RadioGainBlanc);
-            this.GroupResultat.Location = new System.Drawing.Point(658, 703);
+            this.GroupResultat.Location = new System.Drawing.Point(653, 60);
             this.GroupResultat.Name = "GroupResultat";
-            this.GroupResultat.Size = new System.Drawing.Size(87, 80);
+            this.GroupResultat.Size = new System.Drawing.Size(110, 82);
             this.GroupResultat.TabIndex = 32;
             this.GroupResultat.TabStop = false;
             this.GroupResultat.Text = "Résultat";
@@ -385,7 +385,7 @@
             // 
             // ChargePositionFen
             // 
-            this.ChargePositionFen.Location = new System.Drawing.Point(653, 483);
+            this.ChargePositionFen.Location = new System.Drawing.Point(653, 570);
             this.ChargePositionFen.Name = "ChargePositionFen";
             this.ChargePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.ChargePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -398,7 +398,7 @@
             // 
             // BoutonAide
             // 
-            this.BoutonAide.Location = new System.Drawing.Point(653, 634);
+            this.BoutonAide.Location = new System.Drawing.Point(653, 722);
             this.BoutonAide.Name = "BoutonAide";
             this.BoutonAide.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonAide.Size = new System.Drawing.Size(110, 30);
@@ -411,7 +411,7 @@
             // 
             // Apropos
             // 
-            this.Apropos.Location = new System.Drawing.Point(653, 598);
+            this.Apropos.Location = new System.Drawing.Point(653, 686);
             this.Apropos.Name = "Apropos";
             this.Apropos.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.Apropos.Size = new System.Drawing.Size(110, 30);
@@ -433,21 +433,21 @@
             this.groupBox1.BackColor = System.Drawing.Color.Goldenrod;
             this.groupBox1.Controls.Add(this.trackBarTempsReflexion);
             this.groupBox1.Controls.Add(this.LabelTempsReflexion);
-            this.groupBox1.Location = new System.Drawing.Point(367, 743);
+            this.groupBox1.Location = new System.Drawing.Point(325, 98);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(280, 40);
+            this.groupBox1.Size = new System.Drawing.Size(322, 44);
             this.groupBox1.TabIndex = 35;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Temps de réflexion SCAN 3.1 (en secondes)";
+            this.groupBox1.Text = "Pendule et temps de réflexion SCAN 3.1";
             // 
             // trackBarTempsReflexion
             // 
             this.trackBarTempsReflexion.AutoSize = false;
-            this.trackBarTempsReflexion.Location = new System.Drawing.Point(6, 13);
+            this.trackBarTempsReflexion.Location = new System.Drawing.Point(168, 16);
             this.trackBarTempsReflexion.Maximum = 25;
             this.trackBarTempsReflexion.Minimum = 1;
             this.trackBarTempsReflexion.Name = "trackBarTempsReflexion";
-            this.trackBarTempsReflexion.Size = new System.Drawing.Size(198, 21);
+            this.trackBarTempsReflexion.Size = new System.Drawing.Size(100, 21);
             this.trackBarTempsReflexion.TabIndex = 1;
             this.trackBarTempsReflexion.Value = 5;
             this.trackBarTempsReflexion.ValueChanged += new System.EventHandler(this.trackBarTempsReflexion_ValueChanged);
@@ -455,9 +455,9 @@
             // LabelTempsReflexion
             // 
             this.LabelTempsReflexion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LabelTempsReflexion.Location = new System.Drawing.Point(204, 13);
+            this.LabelTempsReflexion.Location = new System.Drawing.Point(270, 18);
             this.LabelTempsReflexion.Name = "LabelTempsReflexion";
-            this.LabelTempsReflexion.Size = new System.Drawing.Size(56, 21);
+            this.LabelTempsReflexion.Size = new System.Drawing.Size(48, 21);
             this.LabelTempsReflexion.TabIndex = 0;
             this.LabelTempsReflexion.Text = "Sec.";
             // 
@@ -467,7 +467,7 @@
             // 
             // SauvePositionFen
             // 
-            this.SauvePositionFen.Location = new System.Drawing.Point(653, 519);
+            this.SauvePositionFen.Location = new System.Drawing.Point(653, 606);
             this.SauvePositionFen.Name = "SauvePositionFen";
             this.SauvePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.SauvePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -485,7 +485,7 @@
             this.groupParcoursPartie.Controls.Add(this.BoutonDebut);
             this.groupParcoursPartie.Controls.Add(this.BoutonSuivant);
             this.groupParcoursPartie.Controls.Add(this.BoutonPrecedent);
-            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 277);
+            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 372);
             this.groupParcoursPartie.Name = "groupParcoursPartie";
             this.groupParcoursPartie.Size = new System.Drawing.Size(110, 68);
             this.groupParcoursPartie.TabIndex = 37;
@@ -538,7 +538,7 @@
             // 
             // ChargePartiesPdn
             // 
-            this.ChargePartiesPdn.Location = new System.Drawing.Point(653, 375);
+            this.ChargePartiesPdn.Location = new System.Drawing.Point(653, 454);
             this.ChargePartiesPdn.Name = "ChargePartiesPdn";
             this.ChargePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.ChargePartiesPdn.Size = new System.Drawing.Size(110, 30);
@@ -556,7 +556,7 @@
             // 
             // SauvePartiesPdn
             // 
-            this.SauvePartiesPdn.Location = new System.Drawing.Point(653, 447);
+            this.SauvePartiesPdn.Location = new System.Drawing.Point(653, 526);
             this.SauvePartiesPdn.Name = "SauvePartiesPdn";
             this.SauvePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.SauvePartiesPdn.Size = new System.Drawing.Size(110, 30);
@@ -569,7 +569,7 @@
             // 
             // BoutonMasqueAffiche
             // 
-            this.BoutonMasqueAffiche.Location = new System.Drawing.Point(653, 411);
+            this.BoutonMasqueAffiche.Location = new System.Drawing.Point(653, 490);
             this.BoutonMasqueAffiche.Name = "BoutonMasqueAffiche";
             this.BoutonMasqueAffiche.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonMasqueAffiche.Size = new System.Drawing.Size(110, 30);
@@ -582,7 +582,7 @@
             // 
             // AnalysePosition
             // 
-            this.AnalysePosition.Location = new System.Drawing.Point(653, 204);
+            this.AnalysePosition.Location = new System.Drawing.Point(653, 292);
             this.AnalysePosition.Name = "AnalysePosition";
             this.AnalysePosition.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.AnalysePosition.Size = new System.Drawing.Size(110, 30);
@@ -598,7 +598,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ClientSize = new System.Drawing.Size(770, 786);
+            this.ClientSize = new System.Drawing.Size(770, 802);
             this.Controls.Add(this.AnalysePosition);
             this.Controls.Add(this.BoutonMasqueAffiche);
             this.Controls.Add(this.SauvePartiesPdn);
