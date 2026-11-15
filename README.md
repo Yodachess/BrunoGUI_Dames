@@ -65,6 +65,8 @@ Il faut le SDK .NET 10 sous Windows. Les tests vérifient les règles (dont un p
 
 Les parties PDN et positions FEN d'exemple sont dans `Dames_PartiesPdn_FEN`. Le moteur Scan, avec ses sources et sa licence, est dans `Dames_Scan31_FabienLetouzey`.
 
+Le protocole Hub2 et les notes du moteur sont dans `Docs`. L'historique des versions est dans `CHANGELOG.md`.
+
 Toute remarque ou signalement d'anomalie est bienvenu (joindre `Journal.log` s'il existe).
 
 ---
@@ -134,5 +136,7 @@ You need the .NET 10 SDK on Windows. The tests check the rules (including a dept
     dotnet test Tests
 
 Sample PDN games and FEN positions are in `Dames_PartiesPdn_FEN`. The Scan engine, with its sources and license, is in `Dames_Scan31_FabienLetouzey`.
+
+The Hub2 protocol and the engine notes are in `Docs`. The version history is in `CHANGELOG.md` (in French).
 
 Any remark or bug report is welcome (please attach `Journal.log` if it exists).
