@@ -9,7 +9,7 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Krypton.Toolkit" Version="95.25.10.293" />
+    <PackageReference Include="Krypton.Toolkit" Version="105.26.7.201" />
   </ItemGroup>
   <ItemGroup>
     <!-- Le projet de tests a son propre .csproj : on l'exclut de l'application -->
