@@ -43,6 +43,8 @@ namespace BrunoGUI_Dames
                     }
                     if (clickCaseSource)     // Permet de savoir si c'est la sélection de la pièce ou le déplacement
                     {   // --- Sélection d'une pièce ---
+                        if (RefuseSiPartieParcourue())
+                            return;
                         CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
                         IndexPictureBoxSource100 = indexCase100;
                         CaseSourceManoury = GestionDamier.ObtenirCaseManoury(IndexPictureBoxSource100);     // Quelle case Manoury est cliquée ?
@@ -374,6 +376,17 @@ namespace BrunoGUI_Dames
                 Journal.Ecrit($"ERREUR MOTEUR {coupScan} dans {positionHub2} : {ex.Message}");
                 return null;
             }
+        }
+        // --- On ne joue que sur la dernière position de la partie : sur une position parcourue (Préc., Début…), un coup serait ajouté à la fin de l'historique sans en être la suite.
+        // Vrai (avec un message) si la position affichée n'est pas la dernière : le coup ou la demande est refusé ---
+        private bool RefuseSiPartieParcourue()
+        {
+            SessionPartie session = Partie.Courante;
+            if (session.EstSurLaDernierePosition)
+                return false;
+            MessageBox.Show($"Vous parcourez la partie (position {session.IndexAffiche} sur {session.Positions.Count - 1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».",
+                            "Partie parcourue", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return true;
         }
         private void EnregistrePositionApresCoupHumain(string coupPdn)
         {   // --- Après un coup humain : change le trait et ajoute le coup (PDN) et la nouvelle position à l'historique ---

@@ -130,7 +130,9 @@ namespace BrunoGUI_Dames
             }
         }
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
-        {   // --- L'ordinateur joue son meilleur coup ---
+        {   // --- L'ordinateur joue son meilleur coup (sur la dernière position de la partie) ---
+            if (RefuseSiPartieParcourue())
+                return;
             await LancementReflexionMoteur(Partie.Courante.Hub2Dernier(), TempsReflexion);
             OrdinateurActif = true;
             ChangerCouleurTrait();      // Inverse le trait

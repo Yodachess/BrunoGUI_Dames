@@ -804,6 +804,32 @@ public static class Scenario
         try { new SessionPartie().AjouteCoup("32-28", Position.Initiale()); }
         catch (InvalidOperationException) { refuse = true; }
         Verifie("Session : un coup ajouté avant Commencer est refusé", refuse, "InvalidOperationException");
+        // On ne joue que sur la dernière position : le formulaire refuse un coup (ou « Ordinateur joue ») tant que le parcours n'y est pas
+        SessionPartie sessionParcourue = new SessionPartie();
+        Verifie("Session : sans partie commencée, on est « sur la dernière position » (rien à refuser)", sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Commencer(positionsSession[0]);
+        Verifie("Session : une partie qui commence est sur sa dernière position", sessionParcourue.EstSurLaDernierePosition, "");
+        for (int i = 0; i < 3; i++)
+            sessionParcourue.AjouteCoup(coupsSession[i], positionsSession[i + 1]);
+        Verifie("Session : après un coup ajouté, on est sur la dernière position", sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Precedent();
+        Verifie("Session : après Précédent, on parcourt la partie (pas la dernière position : on ne peut pas jouer)", !sessionParcourue.EstSurLaDernierePosition, $"indice {sessionParcourue.IndexAffiche}");
+        sessionParcourue.Debut();
+        Verifie("Session : au début d'une partie de trois coups, on parcourt aussi la partie", !sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Suivant();
+        sessionParcourue.Suivant();
+        Verifie("Session : Suivant jusqu'à l'avant-dernière position : toujours pas la dernière", !sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Suivant();
+        Verifie("Session : Suivant jusqu'au bout : on peut de nouveau jouer", sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Debut();
+        sessionParcourue.Fin();
+        Verifie("Session : Fin ramène sur la dernière position", sessionParcourue.EstSurLaDernierePosition, "");
+        sessionParcourue.Debut();
+        sessionParcourue.RetireDernierCoup();
+        Verifie("Session : un retour arrière replace le parcours sur la nouvelle dernière position", sessionParcourue.EstSurLaDernierePosition, "");
+        Verifie("Session : une partie sans coup (un seul état) est toujours sur sa dernière position, même après Début et Fin",
+                new Func<bool>(() => { SessionPartie s = new SessionPartie(); s.Commencer(positionsSession[0]); s.Debut(); s.Fin(); return s.EstSurLaDernierePosition; })(), "");
+
         // ═══════════════ Orientation du damier (cases Manoury <-> places à l'écran) ═══════════════
         Console.WriteLine("── Orientation du damier ──");
         OrientationDamier vueBlancs = new OrientationDamier();

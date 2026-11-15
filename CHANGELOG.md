@@ -4,6 +4,7 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- Un coup (au damier ou par « Ordinateur joue ») n'est plus accepté tant que le parcours de la partie n'est pas revenu sur la dernière position : avant, il s'ajoutait à la fin de l'historique sans en être la suite, et « Ordinateur joue » jouait sur une autre position que celle affichée.
 - Mise en page : le coup joué, les rafles possibles, les compteurs, les cases Ordinateur et Son, le cadre du temps de réflexion et le résultat sont au-dessus du damier, sous la ligne du moteur ; la colonne de boutons est régulièrement espacée.
 - Pendule avec les cadences de la FMJD (1 h 20 + 30 s, 90 min pour 45 coups, 2 h pour 50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s), désactivée par défaut : choix de la cadence dans le cadre « Pendule et temps de réflexion », temps des blancs et des noirs en haut à droite, drapeau tombé = partie perdue au temps, moteur compris (son temps de réflexion est limité par ce qui lui reste). La cadence est retenue dans les préférences. La pendule décompte le camp qui joue réellement, même si le coup est joué depuis une position parcourue.
 - Style du code décrit dans `.editorconfig` ; les avertissements de compilation font échouer la compilation (`Directory.Build.props`).

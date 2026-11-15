@@ -30,6 +30,8 @@ namespace BrunoGUI_Dames
         public int IndexAffiche { get; private set; }
 
         public bool EstVide => positions.Count == 0;
+        // --- Vrai quand la position montrée est la dernière (ou qu'il n'y en a aucune) : seulement là on peut jouer ; ailleurs on parcourt la partie ---
+        public bool EstSurLaDernierePosition => positions.Count == 0 || IndexAffiche == positions.Count - 1;
         // --- La dernière position jouée (lève InvalidOperationException si la partie n'a pas commencé) ---
         public Position DernierePosition => positions.Count > 0 ? positions[positions.Count - 1] : throw new InvalidOperationException("La partie n'a pas commencé.");
         public Position PositionAffichee => positions.Count > 0 ? positions[IndexAffiche] : throw new InvalidOperationException("La partie n'a pas commencé.");
