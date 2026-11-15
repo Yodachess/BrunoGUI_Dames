@@ -10,7 +10,7 @@
 // Les vérifications de la vraie fenêtre : le formulaire est créé hors de l'écran, les tests cliquent sur les cases par le chemin de la souris (CaseMouseDown),
 // appuient sur les boutons par leurs gestionnaires, remplacent l'horloge de la pendule et les boîtes de message (ReglagesDeTest) et regardent l'état du
 // damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (le formulaire a des champs statiques, dont les 100 cases du damier),
-// dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le vrai Scan joue aussi.
+// dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le moteur Scan joue aussi.
 
 using System;
 using System.Collections.Generic;
@@ -101,7 +101,13 @@ public static class ScenarioInterface
         Clique(32);
         verifie("Interface : un premier clic sélectionne la pièce (son image quitte la case, elle est « en main »)",
                 !ImagePresente(32) && Champ<bool>(fenetre, "pieceEnMain") && pos()[32] == Piece.PionBlanc && !Statique<bool>("clickCaseSource"), "");
+        verifie("Interface : la sélection montre les destinations possibles (cadres gris sur les cases vides 27 et 28, couleur du trajet) et la case de départ en couleur de départ",
+                ImagePresente(27) && ImagePresente(28) && pos()[27] == Piece.Vide && pos()[28] == Piece.Vide && CouleurCase(27) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi && CouleurCase(28) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi
+                && CouleurCase(32) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart, $"27 : {CouleurCase(27)}, départ : {CouleurCase(32)}");
         Clique(28);
+        verifie("Interface : après le coup, plus aucun cadre gris (chaque image est celle de la pièce de sa case) et les couleurs sont remises : arrivée, trajet, le reste en couleur de base",
+                ImagesCoherentes() && CouleurCase(28) == BrunoInterfaceGraphiqueDames.CouleurCaseArrivee && CouleurCase(32) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi && CouleurCase(27) == BrunoInterfaceGraphiqueDames.CouleurCaseSombre
+                && Enumerable.Range(1, 50).Where(n => n != 28 && n != 32).All(n => CouleurCase(n) == BrunoInterfaceGraphiqueDames.CouleurCaseSombre), $"27 : {CouleurCase(27)}");
         verifie("Interface : le second clic joue 32-28 : position, images, historique et trait",
                 pos()[28] == Piece.PionBlanc && pos()[32] == Piece.Vide && ImagePresente(28) && !ImagePresente(32) && session().CoupsPdn.SequenceEqual(["32-28"])
                 && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Noir && Statique<bool>("clickCaseSource") && !Champ<bool>(fenetre, "pieceEnMain"),
@@ -112,7 +118,7 @@ public static class ScenarioInterface
         Clique(14);         // Un pion noir ne recule pas, et la case est occupée
         verifie("Interface : un coup illégal est refusé, la pièce revient sur sa case et l'historique ne change pas",
                 pos()[19] == Piece.PionNoir && pos()[14] == Piece.PionNoir && ImagePresente(19) && session().CoupsPdn.Count == 1 && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Noir
-                && Statique<bool>("clickCaseSource"), "");
+                && Statique<bool>("clickCaseSource") && ImagesCoherentes(), "");
         Coup? coupNoir = JoueLegal();
         verifie("Interface : le coup légal suivant (noirs) s'ajoute et rend le trait aux blancs",
                 coupNoir != null && session().CoupsPdn.Count == 2 && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc && pos()[coupNoir.Arrivee] == Piece.PionNoir, coupNoir?.Hub2() ?? "(aucun)");
@@ -127,9 +133,13 @@ public static class ScenarioInterface
         }
         else
         {
+            Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);      // La prise obligatoire est signalée : cadre gris sur la case d'arrivée
+            bool prisesSignalees = ImagePresente(rafle.Arrivee) && pos()[rafle.Arrivee] == Piece.Vide && CouleurCase(rafle.Depart) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart;
             Clique(rafle.Depart);
             Clique(rafle.Arrivee);
             bool jouee = Attendre(() => session().CoupsPdn.Count == 1, 5000);
+            verifie("Interface : la prise obligatoire est signalée avant le coup (départ coloré, cadre gris à l'arrivée) et, après la rafle, aucun cadre gris ne reste",
+                    prisesSignalees && jouee && ImagesCoherentes(), $"signalée : {prisesSignalees}, images cohérentes : {ImagesCoherentes()}");
             verifie("Interface : la rafle (async, animation à 0) est jouée : pièce prise retirée, pièce arrivée, coup « " + rafle.PdnComplet() + " » dans l'historique",
                     jouee && pos()[rafle.Arrivee] == Piece.PionBlanc && pos()[22] == Piece.Vide && pos()[rafle.Depart] == Piece.Vide && !ImagePresente(22) && ImagePresente(rafle.Arrivee) && session().CoupsPdn[0].Contains('x'),
                     jouee ? string.Join(" ", session().CoupsPdn) : "pas de coup joué");
@@ -233,7 +243,7 @@ public static class ScenarioInterface
         if (!avecMoteur)
             return;
 
-        // ═══════════════ Avec le vrai Scan ═══════════════
+        // ═══════════════ Avec le moteur Scan ═══════════════
         ((TrackBar)Trouve("trackBarTempsReflexion")).Value = 1;     // 1 seconde de réflexion
         Nouvelle(5, avecMoteur: true);
         Joue(32, 28, attendCoups: false);
@@ -301,6 +311,19 @@ public static class ScenarioInterface
 
     private static void Tick() => Appelle(fenetre, "MinuteriePendule_Tick", null, EventArgs.Empty);
     private static bool ImagePresente(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Image != null;
+    private static Color CouleurCase(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].BackColor;
+    // Chaque case sombre porte l'image de sa pièce, ou aucune image si elle est vide : pas de cadre gris oublié, pas de pièce fantôme
+    private static bool ImagesCoherentes()
+    {
+        for (int numero = 1; numero <= 50; numero++)
+        {
+            Piece piece = GestionDamier.PositionCourante[numero];
+            Image? attendue = piece == Piece.Vide ? null : BrunoInterfaceGraphiqueDames.ListeBitmapsPiece[piece];
+            if (!ReferenceEquals(BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(numero)].Image, attendue))
+                return false;
+        }
+        return true;
+    }
     private static bool CaseActive(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled;
 
     private static Control Trouve(string nom)

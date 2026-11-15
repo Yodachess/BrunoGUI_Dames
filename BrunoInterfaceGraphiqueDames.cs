@@ -27,21 +27,15 @@ namespace BrunoGUI_Dames
     {
         // Les listes
         public static readonly List<PictureBox> CaseDamier = new List<PictureBox>();    // les 100 cases du jeu
-        public static readonly List<int> ListeCasesCoupSelectionne = new List<int>();
-        public static readonly List<int> ListeCasesMouvementPrecedent = new List<int>();
-        public static readonly List<int> ListeCasesDestination = new List<int>();
         public static List<PartieDamesPdn> ListePartiesPdn = new List<PartieDamesPdn>();
         // liste des Bitmaps pour les pièces
-        public static readonly Dictionary<TypePiece, Bitmap> ListeBitmapsPiece = new Dictionary<TypePiece, Bitmap>();
+        public static readonly Dictionary<Piece, Bitmap> ListeBitmapsPiece = new Dictionary<Piece, Bitmap>();
         // les Bitmaps
         private readonly Bitmap PionBlanc = Properties.Resources.DamesPionBlanc_transparent;
         private readonly Bitmap PionNoir = Properties.Resources.DamesPionNoir_transparent;
         private readonly Bitmap DameBlanche = Properties.Resources.DameBlanche;
         private readonly Bitmap DameNoire = Properties.Resources.DameNoire;
         private static readonly Bitmap CadreGrisSansPrise = Properties.Resources.SansPrise;
-        private static readonly Bitmap CadreVert = Properties.Resources.CadreVertSansPriseTransparent;
-        private static readonly Bitmap CadreRouge = Properties.Resources.CadreRougeSansPriseTransparent;
-        private static readonly Bitmap CadreMarron = Properties.Resources.CadreMarronSansPriseTransparent;
         // les variables
         public static Color CouleurCaseSombre = Color.Peru;         // Cases sombres damier
         public static Color CouleurCaseClaire = Color.BurlyWood;    // Cases claires damier
@@ -53,16 +47,15 @@ namespace BrunoGUI_Dames
         public static Color CouleurCaseEtape = Color.Orange;        // Cases d'arrivée intermédiaires d'une rafle
         public static Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
-        public static FichierPartiePdn.PartieDamesPdn PartieCourante = new FichierPartiePdn.PartieDamesPdn();
+        public static FichierPartiePdn.PartieDamesPdn BalisesPartie = new FichierPartiePdn.PartieDamesPdn();
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
         private const int DiviseurAnimationRejeu = 6;
         // --- La durée de chaque attente de l'animation : DureeAnimation, ou son sixième pendant le déroulé d'une partie PDN chargée ---
         private int DelaiAnimation => rejeuPdnEnCours ? DureeAnimation / DiviseurAnimationRejeu : DureeAnimation;
         public static bool ExisteFENDebut;
-        public static bool AfficheNumeroBox, AfficheCaseLogique, OrdinateurActif, PartieTerminee, EmetUnSon;
+        public static bool OrdinateurActif, PartieTerminee, EmetUnSon;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
-        private ContenuCase pieceCouleurSource = new ContenuCase();     // Pièce sélectionnée au premier clic (case vide = aucune)
-        private string[] donneesMoteurScan = Array.Empty<string>();        // Données en provenance du Moteur SCAN
+        private Piece pieceSelectionnee = Piece.Vide;     // Pièce sélectionnée au premier clic (Piece.Vide = aucune)
         private string cheminMoteur = "";
         private Preferences preferencesChargees = new Preferences();     // Celles lues au démarrage (gardées si le moteur est absent)
         private string nomBlancPrefere = "", nomNoirPrefere = "";        // Les noms tapés par le joueur (pas ceux d'une partie PDN chargée)
@@ -70,14 +63,11 @@ namespace BrunoGUI_Dames
         private static string FichierPreferences => ReglagesDeTest.FichierPreferences ?? Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
         private static bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
-        // Définir les indices des dernières rangées en notation Manoury
-        private static readonly int[] derniereRangeeBlanche = { 46, 47, 48, 49, 50 };
-        private static readonly int[] derniereRangeeNoire = { 1, 2, 3, 4, 5 };
         // -- les classes --
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
         private AffichePdn? affichePdn = new AffichePdn();   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
         private FichierPartiePdn? fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
-        // GestionDamier, ContenuCase, TypePiece et CouleurPiece dans GestionDamier.cs ; Partie (listes de coups) dans Partie.cs
+        // GestionDamier (position du damier, correspondance des cases) dans GestionDamier.cs ; Partie (historique) dans Partie.cs
 
         public BrunoInterfaceGraphiqueDames()
         {
@@ -92,21 +82,17 @@ namespace BrunoGUI_Dames
             MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;
             MoteurDamesScan.MoteurArrete += MoteurArrete;
             // Liste des pièces du jeu
-            ListeBitmapsPiece.Add(TypePiece.PionBlanc, PionBlanc);       // pion blanc
-            ListeBitmapsPiece.Add(TypePiece.PionNoir, PionNoir);         // pion noir
-            ListeBitmapsPiece.Add(TypePiece.DameBlanche, DameBlanche);   // Dame blanche
-            ListeBitmapsPiece.Add(TypePiece.DameNoire, DameNoire);       // Dame noire
-            ListeBitmapsPiece.Add(TypePiece.CadreGris, CadreGrisSansPrise);
-            ListeBitmapsPiece.Add(TypePiece.CadreVert, CadreVert);
-            ListeBitmapsPiece.Add(TypePiece.CadreRouge, CadreRouge);
-            ListeBitmapsPiece.Add(TypePiece.CadreMarron, CadreMarron);
+            ListeBitmapsPiece.Add(Piece.PionBlanc, PionBlanc);       // pion blanc
+            ListeBitmapsPiece.Add(Piece.PionNoir, PionNoir);         // pion noir
+            ListeBitmapsPiece.Add(Piece.DameBlanche, DameBlanche);   // Dame blanche
+            ListeBitmapsPiece.Add(Piece.DameNoire, DameNoire);       // Dame noire
             // les variables
             CouleurAuTrait = Couleur.Blanc;
             GestionDamier.Orientation = new OrientationDamier();       // On commence avec la vue côté Blanc
             OrdinateurActif = true;
-            AfficheNumeroBox = ExisteFENDebut = analyseEnCours = false;
+            ExisteFENDebut = analyseEnCours = false;
             BoutonMasqueAffiche.Enabled = false;
-            AfficheCaseLogique = clickCaseSource = true;
+            clickCaseSource = true;
             DureeAnimation = 900;
             ChargePreferences();                // Les couleurs et la durée d'animation avant la création du damier ; le reste des préférences plus bas (AppliquePreferences)
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";            // Affichage 

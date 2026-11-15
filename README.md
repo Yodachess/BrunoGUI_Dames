@@ -59,7 +59,7 @@ dans `BrunoGUI_Dames.preferences.ini` à côté du programme. Les anomalies sont
 
 ## Compiler les sources
 
-Il faut le SDK .NET 10 sous Windows. Les tests vérifient les règles (dont un perft de profondeur 7), le PDN, les nulles et le dialogue avec le vrai Scan.
+Il faut le SDK .NET 10 sous Windows. Les tests vérifient les règles (dont un perft de profondeur 7), le PDN, les nulles et le dialogue avec le moteur Scan.
 
     dotnet build BrunoGUI_Dames.sln
     dotnet run --project BrunoGUI_Dames.csproj

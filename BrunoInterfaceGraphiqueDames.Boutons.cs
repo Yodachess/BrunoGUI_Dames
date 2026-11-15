@@ -241,7 +241,7 @@ namespace BrunoGUI_Dames
             if (!contenuFichier.Contains('"'))
                 contenuFichier = "[FEN \"" + contenuFichier + "\"]";        // Un FEN sans l'enrobage [FEN "..."] est accepté
             NettoyageRapide();
-            PartieCourante.White =PartieCourante.Black = PartieCourante.Result = PartieCourante.Round = PartieCourante.Site = PartieCourante.Event = "?";
+            BalisesPartie.White =BalisesPartie.Black = BalisesPartie.Result = BalisesPartie.Round = BalisesPartie.Site = BalisesPartie.Event = "?";
             MiseenplaceFen(contenuFichier, true);   // Met en place la position
             AfficheListesPieces();
             ReinitialisePendule();
@@ -266,13 +266,13 @@ namespace BrunoGUI_Dames
         }
         private void BoxNomJoueurBlanc_TextChanged(object sender, EventArgs e)
         {   // --- Gestion du changement de nom du joueur blanc ---
-            NomJoueurBlanc = PartieCourante.White = BoxNomJoueurBlanc.Text;
+            NomJoueurBlanc = BalisesPartie.White = BoxNomJoueurBlanc.Text;
             if (!nomsDepuisPartie)
                 nomBlancPrefere = BoxNomJoueurBlanc.Text;
         }
         private void BoxNomJoueurNoir_TextChanged(object sender, EventArgs e)
         {   //  --- Gestion du changement de nom du joueur noir ---
-            NomJoueurNoir = PartieCourante.Black = BoxNomJoueurNoir.Text;
+            NomJoueurNoir = BalisesPartie.Black = BoxNomJoueurNoir.Text;
             if (!nomsDepuisPartie)
                 nomNoirPrefere = BoxNomJoueurNoir.Text;
         }
@@ -316,12 +316,12 @@ namespace BrunoGUI_Dames
         private void MiseaJourFinPartie(string resultat)
         {   // --- Met à jour certains éléments à la fin de la partie ---
             Partie.Courante.FixeResultat(resultat);     // Le résultat entre dans la partie (il est écrit à la fin des coups PDN)
-            PartieCourante.Event = "Entrainement";
-            PartieCourante.Site = "Interface graphique";
-            PartieCourante.Date = DateTime.Now.ToString("yyyy-MM-dd");      // Stocke la date au format AAAA-MM-JJ
-            PartieCourante.White = NomJoueurBlanc;      // Mise à jour des balises de la partie
-            PartieCourante.Black = NomJoueurNoir;
-            PartieCourante.Result = resultat.Trim(); 
+            BalisesPartie.Event = "Entrainement";
+            BalisesPartie.Site = "Interface graphique";
+            BalisesPartie.Date = DateTime.Now.ToString("yyyy-MM-dd");      // Stocke la date au format AAAA-MM-JJ
+            BalisesPartie.White = NomJoueurBlanc;      // Mise à jour des balises de la partie
+            BalisesPartie.Black = NomJoueurNoir;
+            BalisesPartie.Result = resultat.Trim(); 
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             PartieTerminee = true;
             ArretePendule();                // Le temps s'arrête

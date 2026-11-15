@@ -13,24 +13,6 @@ using System;
 namespace BrunoGUI_Dames
 {       // Règles du jeu de Dames : http://www.ffjd.fr/Web/index.php?page=reglesdujeu
         // Information jeu de Dames : https://fr.wikipedia.org/wiki/Dames
-    public enum TypePiece
-    {
-        Vide,        // Case vide
-        PionNoir,
-        PionBlanc,
-        DameNoire,
-        DameBlanche,
-        CadreGris, CadreVert, CadreRouge, CadreMarron,
-        Inactive     // Case paire qui ne sert à rien
-    }
-
-    public enum CouleurPiece
-    {
-        Vide,        // Pas de pièce sur la case
-        Blanc,
-        Noir,
-        Inactive     // Case inactive
-    }
 
     // Le damier virtuel est un damier de 100 cases
     //
@@ -50,18 +32,6 @@ namespace BrunoGUI_Dames
     // Le damier de droite représente le damier de 100 cases avec les 50 cases réelles du jeu.
     // Les cases marquées d'un chiffre (01 à 50) sont les 50 cases actives du damier de 100 cases.
     // Les cases marquées  ".."  sur le damier de 100 cases sont les cases claires inutilisées.
-    public class ContenuCase
-    {   // --- Définition de la classe ContenuCase pour contenir le type de pièce et la couleur ---
-        public TypePiece TypePiece { get; set; } = TypePiece.Vide;
-        public CouleurPiece CouleurPiece { get; set; } = CouleurPiece.Vide;
-        public ContenuCase(TypePiece typePiece = TypePiece.Vide,
-                          CouleurPiece couleurPiece = CouleurPiece.Vide)
-        {
-            TypePiece = typePiece;
-            CouleurPiece = couleurPiece;
-        }
-    }
-
     public static class GestionDamier
     {
         // Le sens dans lequel on voit le damier : la correspondance entre les cases Manoury (1-50) et les places à l'écran (0-99), voir OrientationDamier
@@ -72,29 +42,6 @@ namespace BrunoGUI_Dames
         // (AppliqueCoupALaPosition, par ReglesDames.Jouer) ; DessinePiece et EffacePiece ne touchent qu'aux images. Le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
         public static Position PositionCourante = new Position();
 
-        // --- Conversions entre les types de pièces de l'affichage et ceux de Position ---
-        public static TypePiece TypeDe(Piece piece)
-        {
-            switch (piece)
-            {
-                case Piece.PionBlanc: return TypePiece.PionBlanc;
-                case Piece.PionNoir: return TypePiece.PionNoir;
-                case Piece.DameBlanche: return TypePiece.DameBlanche;
-                case Piece.DameNoire: return TypePiece.DameNoire;
-                default: return TypePiece.Vide;
-            }
-        }
-        public static CouleurPiece CouleurDe(Piece piece)
-        {
-            if (Position.EstBlanche(piece)) return CouleurPiece.Blanc;
-            if (Position.EstNoire(piece)) return CouleurPiece.Noir;
-            return CouleurPiece.Vide;
-        }
-        // --- La couleur de l'affichage correspondant à la couleur du jeu (le trait, par exemple) ---
-        public static CouleurPiece CouleurAffichee(Couleur couleur)
-        {
-            return couleur == Couleur.Blanc ? CouleurPiece.Blanc : CouleurPiece.Noir;
-        }
         // --- Nombre de pièces (pions et dames) d'une couleur ---
         public static int NombreDePieces(Couleur couleur)
         {
@@ -111,23 +58,7 @@ namespace BrunoGUI_Dames
             PositionCourante = new Position();
         }
 
-        public static ContenuCase ContenuCaseCaseManoury(int numeroCaseManoury)
-        {   // --- Retourne le contenu (type et couleur de la pièce) de la case Manoury, d'après PositionCourante ---
-            Piece piece = PositionCourante[numeroCaseManoury];
-            return new ContenuCase(TypeDe(piece), CouleurDe(piece));
-        }
-        public static ContenuCase ContenuCaseIndice(int indicePictureBox)
-        {   // --- Retourne le contenu de la PictureBox : celui de sa case Manoury, ou une case inactive si la case ne sert pas au jeu (case claire) ---
-            int numeroCase = Orientation.CaseManoury(indicePictureBox);
-            return numeroCase != 0
-                ? ContenuCaseCaseManoury(numeroCase)
-                : new ContenuCase(TypePiece.Inactive, CouleurPiece.Inactive);
-        }
-        public static (int ligne, int colonne) IndiceVersCoordonnees(int indiceBox)
-        {   // --- Retourne la ligne et la colonne de la case indiceBox ---
-            return (indiceBox / 10, indiceBox % 10);
-        }
-        public static bool EstCaseManouryValide(int numeroCaseManoury)              
+        public static bool EstCaseManouryValide(int numeroCaseManoury)
         {   // --- Vérifie si une case Manoury est valide ---
             return numeroCaseManoury >= 1 && numeroCaseManoury <= 50;
         }

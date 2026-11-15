@@ -701,7 +701,7 @@ public static class Scenario
         Verifie("Moteur : un moteur introuvable lève FileNotFoundException", moteurIntrouvable && !MoteurDamesScan.EstDemarre, "");
 
         if (complet)
-        {   // Avec le vrai Scan (dossier Dames_Scan31_FabienLetouzey du dépôt) : il répond par un coup que ReglesDames trouve légal
+        {   // Avec le moteur Scan (dossier Dames_Scan31_FabienLetouzey du dépôt) : il répond par un coup que ReglesDames trouve légal
             string? scan = null;
             for (string? dossier = AppContext.BaseDirectory; dossier != null && scan == null; dossier = Path.GetDirectoryName(dossier))
             {
@@ -1048,6 +1048,29 @@ public static class Scenario
                 Preferences.DepuisTexte(new Preferences { CadenceId = "blitz" }.VersTexte()).CadenceId == "blitz" && Preferences.DepuisTexte("Cadence=CLASSIQUE").CadenceId == "classique", "");
         Preferences cadenceInconnue = Preferences.DepuisTexte("Cadence=quantique\r\n");
         Verifie("Préférences : une cadence inconnue garde « sans pendule » et est signalée", cadenceInconnue.CadenceId == null && cadenceInconnue.Avertissements.Count == 1 && Preferences.DepuisTexte("Cadence=sans").Avertissements.Count == 0, string.Join(" | ", cadenceInconnue.Avertissements));
+
+        Verifie("Position : la couleur d'une pièce (pion ou dame) et l'appartenance à un camp",
+                Position.CouleurDe(Piece.PionBlanc) == Couleur.Blanc && Position.CouleurDe(Piece.DameBlanche) == Couleur.Blanc && Position.CouleurDe(Piece.PionNoir) == Couleur.Noir && Position.CouleurDe(Piece.DameNoire) == Couleur.Noir
+                && Position.Appartient(Piece.DameNoire, Couleur.Noir) && !Position.Appartient(Piece.Vide, Couleur.Blanc) && !Position.Appartient(Piece.Vide, Couleur.Noir), "");
+
+        // ═══════════════ Lecture des lignes du moteur (LigneMoteur) ═══════════════
+        Console.WriteLine("── Lignes du moteur ──");
+
+        LigneMoteurLue identite = LigneMoteur.Lire("id name=Scan version=3.1 author=\"Fabien Letouzey\" country=France");
+        Verifie("Ligne du moteur : « id » donne le nom, la version, l'auteur (entre guillemets) et le pays",
+                identite.EstId && identite.Nom == "Scan" && identite.Version == "3.1" && identite.Auteur == "Fabien Letouzey" && identite.Pays == "France" && identite.Score == null && identite.Variation == null,
+                $"{identite.Nom} {identite.Version} {identite.Auteur} {identite.Pays}");
+        LigneMoteurLue analyse = LigneMoteur.Lire("info depth=21 mean-depth=20.8 score=-0.01 nodes=31261613 time=3.906 nps=8.0 pv=\"32-28 17-22 28x17x22 12x21x17 33-28\"");
+        Verifie("Ligne du moteur : « info » donne le score (avec son signe, point décimal) et la variation principale sans ses guillemets",
+                !analyse.EstId && analyse.Score == -0.01m && analyse.Variation == "32-28 17-22 28x17x22 12x21x17 33-28", $"score {analyse.Score}, variation {analyse.Variation}");
+        LigneMoteurLue scoreSeul = LigneMoteur.Lire("info depth=3 score=1.5 nodes=10");
+        Verifie("Ligne du moteur : un « info » sans variation donne seulement le score", scoreSeul.Score == 1.5m && scoreSeul.Variation == null, "");
+        LigneMoteurLue scoreIllisible = LigneMoteur.Lire("info depth=3 score=abc nodes=10 pv=\"1-2 3-4\"");
+        Verifie("Ligne du moteur : un score illisible est ignoré sans exception, le reste de la ligne est lu", scoreIllisible.Score == null && scoreIllisible.Variation == "1-2 3-4", "");
+        Verifie("Ligne du moteur : « done », « error », « pong », une ligne vide ou trop courte ne donnent rien",
+                new[] { "done move=32-28 ponder=17-22", "error message=\"x y\"", "pong", "", " ", "info", "id name=Scan" }
+                    .Select(LigneMoteur.Lire).All(l => !l.EstId && l.Score == null && l.Variation == null && l.Nom == null),
+                "");
 
         // ═══════════════ Interface : la vraie fenêtre, pilotée par les tests ═══════════════
         ScenarioInterface.Executer(Verifie, complet);

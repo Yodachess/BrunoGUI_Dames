@@ -48,65 +48,27 @@ namespace BrunoGUI_Dames
             }
         }
         private void AnalyseLigneMoteur(string ligne)
-        {
-            donneesMoteurScan = ligne.Split(' ');     // Découpage des informations du moteur SCAN
-            if (string.IsNullOrWhiteSpace(donneesMoteurScan[0]) == false & donneesMoteurScan.Length > 2)
-            {   // true si la chaine est " ", "\n", null, ""
-                switch (donneesMoteurScan[0])   // identifier le premier mot
-                {
-                    case "\n":                  // Analyse réponse moteur SCAN
-                    case " ":
-                        break;
-                    case "done":            // le moteur SCAN propose le meilleur coup
-                        // Le meiileur coup est traité dans MoteurDamesScan.ProcOutputDataReceived
-                        break;
-                    case "id":      // sous la forme : id name=... version=... author="..." country=...
-                        {   // Expression régulière pour extraire les données
-                            string pattern = @"name=(\S+)|version=(\S+)|author=""([^""]+)""|country=(\S+)";     // Extraction des correspondances
-                            string? name = null, version = null, author = null, country = null;
-                            foreach (Match match in Regex.Matches(ligne, pattern))
-                            {
-                                if (match.Groups[1].Success) name = match.Groups[1].Value;
-                                if (match.Groups[2].Success) version = match.Groups[2].Value;
-                                if (match.Groups[3].Success) author = match.Groups[3].Value;
-                                if (match.Groups[4].Success) country = match.Groups[4].Value;
-                            }           // Affichage des résultats
-                            LabelAfficheScan.Text = "Moteur : " + name + " / Version : " + version + " / Auteur : " + author + " / Pays : " + country;
-                            nomMoteur = name ?? "";
-                            versionMoteur = version ?? "";
-                            auteurMoteur = author ?? "";
-                        }
-                        break;
-                    case "info":
-                        for (int scanIndex = 1; (scanIndex < donneesMoteurScan.Length); scanIndex++) // Recherche des informations sur la chaine donneesMoteurScan
-                            switch (donneesMoteurScan[scanIndex].Split('=')[0])
-                            {   // On regarde ce qu'il y a avant le signe =
-                                case "score":
-                                    // Conversion en décimal avec gestion de la culture
-                                    decimal valeur = Decimal.Parse(donneesMoteurScan[scanIndex].Split('=')[1], CultureInfo.InvariantCulture);
-                                    LabelScore.Text = "Score = " + valeur.ToString("F2", CultureInfo.InvariantCulture);     // Affichage avec le format "XX.YY"
-                                    break;
-                                case "pv":          // Affichage de la variation principlale
-                                    int position = ligne.IndexOf(" pv");
-                                    string variationMoteur = ligne.Substring(position + 4);   // exemple : pv="14x23x19 50-44 
-                                    variationMoteur = variationMoteur.Trim('"');       // Il arrive qu'il y ait un " en début de chaine ??!
-                                    if (analyseEnCours)
-                                        {
-                                        LabelPrisesPossibles.Text = "Ligne SCNA 3.1 complète : " + variationMoteur;
-                                        LabelCoupJoue.Text = "Coup suggéré par l'analyse =  : " + variationMoteur.Split(' ')[0];
-                                        }
-                                    if (variationMoteur.Length > 100)
-                                        variationMoteur = variationMoteur.Substring(0, 100);     // On limite la longueur de la variation, pour rester dans le label
-                                    LabelAfficheScan.Text = "Ligne Scan3.1 = " + variationMoteur;
-                                    break;
-                            }
-                        break;
-                    case "error":   // Déjà noté dans le journal par MoteurDamesScan
-                        break;
-                }
+        {   // --- Ce que la ligne du moteur apporte à l'affichage : identité, score, variation principale (la lecture est dans LigneMoteur.cs) ---
+            LigneMoteurLue lue = LigneMoteur.Lire(ligne);
+            if (lue.EstId)
+            {
+                LabelAfficheScan.Text = "Moteur : " + lue.Nom + " / Version : " + lue.Version + " / Auteur : " + lue.Auteur + " / Pays : " + lue.Pays;
+                nomMoteur = lue.Nom ?? "";
+                versionMoteur = lue.Version ?? "";
+                auteurMoteur = lue.Auteur ?? "";
             }
-        }
-        private void AfficheDonneesBrutes(string ligne, bool venantDuMoteur)
+            if (lue.Score is decimal score)
+                LabelScore.Text = "Score = " + score.ToString("F2", CultureInfo.InvariantCulture);     // Affichage avec le format "XX.YY"
+            if (lue.Variation is string variationMoteur)
+            {
+                if (analyseEnCours)
+                {
+                    LabelPrisesPossibles.Text = "Ligne SCAN 3.1 complète : " + variationMoteur;
+                    LabelCoupJoue.Text = "Coup suggéré par l'analyse : " + variationMoteur.Split(' ')[0];
+                }
+                LabelAfficheScan.Text = "Ligne Scan3.1 = " + (variationMoteur.Length > 100 ? variationMoteur.Substring(0, 100) : variationMoteur);     // Limitée pour rester dans le label
+            }
+        }        private void AfficheDonneesBrutes(string ligne, bool venantDuMoteur)
         {   // --- Ajoute une ligne échangée avec le moteur à la fenêtre du protocole (appelée sur le thread du moteur ou celui de l'interface) ---
             if (IsDisposed || !IsHandleCreated)
                 return;     // La fenêtre se ferme : plus rien à afficher

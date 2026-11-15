@@ -33,7 +33,7 @@ namespace BrunoGUI_Dames
         }
         public string GenerationPdn()
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
-            FichierPartiePdn.PartieDamesPdn courante = BrunoInterfaceGraphiqueDames.PartieCourante;
+            FichierPartiePdn.PartieDamesPdn courante = BrunoInterfaceGraphiqueDames.BalisesPartie;
             PartiePdn partie = PartiePdn.Creer(courante.Event, courante.Site, courante.Date, courante.Round, courante.White, courante.Black,
                                                courante.Result, FenDepartPartie(), Partie.Courante.CoupsPdnAvecResultat());
             return partie.VersTexte();

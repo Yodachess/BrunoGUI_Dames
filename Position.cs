@@ -76,6 +76,7 @@ namespace BrunoGUI_Dames
         public static bool EstBlanche(Piece piece) => piece == Piece.PionBlanc || piece == Piece.DameBlanche;
         public static bool EstNoire(Piece piece) => piece == Piece.PionNoir || piece == Piece.DameNoire;
         public static bool EstDame(Piece piece) => piece == Piece.DameBlanche || piece == Piece.DameNoire;
+        public static Couleur CouleurDe(Piece piece) => EstBlanche(piece) ? Couleur.Blanc : Couleur.Noir;       // La couleur d'une pièce (pion ou dame) ; pour Piece.Vide, sans signification
         public static bool Appartient(Piece piece, Couleur couleur) => couleur == Couleur.Blanc ? EstBlanche(piece) : EstNoire(piece);
         public static Couleur Adversaire(Couleur couleur) => couleur == Couleur.Blanc ? Couleur.Noir : Couleur.Blanc;
 

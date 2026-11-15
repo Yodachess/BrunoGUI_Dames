@@ -4,6 +4,9 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- Code simplifié, sans changement de comportement (vérifié par les tests de l'interface, dont les couleurs et les cadres gris des cases) : un seul chemin (`JoueCoupSurLeDamier`) pour jouer un coup au clic, par le moteur ou en rejouant un PDN, et la promotion en dame vient des règles au lieu d'être refaite à l'affichage ; une seule méthode (`TermineLaPartie`) pour terminer une partie ; la lecture des lignes du moteur est une classe testée (`LigneMoteur`) ; un seul vocabulaire de pièces (`Piece` et `Couleur`) pour les règles et l'affichage ; les trois listes de cases à décolorier sont remplacées par la reconnaissance des cadres gris ; code mort supprimé ; `PartieCourante` devient `BalisesPartie`.
+- Deux libellés du moteur corrigés (« SCNA » devenu « SCAN », double deux-points de « Coup suggéré par l'analyse »).
+
 ## 1.11 (2026-11-15)
 
 Pendule, nouvelle mise en page, parcours de partie plus sûr, et des tests automatiques de l'interface qui ont fait corriger plusieurs défauts.
@@ -12,7 +15,7 @@ Pendule, nouvelle mise en page, parcours de partie plus sûr, et des tests autom
 - **Mise en page** : le coup joué, les rafles possibles, les compteurs, les cases Ordinateur et Son, le cadre du temps de réflexion et le résultat sont au-dessus du damier, sous la ligne du moteur ; la colonne de boutons est régulièrement espacée.
 - **Parcours de partie** : un coup (au damier ou par « Ordinateur joue ») n'est plus accepté tant que le parcours n'est pas revenu sur la dernière position. Avant, il s'ajoutait à la fin de l'historique sans en être la suite, et « Ordinateur joue » jouait sur une autre position que celle affichée. « Retour arrière » pendant un parcours replace le parcours sur la dernière position et affiche le coup retiré (et non le résultat) quand la partie était finie.
 - **Corrections** : « Nouvelle partie » après une partie finie laissait le damier inactif ; une fin au temps pendant la réflexion du moteur réactivait des cases.
-- **Tests automatiques de l'interface** : la vraie fenêtre est créée hors de l'écran et pilotée par les tests (clics, boutons, pendule à horloge simulée, fin au temps, parcours, préférences, et le vrai Scan en CI). Ils ont aussi fait corriger un défaut apparu pendant ce travail : « Préc. », « Suiv. », « Début », « Fin » et « Retour arrière » effaçaient l'historique de la partie.
+- **Tests automatiques de l'interface** : la vraie fenêtre est créée hors de l'écran et pilotée par les tests (clics, boutons, pendule à horloge simulée, fin au temps, parcours, préférences, et le moteur Scan en CI). Ils ont aussi fait corriger un défaut apparu pendant ce travail : « Préc. », « Suiv. », « Début », « Fin » et « Retour arrière » effaçaient l'historique de la partie.
 - **Code** : le formulaire principal est découpé en fichiers (classe partielle) ; le sens du damier (`OrientationDamier`) et l'historique de la partie (`SessionPartie`) sont des classes testées ; style du code décrit dans `.editorconfig`, avertissements de compilation traités comme des erreurs ; Dependabot surveille les paquets NuGet et les actions GitHub ; README unique, documents du moteur dans `Docs` ; deux icônes inutilisées supprimées.
 ## 1.10 (2026-11-14)
 

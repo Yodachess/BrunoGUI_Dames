@@ -30,13 +30,13 @@ namespace BrunoGUI_Dames
         // Routines de Dessin
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 
-        public static void DessinePiece(int indexPictureBox, TypePiece pieceType)
+        public static void DessinePiece(int indexPictureBox, Piece piece)
         {   // --- Dessin de la pièce passée en paramètre sur la case PictureBox en paramètre (l'image seulement) ---
             // La position (PositionCourante) n'est pas touchée ici : elle change à la mise en place d'un FEN et une fois par coup (AppliqueCoupALaPosition)
-            if (pieceType != TypePiece.Vide && ListeBitmapsPiece.TryGetValue(pieceType, out Bitmap? image))
-                CaseDamier[indexPictureBox].Image = image;      // L'image correspond au type de pièce
+            if (ListeBitmapsPiece.TryGetValue(piece, out Bitmap? image))
+                CaseDamier[indexPictureBox].Image = image;      // L'image de la pièce
             else
-                CaseDamier[indexPictureBox].Image = null;       // Case vide, ou aucune image pour ce type
+                CaseDamier[indexPictureBox].Image = null;       // Case vide
         }
         public static void EffacePiece(int indexPictureBox)
         {   // --- Efface l'image de la pièce située à indexPictureBox ; PositionCourante n'est pas touchée ---
@@ -58,10 +58,6 @@ namespace BrunoGUI_Dames
                             CaseDamier[indexPrise].BackColor = CouleurCasePrise;
                             CaseDamier[indexArrivee].Image = CadreGrisSansPrise;
                             CaseDamier[indexArrivee].BackColor = CouleurCaseEtape;    // Les cases d'arrivée de chaque étape sont colorées en plus des pièces prises
-                            // Sauvegarder les cases pour les étapes ultérieures
-                            ListeCasesMouvementPrecedent.Add(prise);
-                            ListeCasesMouvementPrecedent.Add(arrivee);
-                            ListeCasesDestination.Add(arrivee); // Garder les arrivées pour vérification finale
                         }
                     }
                 }
@@ -76,34 +72,20 @@ namespace BrunoGUI_Dames
                     int index = GestionDamier.ObtenirIndicePictureBox(coup.Arrivee);
                     CaseDamier[index].Image = CadreGrisSansPrise;         // On affiche un cadre gris sur les cases de déplacement simple
                     CaseDamier[index].BackColor = CouleurTrajetSuivi;     // On colorie les cases de déplacement simple avec CouleurTrajetSuivi
-                    ListeCasesMouvementPrecedent.Add(coup.Arrivee);
-                    ListeCasesDestination.Add(coup.Arrivee);
                 }
             }
         }
         public static void EffaceMouvements()
-        {   // --- Efface toutes les indications des mouvements pour déplacer la pièce ---
-            EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
-            for (int i = 0; i < ListeCasesDestination.Count; i++)           // On enlève tous les cadres gris
-            {   // On enlève les cadres gris
-                CaseDamier[GestionDamier.ObtenirIndicePictureBox(ListeCasesDestination[i])].Image = null;
-            }
-            ListeCasesDestination.Clear();
-            for (int i = 0; i < ListeCasesMouvementPrecedent.Count; i++)    // On enlève tous les mouvements affichés précédemment
-            {   // On remet la couleur de base sur les cases
-                CaseDamier[GestionDamier.ObtenirIndicePictureBox(ListeCasesMouvementPrecedent[i])].BackColor = BrunoInterfaceGraphiqueDames.CouleurCaseSombre;
-            }
-            ListeCasesMouvementPrecedent.Clear();
+        {   // --- Efface toutes les indications des mouvements possibles d'une pièce sélectionnée : les cadres gris et les couleurs des cases ---
+            EffaceCasesDestination();
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // Au clic de destination, seules les indications de la sélection sont affichées (tout a été remis à zéro à la sélection)
         }
         public static void EffaceCasesDestination()
-        {   // --- Efface les cases de destination des mouvements possibles ---
-            for (int i = 0; i < ListeCasesDestination.Count; i++)           // On enlève tous les cadres gris
-            {   // On enlève les cadres gris
-                CaseDamier[GestionDamier.ObtenirIndicePictureBox(ListeCasesDestination[i])].Image = null;
-            }
-            ListeCasesDestination.Clear();
-        }
-        private void CreeDamier()
+        {   // --- Efface les cadres gris que le damier montre sur des cases vides (destinations possibles, cases d'arrivée d'une prise obligatoire) : on les reconnaît à leur image ---
+            foreach (PictureBox caseDuDamier in CaseDamier)
+                if (caseDuDamier.Image == CadreGrisSansPrise)
+                    caseDuDamier.Image = null;
+        }        private void CreeDamier()
         {    // --- Crée les 100 PictureBox représentant les cases du damier (Note : n'affiche pas les pièces sur le damier) ---
             Color couleur;
             int index = 0;          // Les PictureBox sont numérotées de 1 à 100
@@ -113,7 +95,6 @@ namespace BrunoGUI_Dames
                 couleur = ligne % 2 == 0 ? CouleurCaseSombre : CouleurCaseClaire;       // Couleur des cases du damier
                 for (int colonne = 0; colonne <= 9; colonne++)
                 {
-                    int indexCourant = index;               // Capturer la valeur actuelle de l'index 
                     int caseLogiqueCourant = caseLogique;   // Capturer la valeur actuelle de caseLogique
                     PictureBox Pict = new PictureBox
                     {   //  Les cases sont des PictureBox indéxées, par exemple : case a1 = CaseDamier21, case h8 = CaseDamier98
@@ -128,7 +109,7 @@ namespace BrunoGUI_Dames
                     // Vérifier si la case est sombre
                     if ((ligne % 2 == 0 && colonne % 2 == 0) || (ligne % 2 != 0 && colonne % 2 != 0))
                     {   // Case sombre : elle porte un numéro Manoury
-                        AfficheIndexBox(Pict, indexCourant, caseLogiqueCourant);
+                        PoseNumeroCase(Pict, caseLogiqueCourant);
                         caseLogique++; // Passer à la case logique suivante
                     }
                     Pict.BringToFront();
@@ -164,22 +145,18 @@ namespace BrunoGUI_Dames
         }
         public static void ActiveCouleurDamier(Couleur couleur, bool statut)
         {   // Active (statut = true) ou désactive les cases qui portent une pièce de cette couleur dans la position
-            ActiveCouleurDamier(GestionDamier.CouleurAffichee(couleur), statut);
-        }
-        public static void ActiveCouleurDamier(CouleurPiece couleur, bool statut)
-        {   // Idem avec la couleur de l'affichage (celle de la pièce jouée)
             for (int i = 0; i <= 99; i++)
             {
-                if (GestionDamier.ContenuCaseIndice(i).CouleurPiece == couleur)
-                {
+                int numeroCase = GestionDamier.Orientation.CaseManoury(i);      // 0 : case claire, qui ne porte jamais de pièce
+                if (numeroCase != 0 && Position.Appartient(GestionDamier.PositionCourante[numeroCase], couleur))
                     CaseDamier[i].Enabled = statut;
-                }
             }
-        }        public static void ActiverCaseManoury(int caseManoury, bool statut)
+        }
+        public static void ActiverCaseManoury(int caseManoury, bool statut)
         {   // --- Active ou désactive une case Manoury (1 à 50) ---
             CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled = statut;
         }
-        public void CouleurToutesCasesManoury(Color couleur)
+        public static void CouleurToutesCasesManoury(Color couleur)
         {   // --- Colorie toutes les cases actives (Manoury) avec la couleur demandée ---
             for (int ligne = 0; ligne < 10; ligne++) // 10 lignes
             {
@@ -193,44 +170,37 @@ namespace BrunoGUI_Dames
                 }
             }
         }
+        // --- Termine la partie : le résultat est coché dans le groupe Résultat (gagnant : Blanc ou Noir ; null pour une nulle), ce qui l'écrit dans la partie
+        // (RadioXxx_CheckedChanged), puis le statut est affiché et le message annoncé. C'est le seul endroit où une partie se termine pour une raison de jeu ---
+        private void TermineLaPartie(Couleur? gagnant, string statut, string message, string titre = "Partie terminée")
+        {
+            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
+            if (gagnant == Couleur.Blanc)
+                RadioGainBlanc.Checked = PartieTerminee = true;     // Note : cocher la case lance RadioGainBlanc_CheckedChanged
+            else if (gagnant == Couleur.Noir)
+                RadioGainNoir.Checked = PartieTerminee = true;      // Note : cocher la case lance RadioGainNoir_CheckedChanged
+            else
+                RadioNulle.Checked = PartieTerminee = true;         // Note : cocher la case lance RadioNulle_CheckedChanged
+            LabelInformationJoueur.Text = statut;
+            ReglagesDeTest.Message(message, titre, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
         public void VerifierGain()
-        {   // --- Verifie le gain uniquement sur a présence de pièces ---
+        {   // --- Vérifie le gain par l'absence de pièces ---
             if (GestionDamier.NombreDePieces(Couleur.Blanc) == 0)
-            {   // Vérifier si les listes blanches sont vides
-                GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
-                LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de pièces";
-                ReglagesDeTest.Message("Les Noirs gagnent !\n Les blancs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+                TermineLaPartie(Couleur.Noir, "Les Noirs gagnent, les blancs n'ont plus de pièces", "Les Noirs gagnent !\n Les blancs n'ont plus de pièces");
             if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
-            {   // Vérifier si les listes noires sont vides
-                GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
-                LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de pièces";
-                ReglagesDeTest.Message("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+                TermineLaPartie(Couleur.Blanc, "Les Blancs gagnent, les noirs n'ont plus de pièces", "Les Blancs gagnent !\n Les noirs n'ont plus de pièces");
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
-            // Les parties nulles (répétition, coups de dames) : NulleActuelle et FinPartieParNulle ; pas détectées : finales à peu de pièces
+            // Les parties nulles (répétition, coups de dames, finales) : NulleActuelle et FinPartieParNulle
         }
         private void FinPartieParBlocage(Couleur couleurBloquee)
         {   // --- Le camp de couleurBloquee, au trait, ne peut plus jouer : il perd la partie ---
             if (PartieTerminee)
                 return;
-            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            if (couleurBloquee == Couleur.Blanc)
-            {
-                RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
-                LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de coup possible";
-                ReglagesDeTest.Message("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
-                LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de coup possible";
-                ReglagesDeTest.Message("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-        private static RaisonNulle NulleActuelle()
+            string gagnants = couleurBloquee == Couleur.Blanc ? "Noirs" : "Blancs";
+            string perdants = couleurBloquee == Couleur.Blanc ? "blancs" : "noirs";
+            TermineLaPartie(Position.Adversaire(couleurBloquee), $"Les {gagnants} gagnent, les {perdants} n'ont plus de coup possible", $"Les {gagnants} gagnent !\n Les {perdants} n'ont plus de coup possible");
+        }        private static RaisonNulle NulleActuelle()
         {   // --- Les règles de nulle (NullesDames) appliquées à l'historique de la partie : la position de départ puis celle après chaque demi-coup ---
             return NullesDames.Detecte(Partie.Courante.Positions);
         }
@@ -245,10 +215,7 @@ namespace BrunoGUI_Dames
                 RaisonNulle.FinaleCinqCoups => $"finale à peu de pièces : {NullesDames.CoupsFinaleSimple} coups de chaque joueur sans gagner",
                 _ => $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise"
             };
-            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            RadioNulle.Checked = PartieTerminee = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
-            LabelInformationJoueur.Text = "Partie nulle : " + motif;
-            ReglagesDeTest.Message("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            TermineLaPartie(null, "Partie nulle : " + motif, "Nulle possible, la partie est terminée :\n" + motif, "Partie nulle");
         }
         private void MetEnEvidenceRafle(Coup rafle)
         {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---
@@ -277,7 +244,7 @@ namespace BrunoGUI_Dames
         }
         private void InitialiserEtatMouvement()
         {   // --- Remet à zéro les paramètes utilisés pour dessiner les mouvements possibles ---
-            pieceCouleurSource = new ContenuCase();
+            pieceSelectionnee = Piece.Vide;
             CaseSourceManoury = 0;
             CaseDestinationManoury = 0;
             IndexPictureBoxSource100 = -1;
@@ -293,47 +260,21 @@ namespace BrunoGUI_Dames
             fenetrePrincipale.LabelDamesBlanches.Text = position.Compte(Piece.DameBlanche) + " Dames blanches";
             fenetrePrincipale.LabelDamesNoires.Text = position.Compte(Piece.DameNoire) + " Dames noires";
         }
-        public static void AfficheIndexBox(PictureBox pict, int index, int caseLogique)
-        {   // --- Affiche les index Box et Manoury an haut à gauche et droite ---
-            pict.Tag = $"{index},{caseLogique}";    // Stocker l'index et la case logique sous forme de chaîne dans Tag
+        private static void PoseNumeroCase(PictureBox pict, int numeroManoury)
+        {   // --- Une case sombre porte son numéro Manoury (dessiné en haut à droite par PictureBox_Paint) ---
+            pict.Tag = numeroManoury;               // Le numéro est stocké dans le Tag de la case
             pict.Paint += PictureBox_Paint;         // Ajouter le gestionnaire Paint à la PictureBox
             pict.Invalidate();                      // Forcer la mise à jour
         }
-        private static void PictureBox_Paint(object? sender, PaintEventArgs e)       // Déclaration du gestionnaire d'événement Paint
-        {   // --- Evénement Paint lié à la PictureBox ---
-            if (sender is not PictureBox pict || pict.Tag?.ToString() is not string tag)
-                return;     // Le Tag est posé par AfficheIndexBox pour chaque case
-            // Récupérer les données depuis Tag et les séparer
-            string[] data = tag.Split(',');
-            int index = int.Parse(data[0]);
-            int caseLogique = int.Parse(data[1]);
-            // Effacer le fond
-            e.Graphics.FillRectangle(new SolidBrush(pict.BackColor), 0, 0, pict.Width, pict.Height);
-            // Redessiner l'image si elle existe
+        private static void PictureBox_Paint(object? sender, PaintEventArgs e)
+        {   // --- Événement Paint des cases sombres : fond, image de la pièce et numéro Manoury ---
+            if (sender is not PictureBox pict || pict.Tag is not int numeroManoury)
+                return;     // Le Tag est posé par PoseNumeroCase pour chaque case sombre
+            using (SolidBrush fond = new SolidBrush(pict.BackColor))
+                e.Graphics.FillRectangle(fond, 0, 0, pict.Width, pict.Height);      // Effacer le fond
             if (pict.Image != null)
-            {
-                e.Graphics.DrawImage(pict.Image, 0, 0, pict.Width, pict.Height);
-            }
-            if (AfficheCaseLogique)            // Afficher l'index logique et l'index Manoury
-            {
-                string text2 = caseLogique.ToString();
-                using (Font font2 = new Font("Arial", 10, FontStyle.Bold))
-                {
-                    Brush brush2 = Brushes.Cyan;
-                    PointF position2 = new PointF(pict.Width - 20, 3); // Position ajustée
-                    e.Graphics.DrawString(text2, font2, brush2, position2);
-                }
-            }
-            if (AfficheNumeroBox)            // Afficher l'index de la case
-            {
-                string text = index.ToString();
-                using (Font font = new Font("Arial", 8))
-                {
-                    Brush brush = Brushes.Black;
-                    PointF position = new PointF(3, 3); // Position ajustée
-                    e.Graphics.DrawString(text, font, brush, position);
-                }
-            }
-        }
-    }
+                e.Graphics.DrawImage(pict.Image, 0, 0, pict.Width, pict.Height);    // Redessiner l'image si elle existe
+            using (Font police = new Font("Arial", 10, FontStyle.Bold))
+                e.Graphics.DrawString(numeroManoury.ToString(), police, Brushes.Cyan, new PointF(pict.Width - 20, 3));
+        }    }
 }

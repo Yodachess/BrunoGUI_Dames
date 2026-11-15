@@ -90,19 +90,19 @@ namespace BrunoGUI_Dames
             foreach (string avertissement in partiePdn.Avertissements)
                 Journal.Ecrit($"Partie PDN ({partie.White} - {partie.Black}) : ignoré à la lecture : {avertissement}");
             NettoyageRapide();
-            PartieCourante.CoupsPartiePDN = "";
+            BalisesPartie.CoupsPartiePDN = "";
             nomsDepuisPartie = true;       // Ces noms sont ceux de la partie chargée : ils ne deviennent pas des préférences
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
-            PartieCourante.Event = partie.Event;
-            PartieCourante.Site = partie.Site;
-            PartieCourante.Date = partie.Date;
-            PartieCourante.Round = partie.Round;
-            PartieCourante.White = BoxNomJoueurBlanc.Text = NomJoueurBlanc = partie.White;
-            PartieCourante.Black = BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
+            BalisesPartie.Event = partie.Event;
+            BalisesPartie.Site = partie.Site;
+            BalisesPartie.Date = partie.Date;
+            BalisesPartie.Round = partie.Round;
+            BalisesPartie.White = BoxNomJoueurBlanc.Text = NomJoueurBlanc = partie.White;
+            BalisesPartie.Black = BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
             nomsDepuisPartie = false;
-            PartieCourante.Result = partie.Result;
-            PartieCourante.CoupsPartiePDN = partie.CoupsPartiePDN;
-            PartieCourante.FENDebut = partie.FENDebut;
+            BalisesPartie.Result = partie.Result;
+            BalisesPartie.CoupsPartiePDN = partie.CoupsPartiePDN;
+            BalisesPartie.FENDebut = partie.FENDebut;
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
             ExisteFENDebut = !string.IsNullOrWhiteSpace(partie.FENDebut);     // Propre à CETTE partie (avant, le drapeau gardait la valeur de la dernière partie lue du fichier)
@@ -133,7 +133,7 @@ namespace BrunoGUI_Dames
         {   // --- Met la position de départ sur le damier, puis rejoue (avec animation) les coups déjà validés par les règles et remplit les listes de coups ---
             if (ExisteFENDebut)         // MiseenplaceFen(..., true) fait repartir l'historique de zéro avant d'y ajouter les coups
             {
-                MiseenplaceFen("[FEN \"" + PartieCourante.FENDebut + "\"]", true);  // Position initiale
+                MiseenplaceFen("[FEN \"" + BalisesPartie.FENDebut + "\"]", true);  // Position initiale
                 LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
             }
             else
@@ -157,21 +157,10 @@ namespace BrunoGUI_Dames
                 foreach (Coup coupPdn in coupsDeLaPartie)
                 {
                     CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
-                    int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupPdn.Depart);
-                    ContenuCase pieceSource = GestionDamier.ContenuCaseCaseManoury(coupPdn.Depart);
-                    string notationCoupRejoue;
-                    if (coupPdn.EstPrise)       // Prise (rafle)
-                    {
-                        string notationRejeu = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(Position.DepuisFen(RecupereFEN())), coupPdn);
-                        notationCoupRejoue = await AnimerEtExecuterRafle(indexSourceBox, coupPdn, pieceSource, notationRejeu);
-                        ChangerCouleurTrait();
-                    }
-                    else                        // Déplacement simple
-                    {
-                        notationCoupRejoue = ExecuteDeplacement(indexSourceBox, coupPdn, pieceSource);
-                        ChangerCouleurTrait();
-                        await Task.Delay(DelaiAnimation);       // Attendre un peu pour l'effet visuel du déplacement
-                    }
+                    string notationCoupRejoue = await JoueCoupSurLeDamier(coupPdn);
+                    ChangerCouleurTrait();
+                    if (!coupPdn.EstPrise)
+                        await Task.Delay(DelaiAnimation);       // Attendre un peu pour l'effet visuel du déplacement (une rafle a déjà son animation)
                     Partie.Courante.AjouteCoup(notationCoupRejoue, PositionDuDamier());     // Le coup et la position qu'il donne entrent dans l'historique
                 }
                 LabelPrisesPossibles.Text = "Fin des coups de la partie";

@@ -164,19 +164,13 @@ namespace BrunoGUI_Dames
                 pieceEnMain = false;
                 Cursor = Cursors.Default;
                 EffaceMouvements();
-                DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
+                DessinePiece(IndexPictureBoxSource100, pieceSelectionnee);
                 CouleurToutesCasesManoury(CouleurCaseSombre);
                 clickCaseSource = true;
             }
             ActiveDamier(false);
-            GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             FinAuTemps fin = Pendule.FinDePartie(perdante);     // Le gagnant et les textes viennent de la logique testée
-            if (fin.Gagnant == Couleur.Noir)
-                RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
-            else
-                RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
-            LabelInformationJoueur.Text = fin.Statut;
-            ReglagesDeTest.Message(fin.Message, "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            TermineLaPartie(fin.Gagnant, fin.Statut, fin.Message);
         }
     }
 }
