@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -670,18 +670,18 @@ public static class Scenario
         Preferences abimees = Preferences.DepuisTexte("﻿; commentaire\r\n[Preferences]\r\nTempsReflexion=abc\r\nTempsReflexion = 0\r\nSonEmis=peut-être\r\nCouleurDuDamier=rouge\r\nligne sans egal\r\n\r\n  NOMJOUEURNOIR =  Scan  \r\nOrdinateurJoue=non\r\n");
         Verifie("Préférences : lignes abîmées signalées (5 avertissements), sans exception, le reste est lu (clés sans majuscules, espaces, BOM, sections)",
                 abimees.Avertissements.Count == 5 && abimees.TempsReflexion == 5 && !abimees.SonEmis && abimees.NomJoueurNoir == "Scan" && !abimees.OrdinateurJoue, string.Join(" | ", abimees.Avertissements));
-        Verifie("Préférences : durée d'animation par défaut 900 ms, damier côté blancs, aucune couleur changée", parDefaut.DureeAnimation == 900 && !parDefaut.VueCoteNoir && parDefaut.Couleurs.Count == 0, "");
-        Preferences avecCouleurs = new Preferences { DureeAnimation = 250, VueCoteNoir = true };
+        Verifie("Préférences : durée d'une étape d'animation par défaut 250 ms, damier côté blancs, aucune couleur changée", parDefaut.DureeEtape == 250 && !parDefaut.VueCoteNoir && parDefaut.Couleurs.Count == 0, "");
+        Preferences avecCouleurs = new Preferences { DureeEtape = 400, VueCoteNoir = true };
         avecCouleurs.Couleurs["CaseSombre"] = 0xCD853F;
         avecCouleurs.Couleurs["CaseArrivee"] = 0x010203;
         Preferences couleursRelues = Preferences.DepuisTexte(avecCouleurs.VersTexte());
         Verifie("Préférences : durée d'animation, sens du damier et couleurs (écrites #RRGGBB) se relisent à l'identique",
-                couleursRelues.DureeAnimation == 250 && couleursRelues.VueCoteNoir && couleursRelues.Couleurs.Count == 2
+                couleursRelues.DureeEtape == 400 && couleursRelues.VueCoteNoir && couleursRelues.Couleurs.Count == 2
                 && couleursRelues.Couleurs["CaseSombre"] == 0xCD853F && couleursRelues.Couleurs["CaseArrivee"] == 0x010203 && couleursRelues.Avertissements.Count == 0,
                 avecCouleurs.VersTexte().Replace(Environment.NewLine, "⏎"));
-        Preferences couleursAbimees = Preferences.DepuisTexte("CouleurCaseSombre=rouge\r\nCouleurCaseInconnue=#000000\r\ncouleurcaseclaire = abcdef\r\nCouleurCaseDepart=#12345\r\nDureeAnimation=20000\r\nVueCoteNoir=x\r\n");
+        Preferences couleursAbimees = Preferences.DepuisTexte("CouleurCaseSombre=rouge\r\nCouleurCaseInconnue=#000000\r\ncouleurcaseclaire = abcdef\r\nCouleurCaseDepart=#12345\r\nDureeEtape=20000\r\nVueCoteNoir=x\r\n");
         Verifie("Préférences : couleur invalide, clé de couleur inconnue, durée hors limites et booléen invalide signalés ; « # » facultatif, clé insensible à la casse",
-                couleursAbimees.Avertissements.Count == 5 && couleursAbimees.Couleurs.Count == 1 && couleursAbimees.Couleurs["CaseClaire"] == 0xABCDEF && couleursAbimees.DureeAnimation == 900 && !couleursAbimees.VueCoteNoir,
+                couleursAbimees.Avertissements.Count == 5 && couleursAbimees.Couleurs.Count == 1 && couleursAbimees.Couleurs["CaseClaire"] == 0xABCDEF && couleursAbimees.DureeEtape == 250 && !couleursAbimees.VueCoteNoir,
                 string.Join(" | ", couleursAbimees.Avertissements));
         Preferences nomSurDeuxLignes =Preferences.DepuisTexte(new Preferences { NomJoueurBlanc = "Ligne 1\r\nLigne 2" }.VersTexte());
         Verifie("Préférences : un nom sur plusieurs lignes est écrit sur une seule", nomSurDeuxLignes.NomJoueurBlanc == "Ligne 1 Ligne 2", nomSurDeuxLignes.NomJoueurBlanc ?? "(null)");
@@ -1052,6 +1052,27 @@ public static class Scenario
         Verifie("Position : la couleur d'une pièce (pion ou dame) et l'appartenance à un camp",
                 Position.CouleurDe(Piece.PionBlanc) == Couleur.Blanc && Position.CouleurDe(Piece.DameBlanche) == Couleur.Blanc && Position.CouleurDe(Piece.PionNoir) == Couleur.Noir && Position.CouleurDe(Piece.DameNoire) == Couleur.Noir
                 && Position.Appartient(Piece.DameNoire, Couleur.Noir) && !Position.Appartient(Piece.Vide, Couleur.Blanc) && !Position.Appartient(Piece.Vide, Couleur.Noir), "");
+
+        // ═══════════════ Palette du damier et lisibilité ═══════════════
+        Console.WriteLine("── Couleurs ──");
+
+        Verifie("Couleurs : la palette par défaut a les huit couleurs, toutes différentes",
+                Preferences.CouleursParDefaut.Count == 8 && Preferences.NomsCouleurs.All(Preferences.CouleursParDefaut.ContainsKey) && Preferences.CouleursParDefaut.Values.Distinct().Count() == 8, "");
+        Preferences personnalisee = Preferences.DepuisTexte("CouleurCaseDepart=#FF00FF\r\n");
+        Verifie("Couleurs : une couleur choisie par le joueur est gardée (même magenta)", personnalisee.Couleurs.Count == 1 && personnalisee.Couleurs["CaseDepart"] == 0xFF00FF, string.Join(", ", personnalisee.Couleurs.Keys));
+
+        // ═══════════════ Vitesse de lecture d'une partie ═══════════════
+        Verifie("Lecture : cinq vitesses, de plus en plus rapides (la pause entre deux coups diminue), 0,5 s par défaut, tout niveau est ramené entre 1 et 5",
+                Enumerable.Range(1, 5).Select(RythmeLecture.PauseMs).SequenceEqual(Enumerable.Range(1, 5).Select(RythmeLecture.PauseMs).OrderByDescending(p => p)) && RythmeLecture.PauseMs(RythmeLecture.ParDefaut) == 500
+                && RythmeLecture.PauseMs(0) == RythmeLecture.PauseMs(1) && RythmeLecture.PauseMs(99) == RythmeLecture.PauseMs(5) && RythmeLecture.PauseMs(5) < RythmeLecture.PauseMs(4),
+                string.Join(", ", Enumerable.Range(1, 5).Select(RythmeLecture.PauseMs)));
+        Verifie("Lecture : le texte de l'infobulle dit le niveau et la pause", RythmeLecture.Libelle(3).Contains("3 sur 5") && RythmeLecture.Libelle(3).Contains("0,5 s") && RythmeLecture.Libelle(5).Contains("0,08 s"), RythmeLecture.Libelle(3));
+        Preferences vitesseLue = Preferences.DepuisTexte(new Preferences { VitesseLecture = 5 }.VersTexte());
+        Preferences vitesseRefusee = Preferences.DepuisTexte("VitesseLecture=9\r\n");
+        Verifie("Préférences : la vitesse de lecture est écrite puis relue ; 3 par défaut ; une valeur hors de 1 à 5 est refusée et signalée",
+                vitesseLue.VitesseLecture == 5 && new Preferences().VitesseLecture == 3 && vitesseRefusee.VitesseLecture == 3 && vitesseRefusee.Avertissements.Count == 1, "");
+        Verifie("Préférences : l'ancienne clé DureeAnimation (versions 1.10 et 1.11) est ignorée sans avertissement, la durée d'une étape reste à 250 ms",
+                Preferences.DepuisTexte("DureeAnimation=900\r\n").DureeEtape == 250 && Preferences.DepuisTexte("DureeAnimation=900\r\n").Avertissements.Count == 0, "");
 
         // ═══════════════ Lecture des lignes du moteur (LigneMoteur) ═══════════════
         Console.WriteLine("── Lignes du moteur ──");

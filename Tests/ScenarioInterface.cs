@@ -14,11 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using BrunoGUI_Dames;
 
@@ -26,6 +28,7 @@ public static class ScenarioInterface
 {
     private const BindingFlags Tous = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     private static BrunoInterfaceGraphiqueDames fenetre = null!;
+    private static WindowsFormsSynchronizationContext? contexteFenetre;      // Voir InstalleContexte
     private static Action<string, bool, string> verifie = (_, _, _) => { };
     private static TimeSpan maintenant;                         // L'heure de la pendule, avancée à la main
     private static readonly List<string> messages = new();      // Les boîtes de message que la fenêtre a voulu afficher
@@ -64,13 +67,14 @@ public static class ScenarioInterface
         {
             try { Application.SetDefaultFont(new Font("Microsoft Sans Serif", 8.25F)); }     // Comme Program.cs : la géométrie du Designer en dépend
             catch (InvalidOperationException) { }                                              // Déjà fait, ou une fenêtre existe déjà
+            InstalleContexte();
             fenetre = new BrunoInterfaceGraphiqueDames();
             fenetre.ShowInTaskbar = false;
             fenetre.StartPosition = FormStartPosition.Manual;
             fenetre.Location = new Point(-32000, -32000);       // Hors de l'écran
             fenetre.Show();
             Pompe(300);
-            BrunoInterfaceGraphiqueDames.DureeAnimation = 0;    // Pas d'attente pendant les rafles animées
+            BrunoInterfaceGraphiqueDames.DureeEtape = 0;    // Pas d'attente ni de glissement : les rafles et les coups du moteur sont immédiats
             Scenarios(complet && scan != null, fichierPreferences);
         }
         finally
@@ -147,6 +151,33 @@ public static class ScenarioInterface
                     BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == "1-0" && ((RadioButton)Trouve("RadioGainBlanc")).Checked && messages.Any(m => m.Contains("Les Blancs gagnent")),
                     $"résultat {session().Resultat}, messages : {string.Join(" / ", messages)}");
         }
+        // ═══════════════ Animations : glissement des pièces et durée des étapes ═══════════════
+        Nouvelle();
+        BrunoInterfaceGraphiqueDames.DureeEtape = 120;
+        Coup? coupGlisse = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault(c => c.Depart == 32 && c.Arrivee == 28);
+        Stopwatch chrono = Stopwatch.StartNew();
+        Task<string> glissement = AppelleRetour<Task<string>>(fenetre, "JoueCoupSurLeDamier", coupGlisse!, true);
+        Pompe(60);        // Au milieu du glissement
+        PictureBox? vole = Champ<PictureBox?>(fenetre, "glisseur");
+        bool enVol = vole != null && vole.Visible && !ImagePresente(32) && !ImagePresente(28) && vole.Location != BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)].Location
+                     && vole.Location != BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(28)].Location && vole.Region != null && !vole.Enabled;
+        bool glisseFini = Attendre(() => glissement.IsCompleted, 3000);
+        chrono.Stop();
+        verifie("Interface : un coup glissé (moteur, rejeu) : pendant le glissement la pièce est dans un contrôle à part, entre les deux cases (de la forme de la pièce, sans clic) ; à la fin elle est sur sa case et le contrôle disparaît",
+                coupGlisse != null && enVol && glisseFini && !vole!.Visible && pos()[28] == Piece.PionBlanc && pos()[32] == Piece.Vide && ImagesCoherentes() && chrono.ElapsedMilliseconds >= 100,
+                $"en vol : {enVol}, fini : {glisseFini}, {chrono.ElapsedMilliseconds} ms, tâche {glissement.Status} {glissement.Exception?.GetBaseException().Message}, contexte {SynchronizationContext.Current?.GetType().Name}");
+
+        Nouvelle();
+        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:W28:B22\"]", true);
+        Coup? petiteRafle = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault();
+        chrono.Restart();
+        Task<string> tacheRafle = AppelleRetour<Task<string>>(fenetre, "JoueCoupSurLeDamier", petiteRafle!, false);
+        bool rafleHumaineFinie = petiteRafle != null && Attendre(() => tacheRafle.IsCompleted, 3000);
+        chrono.Stop();
+        verifie("Interface : une rafle d'une pièce dure deux étapes (une par prise, plus une pause) : 2 × 120 ms au moins pour le joueur, et aucune pièce prise ne reste",
+                rafleHumaineFinie && chrono.ElapsedMilliseconds >= 200 && chrono.ElapsedMilliseconds < 2000 && pos().Compte(Piece.PionNoir) == 0 && ImagesCoherentes(), $"{chrono.ElapsedMilliseconds} ms");
+
+        BrunoInterfaceGraphiqueDames.DureeEtape = 0;
         Nouvelle();
         verifie("Interface : « Nouvelle partie » après une partie finie remet tout en route : position initiale, cases actives, plus de résultat",
                 pos().Compte(Piece.PionBlanc) == 20 && !BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == null && session().Positions.Count == 1
@@ -231,6 +262,55 @@ public static class ScenarioInterface
         Appelle(fenetre, "BoutonFin_Click", null, EventArgs.Empty);
         Coup? apresFin = JoueLegal();
         verifie("Interface : après « Fin », on rejoue normalement", apresFin != null && session().CoupsPdn.Count == 3 && session().EstSurLaDernierePosition, session().CoupsPdn.Count.ToString());
+
+        // ═══════════════ Charger une partie PDN, puis la lire ═══════════════
+        List<FichierPartiePdn.PartieDamesPdn> partiesExemple = FichierPartiePdn.LireParties(Path.Combine(AppContext.BaseDirectory, "Parties", "test.pdn"));
+        Nouvelle();
+        messages.Clear();
+        fenetre.ChargerPartieDepuisPdn(partiesExemple[0]);      // 12 demi-coups (6 coups de chaque camp), dont plusieurs prises
+        verifie("Interface : une partie PDN chargée entre tout de suite dans l'historique (12 demi-coups, 13 positions), le damier montre la position de départ, sans message ni attente",
+                session().Positions.Count == 13 && session().CoupsPdn.Count == 12 && session().IndexAffiche == 0 && pos().Compte(Piece.PionBlanc) == 20 && pos().Compte(Piece.PionNoir) == 20 && ImagesCoherentes()
+                && messages.Count == 0 && BrunoInterfaceGraphiqueDames.BalisesPartie.White == "Bruno" && Trouve("LabelCoupJoue").Text == "Position initiale" && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc,
+                $"{session().Positions.Count} positions, indice {session().IndexAffiche}, messages : {string.Join(" / ", messages)}");
+        Clique(31);
+        verifie("Interface : sur la position de départ d'une partie chargée, on ne joue pas (message « Partie parcourue »)", messages.Count == 1 && messages[0].StartsWith("Partie parcourue") && session().CoupsPdn.Count == 12, string.Join(" / ", messages));
+
+        ((TrackBar)Trouve("TrackBarVitesseLecture")).Value = 5;
+        messages.Clear();
+        Appelle(fenetre, "BoutonLecture_Click", null, EventArgs.Empty);
+        Pompe(30);
+        bool enLecture = Champ<CancellationTokenSource?>(fenetre, "lecture") != null;
+        bool boutonsBloques = !Trouve("BoutonPrecedent").Enabled && !Trouve("BoutonFin").Enabled && !Trouve("NouvellePartie").Enabled && Trouve("BoutonLecture").Enabled && Trouve("BoutonLecture").Text == "Pause";
+        Clique(31);       // Un clic sur le damier est ignoré pendant la lecture
+        bool clicIgnore = messages.Count == 0 && Statique<bool>("clickCaseSource");
+        bool luJusquAuBout = Attendre(() => Champ<CancellationTokenSource?>(fenetre, "lecture") == null, 20000);
+        Position visible = pos().Copie();
+        visible.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait;
+        verifie("Interface : pendant la lecture, les boutons sont inactifs sauf Pause et la vitesse, et un clic sur le damier est ignoré sans message",
+                enLecture && boutonsBloques && clicIgnore, $"en lecture : {enLecture}, boutons bloqués : {boutonsBloques}, clic ignoré : {clicIgnore}");
+        verifie("Interface : la lecture déroule toute la partie : dernière position, damier identique à l'historique, boutons de nouveau actifs, « Lecture » sur le bouton, dernier coup affiché",
+                luJusquAuBout && session().EstSurLaDernierePosition && visible.VersFen() == session().DernierePosition.VersFen() && ImagesCoherentes() && Trouve("BoutonPrecedent").Enabled && Trouve("NouvellePartie").Enabled
+                && Trouve("BoutonLecture").Text == "Lecture" && Trouve("LabelCoupJoue").Text.StartsWith("Coup 12 :") && messages.Count == 0,
+                $"fini : {luJusquAuBout}, indice {session().IndexAffiche}, {Trouve("LabelCoupJoue").Text}, messages : {string.Join(" / ", messages)}");
+
+        Appelle(fenetre, "BoutonDebut_Click", null, EventArgs.Empty);
+        Appelle(fenetre, "BoutonLecture_Click", null, EventArgs.Empty);
+        Pompe(200);
+        Appelle(fenetre, "BoutonLecture_Click", null, EventArgs.Empty);       // Pause
+        bool arretee = Attendre(() => Champ<CancellationTokenSource?>(fenetre, "lecture") == null, 20000);
+        int indexPause = session().IndexAffiche;
+        Position apresPause = pos().Copie();
+        apresPause.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait;
+        verifie("Interface : « Pause » arrête la lecture après le coup en cours : on est entre le début et la fin, le damier montre la position de l'historique à cet indice et le bouton redevient « Lecture »",
+                arretee && indexPause > 0 && indexPause < 12 && apresPause.VersFen() == session().Positions[indexPause].VersFen() && ImagesCoherentes() && Trouve("BoutonLecture").Text == "Lecture" && Trouve("BoutonPrecedent").Enabled,
+                $"arrêtée : {arretee}, indice {indexPause}");
+        Appelle(fenetre, "BoutonLecture_Click", null, EventArgs.Empty);        // Reprise là où l'on s'était arrêté
+        bool repris = Attendre(() => Champ<CancellationTokenSource?>(fenetre, "lecture") == null, 20000);
+        verifie("Interface : « Lecture » après une pause reprend où l'on s'était arrêté et va jusqu'à la fin", repris && session().EstSurLaDernierePosition && ImagesCoherentes(), $"indice {session().IndexAffiche}");
+
+        Nouvelle();
+        Appelle(fenetre, "BoutonLecture_Click", null, EventArgs.Empty);
+        verifie("Interface : lire une partie sans aucun coup est refusé avec un message", messages.Count == 1 && messages[0].StartsWith("Lecture") && Champ<CancellationTokenSource?>(fenetre, "lecture") == null, string.Join(" / ", messages));
 
         // ═══════════════ Préférences : la cadence est retenue ═══════════════
         Nouvelle(5);
@@ -345,8 +425,30 @@ public static class ScenarioInterface
         return (T)champ.GetValue(null)!;
     }
 
+    // Comme Application.Run : les suites des « await » doivent revenir sur le thread de la fenêtre, quand la boucle de messages tourne (Pompe, Attendre). Application.DoEvents remet à chaque
+    // appel le contexte de base, d'où cette réinstallation avant chaque appel et chaque pompage : sans elle, les suites s'exécuteraient sur un autre thread (et toucheraient les
+    // contrôles hors de leur thread, ce que Windows Forms ne signale que sous débogueur)
+    private static void InstalleContexte()
+    {
+        contexteFenetre ??= new WindowsFormsSynchronizationContext();
+        if (!ReferenceEquals(SynchronizationContext.Current, contexteFenetre))
+            SynchronizationContext.SetSynchronizationContext(contexteFenetre);
+    }
+    private static T AppelleRetour<T>(object objet, string nom, params object?[] arguments)
+    {
+        InstalleContexte();
+        MethodInfo methode = objet.GetType().GetMethod(nom, Tous) ?? throw new InvalidOperationException($"Méthode « {nom} » introuvable");
+        try { return (T)methode.Invoke(objet, arguments)!; }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw;
+        }
+    }
+
     private static void Appelle(object objet, string nom, params object?[]? arguments)
     {
+        InstalleContexte();
         MethodInfo methode = objet.GetType().GetMethod(nom, Tous) ?? throw new InvalidOperationException($"Méthode « {nom} » introuvable");
         try { methode.Invoke(objet, arguments ?? Array.Empty<object?>()); }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
@@ -361,6 +463,7 @@ public static class ScenarioInterface
         long fin = Environment.TickCount64 + millisecondes;
         while (Environment.TickCount64 < fin)
         {
+            InstalleContexte();
             Application.DoEvents();
             Thread.Sleep(5);
         }
@@ -372,6 +475,7 @@ public static class ScenarioInterface
         {
             if (Environment.TickCount64 > fin)
                 return false;
+            InstalleContexte();
             Application.DoEvents();
             Thread.Sleep(5);
         }

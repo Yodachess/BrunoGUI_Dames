@@ -185,7 +185,9 @@ namespace BrunoGUI_Dames
             ReglagesDeTest.Message(message, titre, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         public void VerifierGain()
-        {   // --- Vérifie le gain par l'absence de pièces ---
+        {   // --- Vérifie le gain par l'absence de pièces (pas pendant la lecture d'une partie : elle ne fait que revoir des coups déjà joués) ---
+            if (lecture != null)
+                return;
             if (GestionDamier.NombreDePieces(Couleur.Blanc) == 0)
                 TermineLaPartie(Couleur.Noir, "Les Noirs gagnent, les blancs n'ont plus de pièces", "Les Noirs gagnent !\n Les blancs n'ont plus de pièces");
             if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
@@ -274,7 +276,17 @@ namespace BrunoGUI_Dames
                 e.Graphics.FillRectangle(fond, 0, 0, pict.Width, pict.Height);      // Effacer le fond
             if (pict.Image != null)
                 e.Graphics.DrawImage(pict.Image, 0, 0, pict.Width, pict.Height);    // Redessiner l'image si elle existe
-            using (Font police = new Font("Arial", 10, FontStyle.Bold))
-                e.Graphics.DrawString(numeroManoury.ToString(), police, Brushes.Cyan, new PointF(pict.Width - 20, 3));
-        }    }
+            // Le numéro est blanc cerné de noir : il se voit sur toutes les cases et sur les pièces blanches comme sur les noires
+            using (System.Drawing.Drawing2D.GraphicsPath contour = new System.Drawing.Drawing2D.GraphicsPath())
+            {
+                contour.AddString(numeroManoury.ToString(), new FontFamily("Arial"), (int)FontStyle.Bold, e.Graphics.DpiY * 10 / 72, new PointF(pict.Width - 20, 3), StringFormat.GenericDefault);
+                System.Drawing.Drawing2D.SmoothingMode ancien = e.Graphics.SmoothingMode;
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using (Pen cerne = new Pen(Color.Black, 3f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round })
+                    e.Graphics.DrawPath(cerne, contour);
+                e.Graphics.FillPath(Brushes.White, contour);
+                e.Graphics.SmoothingMode = ancien;
+            }
+        }
+    }
 }

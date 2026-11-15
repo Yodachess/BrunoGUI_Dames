@@ -33,7 +33,6 @@ namespace BrunoGUI_Dames
         {   // --- Initialisation du damier et mise à zéro des diverses listes --- 
             GestionDamier.ViderDamier();
             GestionDamier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
-            ExisteFENDebut = false;
             NettoyageRapide();                  // Remet PartieTerminee à faux : à faire AVANT d'activer les cases (ActiveDamier(true) ne fait rien tant que la partie est finie)
             ActiveDamier(true);
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);   // Position initiale : la nouvelle partie repart de zéro (historique, résultat, parcours)

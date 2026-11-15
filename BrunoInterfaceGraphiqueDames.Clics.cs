@@ -210,7 +210,7 @@ namespace BrunoGUI_Dames
                 else if (PenduleCoupJoue(campDuMoteur))
                 {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur ; la pendule l'a décompté (sinon son drapeau est tombé : il perd, rien n'est joué)
                     CaseDamier[GestionDamier.ObtenirIndicePictureBox(coupMoteur.Depart)].BackColor = CouleurTrajetSuivi;
-                    string coupPdnMoteur = await JoueCoupSurLeDamier(coupMoteur);
+                    string coupPdnMoteur = await JoueCoupSurLeDamier(coupMoteur, glisse: true);      // Les pièces du moteur glissent : sans cela, son coup passe inaperçu
                     Partie.Courante.AjouteCoup(coupPdnMoteur, PositionDuDamier());      // Le coup et la position qu'il donne entrent dans l'historique
                     LabelPrisesPossibles.Text = "";
                     LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
@@ -362,6 +362,8 @@ namespace BrunoGUI_Dames
         // Vrai (avec un message) si la position affichée n'est pas la dernière : le coup ou la demande est refusé ---
         private bool RefuseSiPartieParcourue()
         {
+            if (lecture != null)
+                return true;        // Pendant la lecture d'une partie, les clics sur le damier sont ignorés (sans message)
             SessionPartie session = Partie.Courante;
             if (session.EstSurLaDernierePosition)
                 return false;
@@ -378,29 +380,35 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         // Mouvements  divers
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
-        // --- Joue un coup légal sur le damier : une rafle est animée, un déplacement simple est immédiat. Renvoie le coup en notation PDN (l'abrégée « 28x19 », ou la complète
-        // si une autre rafle légale de mêmes départ et arrivée prend d'autres pièces), que l'appelant met dans l'historique (Partie.Courante) avec la position obtenue.
-        // Les images du damier sont mises à jour pendant le coup ; la position (PositionCourante) l'est une seule fois, à la fin, par ReglesDames.Jouer ---
-        public async Task<string> JoueCoupSurLeDamier(Coup coup)
+        // --- Joue un coup légal sur le damier : un déplacement simple ou une rafle, avec les animations de DureeEtape millisecondes par étape. Renvoie le coup en notation PDN
+        // (l'abrégée « 28x19 », ou la complète si une autre rafle légale de mêmes départ et arrivée prend d'autres pièces), que l'appelant met dans l'historique (Partie.Courante)
+        // avec la position obtenue. « glisse » : les pièces glissent d'une case à l'autre (le coup du moteur, le rejeu d'une partie) ; sinon (le coup que le joueur vient de choisir)
+        // le déplacement simple est immédiat et les étapes d'une rafle s'enchaînent sans glissement. Les images du damier sont mises à jour pendant le coup ;
+        // la position (PositionCourante) l'est une seule fois, à la fin, par ReglesDames.Jouer ---
+        public async Task<string> JoueCoupSurLeDamier(Coup coup, bool glisse = false)
         {
             Position avant = GestionDamier.PositionCourante.Copie();
             avant.Trait = Position.CouleurDe(avant[coup.Depart]);     // Le camp de la pièce qui joue (CouleurAuTrait est celui de l'humain pendant que le moteur réfléchit)
             string notationPdn = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(avant), coup);
-            return coup.EstPrise ? await AnimerEtExecuterRafle(coup, notationPdn) : ExecuteDeplacement(coup, notationPdn);
+            return coup.EstPrise ? await AnimerEtExecuterRafle(coup, notationPdn, glisse) : await ExecuteDeplacement(coup, notationPdn, glisse);
         }
         // --- Un déplacement simple (coup sans prise) ; la promotion éventuelle vient de la position obtenue par ReglesDames.Jouer ---
-        private string ExecuteDeplacement(Coup coup, string notationPdn)
+        private async Task<string> ExecuteDeplacement(Coup coup, string notationPdn, bool glisse)
         {
+            Piece pieceQuiJoue = GestionDamier.PositionCourante[coup.Depart];
             Position apres = ReglesDames.Jouer(GestionDamier.PositionCourante, coup);
-            Couleur couleurPiece = Position.CouleurDe(GestionDamier.PositionCourante[coup.Depart]);
+            Couleur couleurPiece = Position.CouleurDe(pieceQuiJoue);
             int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coup.Depart);
             int indexArriveeBox = GestionDamier.ObtenirIndicePictureBox(coup.Arrivee);
             ActiveDamier(false); // Désactiver les interactions pendant le déplacement
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
-            DessinePiece(indexArriveeBox, apres[coup.Arrivee]);      // Le pion devenu dame est dessiné en dame
             CaseDamier[indexArriveeBox].BackColor = CouleurCaseArrivee;
-            EffacePiece(indexSourceBox);                  // Efface la pièce source
-            CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;      // mais on la colorie pour suivre le trajet
+            CaseDamier[indexSourceBox].BackColor = CouleurTrajetSuivi;      // La case de départ reste colorée pour suivre le trajet
+            if (glisse)
+                await GlisseUnePiece(indexSourceBox, indexArriveeBox, pieceQuiJoue, DureeEtape);
+            else
+                EffacePiece(indexSourceBox);
+            DessinePiece(indexArriveeBox, apres[coup.Arrivee]);      // Le pion devenu dame est dessiné en dame
             if (!jeuMoteurEnCours)                      // On l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + notationPdn;
             AppliqueCoupALaPosition(apres);
@@ -415,9 +423,10 @@ namespace BrunoGUI_Dames
             GestionDamier.PositionCourante = apres;
             AfficheListesPieces();
         }
-        // --- Une rafle complète avec une animation à la vitesse DureeAnimation ; les pièces ne sont prises qu'à la fin de la rafle (le coup donne les étapes : une pièce prise
-        // et une case d'arrivée par prise). La promotion éventuelle, en fin de rafle, vient de la position obtenue par ReglesDames.Jouer ---
-        private async Task<string> AnimerEtExecuterRafle(Coup coup, string notationPdn)
+        // --- Une rafle complète : une étape de DureeEtape millisecondes par pièce prise (la pièce qui prend va de case d'arrivée en case d'arrivée, en glissant si « glisse »),
+        // puis une dernière pause, et les pièces prises sont enlevées toutes ensemble à la fin de la rafle (le coup donne les étapes : une pièce prise et une case d'arrivée
+        // par prise). La promotion éventuelle, en fin de rafle, vient de la position obtenue par ReglesDames.Jouer ---
+        private async Task<string> AnimerEtExecuterRafle(Coup coup, string notationPdn, bool glisse)
         {
             Position apres = ReglesDames.Jouer(GestionDamier.PositionCourante, coup);
             Piece pieceQuiPrend = GestionDamier.PositionCourante[coup.Depart];
@@ -427,9 +436,7 @@ namespace BrunoGUI_Dames
             EffaceCasesDestination();   // Efface les cadres gris des cases de destination générées lors de l'AnalyseCoupoObligatoire
             List<int> boxesAEffacerFinRafle = new List<int>();
             int indexSourceBoxActuel = GestionDamier.ObtenirIndicePictureBox(coup.Depart);
-            Bitmap imagePiece = ListeBitmapsPiece[pieceQuiPrend];  // L'image de la pièce qui prend
-            // On Assure que la pièce source reste affichée sur la case de départ
-            CaseDamier[indexSourceBoxActuel].Image = imagePiece;
+            CaseDamier[indexSourceBoxActuel].Image = ListeBitmapsPiece[pieceQuiPrend];     // La pièce qui prend reste affichée sur la case de départ (le joueur l'avait « en main »)
             CaseDamier[indexSourceBoxActuel].BackColor = CouleurCaseDepart; // Marquer la case de départ
 
             foreach (var (casePrise, caseArrivee) in rafle)
@@ -440,29 +447,26 @@ namespace BrunoGUI_Dames
                 CaseDamier[indexPriseBox].BackColor = CouleurCasePrise;       // Marquer la case de prise en CouleurCasePrise
                 CaseDamier[indexArriveeBox].BackColor = CouleurCasePivot;     // et la case d'arrivée en CouleurCasePivot
                 CaseDamier[indexArriveeBox].Image = CadreGrisSansPrise;       // Afficher le cadre gris sans pièce
-                CaseDamier[indexSourceBoxActuel].Image = imagePiece;  // Afficher la pièce source
-
-                // Attendre un peu pour l'effet visuel de la prise
-                await Task.Delay(DelaiAnimation);
-
-                boxesAEffacerFinRafle.Add(indexPriseBox);                   // On enregistre la pièce qu'il faudra prendre, mais on ne l'efface pas encore
-                EffacePiece(indexSourceBoxActuel);                    // On efface la pièce qui prend sur la case de départ
-                DessinePiece(indexArriveeBox, pieceQuiPrend);     // ON place la pièce qui prend sur sa case d'arrivée
-                // Attendre un peu avant de continuer avec la prochaine prise
-                await Task.Delay(DelaiAnimation);
-
-                indexSourceBoxActuel = indexArriveeBox;                     // Mettre à jour l'indice de la source pour le prochain déplacement
+                if (glisse)
+                {
+                    await GlisseUnePiece(indexSourceBoxActuel, indexArriveeBox, pieceQuiPrend, DureeEtape);
+                }
+                else
+                {
+                    await Task.Delay(DureeEtape);                             // Le temps de voir l'étape
+                    EffacePiece(indexSourceBoxActuel);                        // La pièce qui prend quitte sa case...
+                    DessinePiece(indexArriveeBox, pieceQuiPrend);             // ... et se place sur sa case d'arrivée
+                }
+                boxesAEffacerFinRafle.Add(indexPriseBox);                     // On enregistre la pièce qu'il faudra prendre, mais on ne l'efface pas encore
+                indexSourceBoxActuel = indexArriveeBox;                       // Mettre à jour l'indice de la source pour le prochain déplacement
             }
             int indexArriveeFinale = GestionDamier.ObtenirIndicePictureBox(coup.Arrivee);
             Piece pieceFinale = apres[coup.Arrivee];
             if (pieceFinale != pieceQuiPrend)
                 DessinePiece(indexArriveeFinale, pieceFinale);                // Promotion en dame à la fin de la rafle
-            // Parcourir la liste des pièces prises et effacer les pièces
-            foreach (var index in boxesAEffacerFinRafle)
-            {
-                EffacePiece(index);
-                await Task.Delay(DelaiAnimation);
-            }
+            await Task.Delay(DureeEtape);                                     // Une dernière pause avant que les pièces prises disparaissent
+            foreach (int index in boxesAEffacerFinRafle)
+                EffacePiece(index);                                           // Toutes ensemble
             CaseDamier[indexArriveeFinale].BackColor = CouleurCaseArrivee;
             if (!jeuMoteurEnCours)                      // On l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + notationPdn;

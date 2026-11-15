@@ -92,7 +92,7 @@
             // 
             // BoutonQuitterApplication
             // 
-            this.BoutonQuitterApplication.Location = new System.Drawing.Point(653, 758);
+            this.BoutonQuitterApplication.Location = new System.Drawing.Point(653, 760);
             this.BoutonQuitterApplication.Name = "BoutonQuitterApplication";
             this.BoutonQuitterApplication.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonQuitterApplication.Size = new System.Drawing.Size(110, 30);
@@ -105,7 +105,7 @@
             // 
             // BoutonTournerDamier
             // 
-            this.BoutonTournerDamier.Location = new System.Drawing.Point(653, 256);
+            this.BoutonTournerDamier.Location = new System.Drawing.Point(653, 250);
             this.BoutonTournerDamier.Name = "BoutonTournerDamier";
             this.BoutonTournerDamier.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonTournerDamier.Size = new System.Drawing.Size(110, 30);
@@ -186,7 +186,7 @@
             // 
             // BoutonRetourArriere
             // 
-            this.BoutonRetourArriere.Location = new System.Drawing.Point(653, 220);
+            this.BoutonRetourArriere.Location = new System.Drawing.Point(653, 216);
             this.BoutonRetourArriere.Name = "BoutonRetourArriere";
             this.BoutonRetourArriere.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonRetourArriere.Size = new System.Drawing.Size(110, 30);
@@ -199,7 +199,7 @@
             // 
             // MontreDonneesScan
             // 
-            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 650);
+            this.MontreDonneesScan.Location = new System.Drawing.Point(653, 658);
             this.MontreDonneesScan.Name = "MontreDonneesScan";
             this.MontreDonneesScan.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.MontreDonneesScan.Size = new System.Drawing.Size(110, 30);
@@ -212,7 +212,7 @@
             // 
             // VisualisationPdn
             // 
-            this.VisualisationPdn.Location = new System.Drawing.Point(653, 328);
+            this.VisualisationPdn.Location = new System.Drawing.Point(653, 318);
             this.VisualisationPdn.Name = "VisualisationPdn";
             this.VisualisationPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.VisualisationPdn.Size = new System.Drawing.Size(110, 30);
@@ -225,7 +225,7 @@
             // 
             // OrdinateurJoue
             // 
-            this.OrdinateurJoue.Location = new System.Drawing.Point(653, 184);
+            this.OrdinateurJoue.Location = new System.Drawing.Point(653, 182);
             this.OrdinateurJoue.Name = "OrdinateurJoue";
             this.OrdinateurJoue.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.OrdinateurJoue.Size = new System.Drawing.Size(110, 30);
@@ -385,7 +385,7 @@
             // 
             // ChargePositionFen
             // 
-            this.ChargePositionFen.Location = new System.Drawing.Point(653, 570);
+            this.ChargePositionFen.Location = new System.Drawing.Point(653, 584);
             this.ChargePositionFen.Name = "ChargePositionFen";
             this.ChargePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.ChargePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -398,7 +398,7 @@
             // 
             // BoutonAide
             // 
-            this.BoutonAide.Location = new System.Drawing.Point(653, 722);
+            this.BoutonAide.Location = new System.Drawing.Point(653, 726);
             this.BoutonAide.Name = "BoutonAide";
             this.BoutonAide.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonAide.Size = new System.Drawing.Size(110, 30);
@@ -411,7 +411,7 @@
             // 
             // Apropos
             // 
-            this.Apropos.Location = new System.Drawing.Point(653, 686);
+            this.Apropos.Location = new System.Drawing.Point(653, 692);
             this.Apropos.Name = "Apropos";
             this.Apropos.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.Apropos.Size = new System.Drawing.Size(110, 30);
@@ -467,7 +467,7 @@
             // 
             // SauvePositionFen
             // 
-            this.SauvePositionFen.Location = new System.Drawing.Point(653, 606);
+            this.SauvePositionFen.Location = new System.Drawing.Point(653, 618);
             this.SauvePositionFen.Name = "SauvePositionFen";
             this.SauvePositionFen.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.SauvePositionFen.Size = new System.Drawing.Size(110, 30);
@@ -485,9 +485,9 @@
             this.groupParcoursPartie.Controls.Add(this.BoutonDebut);
             this.groupParcoursPartie.Controls.Add(this.BoutonSuivant);
             this.groupParcoursPartie.Controls.Add(this.BoutonPrecedent);
-            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 372);
+            this.groupParcoursPartie.Location = new System.Drawing.Point(653, 358);
             this.groupParcoursPartie.Name = "groupParcoursPartie";
-            this.groupParcoursPartie.Size = new System.Drawing.Size(110, 68);
+            this.groupParcoursPartie.Size = new System.Drawing.Size(110, 108);
             this.groupParcoursPartie.TabIndex = 37;
             this.groupParcoursPartie.TabStop = false;
             this.groupParcoursPartie.Text = "   Parcours partie   ";
@@ -538,7 +538,7 @@
             // 
             // ChargePartiesPdn
             // 
-            this.ChargePartiesPdn.Location = new System.Drawing.Point(653, 454);
+            this.ChargePartiesPdn.Location = new System.Drawing.Point(653, 476);
             this.ChargePartiesPdn.Name = "ChargePartiesPdn";
             this.ChargePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.ChargePartiesPdn.Size = new System.Drawing.Size(110, 30);
@@ -556,7 +556,7 @@
             // 
             // SauvePartiesPdn
             // 
-            this.SauvePartiesPdn.Location = new System.Drawing.Point(653, 526);
+            this.SauvePartiesPdn.Location = new System.Drawing.Point(653, 544);
             this.SauvePartiesPdn.Name = "SauvePartiesPdn";
             this.SauvePartiesPdn.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.SauvePartiesPdn.Size = new System.Drawing.Size(110, 30);
@@ -569,7 +569,7 @@
             // 
             // BoutonMasqueAffiche
             // 
-            this.BoutonMasqueAffiche.Location = new System.Drawing.Point(653, 490);
+            this.BoutonMasqueAffiche.Location = new System.Drawing.Point(653, 510);
             this.BoutonMasqueAffiche.Name = "BoutonMasqueAffiche";
             this.BoutonMasqueAffiche.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.BoutonMasqueAffiche.Size = new System.Drawing.Size(110, 30);
@@ -582,7 +582,7 @@
             // 
             // AnalysePosition
             // 
-            this.AnalysePosition.Location = new System.Drawing.Point(653, 292);
+            this.AnalysePosition.Location = new System.Drawing.Point(653, 284);
             this.AnalysePosition.Name = "AnalysePosition";
             this.AnalysePosition.PaletteMode = Krypton.Toolkit.PaletteMode.Microsoft365SilverDarkMode;
             this.AnalysePosition.Size = new System.Drawing.Size(110, 30);
@@ -597,8 +597,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.ClientSize = new System.Drawing.Size(770, 802);
+            this.BackColor = System.Drawing.Color.FromArgb(153, 180, 209);
+            this.ClientSize = new System.Drawing.Size(770, 804);
             this.Controls.Add(this.AnalysePosition);
             this.Controls.Add(this.BoutonMasqueAffiche);
             this.Controls.Add(this.SauvePartiesPdn);

@@ -107,22 +107,23 @@ namespace BrunoGUI_Dames
             LabelAfficheScan.Text = message;
         }
         private static int VersRgb(Color couleur) => couleur.ToArgb() & 0xFFFFFF;
+        private static Color CouleurParDefaut(string nom) => DepuisRgb(Preferences.CouleursParDefaut[nom]);
         private static Color DepuisRgb(int rgb) => Color.FromArgb(255, (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
         private void ChargePreferences()
-        {   // --- Lit BrunoGUI_Dames.preferences.ini (les avertissements vont au journal) et applique les couleurs du damier et la durée d'animation ---
+        {   // --- Lit BrunoGUI_Dames.preferences.ini (les avertissements vont au journal) et applique les couleurs du damier et la durée d'une étape d'animation ---
             preferencesChargees = Preferences.Lire(FichierPreferences);
             foreach (string avertissement in preferencesChargees.Avertissements)
                 Journal.Ecrit("Préférences : " + avertissement);
-            DureeAnimation = preferencesChargees.DureeAnimation;
-            Color Choisie(string nom, Color parDefaut) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : parDefaut;
-            CouleurCaseSombre = Choisie("CaseSombre", CouleurCaseSombre);
-            CouleurCaseClaire = Choisie("CaseClaire", CouleurCaseClaire);
-            CouleurCaseDepart = Choisie("CaseDepart", CouleurCaseDepart);
-            CouleurTrajetSuivi = Choisie("TrajetSuivi", CouleurTrajetSuivi);
-            CouleurCasePivot = Choisie("CasePivot", CouleurCasePivot);
-            CouleurCasePrise = Choisie("CasePrise", CouleurCasePrise);
-            CouleurCaseArrivee = Choisie("CaseArrivee", CouleurCaseArrivee);
-            CouleurCaseEtape = Choisie("CaseEtape", CouleurCaseEtape);
+            DureeEtape = preferencesChargees.DureeEtape;
+            Color Choisie(string nom) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : CouleurParDefaut(nom);
+            CouleurCaseSombre = Choisie("CaseSombre");
+            CouleurCaseClaire = Choisie("CaseClaire");
+            CouleurCaseDepart = Choisie("CaseDepart");
+            CouleurTrajetSuivi = Choisie("TrajetSuivi");
+            CouleurCasePivot = Choisie("CasePivot");
+            CouleurCasePrise = Choisie("CasePrise");
+            CouleurCaseArrivee = Choisie("CaseArrivee");
+            CouleurCaseEtape = Choisie("CaseEtape");
         }
         private void AppliquePreferences()
         {   // --- Applique les préférences enregistrées (temps de réflexion, noms, son, ordinateur qui joue) ; les valeurs absentes ou refusées gardent leur valeur par défaut ---
@@ -137,28 +138,32 @@ namespace BrunoGUI_Dames
             SonEmis.Checked = preferences.SonEmis;
             OrdinateurBosse.Checked = preferences.OrdinateurJoue;
             SelectionneCadence(preferences.CadenceId);      // Sans pendule par défaut
+            trackBarVitesseLecture.Value = RythmeLecture.Limite(preferences.VitesseLecture);
         }
         private void EnregistrePreferences()
         {   // --- Écrit les préférences personnelles dans BrunoGUI_Dames.preferences.ini, à côté de l'exe ---
             Preferences aEnregistrer = new Preferences
             {
                 TempsReflexion = trackBarTempsReflexion.Value,
-                DureeAnimation = DureeAnimation,
+                DureeEtape = DureeEtape,
                 VueCoteNoir = GestionDamier.Orientation.CoteNoir,
                 NomJoueurBlanc = nomBlancPrefere,
                 NomJoueurNoir = nomNoirPrefere,
                 SonEmis = SonEmis.Checked,
                 CadenceId = CadenceChoisieId,
+                VitesseLecture = trackBarVitesseLecture.Value,
                 OrdinateurJoue = moteurDisponible ? OrdinateurBosse.Checked : preferencesChargees.OrdinateurJoue     // Sans moteur la case est grisée : on garde le choix précédent
             };
-            aEnregistrer.Couleurs["CaseSombre"] = VersRgb(CouleurCaseSombre);
-            aEnregistrer.Couleurs["CaseClaire"] = VersRgb(CouleurCaseClaire);
-            aEnregistrer.Couleurs["CaseDepart"] = VersRgb(CouleurCaseDepart);
-            aEnregistrer.Couleurs["TrajetSuivi"] = VersRgb(CouleurTrajetSuivi);
-            aEnregistrer.Couleurs["CasePivot"] = VersRgb(CouleurCasePivot);
-            aEnregistrer.Couleurs["CasePrise"] = VersRgb(CouleurCasePrise);
-            aEnregistrer.Couleurs["CaseArrivee"] = VersRgb(CouleurCaseArrivee);
-            aEnregistrer.Couleurs["CaseEtape"] = VersRgb(CouleurCaseEtape);
+            // Seules les couleurs que le joueur a changées sont écrites : les autres suivent les valeurs par défaut du programme, qui peuvent évoluer d'une version à l'autre
+            void EcritSiChangee(string nom, Color couleur) { if (VersRgb(couleur) != Preferences.CouleursParDefaut[nom]) aEnregistrer.Couleurs[nom] = VersRgb(couleur); }
+            EcritSiChangee("CaseSombre", CouleurCaseSombre);
+            EcritSiChangee("CaseClaire", CouleurCaseClaire);
+            EcritSiChangee("CaseDepart", CouleurCaseDepart);
+            EcritSiChangee("TrajetSuivi", CouleurTrajetSuivi);
+            EcritSiChangee("CasePivot", CouleurCasePivot);
+            EcritSiChangee("CasePrise", CouleurCasePrise);
+            EcritSiChangee("CaseArrivee", CouleurCaseArrivee);
+            EcritSiChangee("CaseEtape", CouleurCaseEtape);
             aEnregistrer.Ecrire(FichierPreferences);
         }
         private static void JoueSonCoupJoue()
@@ -182,6 +187,7 @@ namespace BrunoGUI_Dames
             if (!e.Cancel)
             {
                 minuteriePendule.Stop();
+                lecture?.Cancel();
                 EnregistrePreferences();
                 MoteurDamesScan.Quitte();
             }

@@ -28,10 +28,18 @@ namespace BrunoGUI_Dames
         public string? NomJoueurNoir { get; set; }
         public bool SonEmis { get; set; }                               // Un son quand le moteur a joué
         public bool OrdinateurJoue { get; set; } = true;                // Le moteur répond aux coups du joueur
-        public int DureeAnimation { get; set; } = 900;                  // Millisecondes par étape de l'animation d'un coup (0 à 10000)
+        public int DureeEtape { get; set; } = 250;                     // Millisecondes d'une étape d'animation : un glissement de pièce, une étape de rafle (0 à 10000 ; 0 : sans animation). Les versions 1.10 et 1.11 avaient 900
+        public int VitesseLecture { get; set; } = RythmeLecture.ParDefaut;      // La vitesse de la lecture d'une partie, de 1 (lente) à 5 (rapide)
         public bool VueCoteNoir { get; set; }                           // Le damier est vu du côté des noirs
         public string? CadenceId { get; set; }                          // La cadence de la pendule (Id d'une Cadence) ; null : pas de pendule
         public static readonly string[] NomsCouleurs = { "CaseSombre", "CaseClaire", "CaseDepart", "TrajetSuivi", "CasePivot", "CasePrise", "CaseArrivee", "CaseEtape" };
+        // --- Les couleurs par défaut du damier (0xRRGGBB) : cases sombres et claires (bois), puis les surbrillances (celles des versions 1.10 et 1.11, gardées : une palette
+        // pour daltoniens essayée le 2026-11-15 n'a pas plu) ---
+        public static readonly IReadOnlyDictionary<string, int> CouleursParDefaut = new Dictionary<string, int>
+        {
+            ["CaseSombre"] = 0xCD853F, ["CaseClaire"] = 0xDEB887, ["CaseDepart"] = 0x00FF7F, ["TrajetSuivi"] = 0x9ACD32,
+            ["CasePivot"] = 0xBDB76B, ["CasePrise"] = 0x556B2F, ["CaseArrivee"] = 0x6B8E23, ["CaseEtape"] = 0xFFA500
+        };
         public Dictionary<string, int> Couleurs { get; } = new Dictionary<string, int>();   // Couleurs du damier changées ou à enregistrer : nom (de NomsCouleurs) -> 0xRRGGBB ; absent = couleur par défaut
         public List<string> Avertissements { get; } = new List<string>();   // Ce que la lecture n'a pas compris (lignes ignorées, valeurs refusées)
 
@@ -92,10 +100,18 @@ namespace BrunoGUI_Dames
                         else preferences.Avertissements.Add($"OrdinateurJoue refusé (0 ou 1 attendu) : {valeur}");
                         break;
                     case "dureeanimation":
-                        if (int.TryParse(valeur, NumberStyles.None, CultureInfo.InvariantCulture, out int millisecondes) && millisecondes <= 10000)
-                            preferences.DureeAnimation = millisecondes;
+                        break;      // Clé des versions 1.10 et 1.11 (900 ms par attente, trop lent) : ignorée sans avertissement, la clé DureeEtape la remplace
+                    case "vitesselecture":
+                        if (int.TryParse(valeur, NumberStyles.None, CultureInfo.InvariantCulture, out int vitesse) && vitesse >= RythmeLecture.Minimum && vitesse <= RythmeLecture.Maximum)
+                            preferences.VitesseLecture = vitesse;
                         else
-                            preferences.Avertissements.Add($"DureeAnimation refusée (un nombre de millisecondes de 0 à 10000 est attendu) : {valeur}");
+                            preferences.Avertissements.Add($"VitesseLecture refusée (un nombre de {RythmeLecture.Minimum} à {RythmeLecture.Maximum} est attendu) : {valeur}");
+                        break;
+                    case "dureeetape":
+                        if (int.TryParse(valeur, NumberStyles.None, CultureInfo.InvariantCulture, out int millisecondes) && millisecondes <= 10000)
+                            preferences.DureeEtape = millisecondes;
+                        else
+                            preferences.Avertissements.Add($"DureeEtape refusée (un nombre de millisecondes de 0 à 10000 est attendu) : {valeur}");
                         break;
                     case "vuecotenoir":
                         if (LitBooleen(valeur, out bool vueNoire)) preferences.VueCoteNoir = vueNoire;
@@ -115,7 +131,9 @@ namespace BrunoGUI_Dames
                         if (nomCouleur == null)
                             preferences.Avertissements.Add($"Clé inconnue ignorée : {cle}");
                         else if (LitCouleur(valeur, out int rgb))
+                        {
                             preferences.Couleurs[nomCouleur] = rgb;
+                        }
                         else
                             preferences.Avertissements.Add($"{cle} refusée (une couleur « #RRGGBB » est attendue) : {valeur}");
                         break;
@@ -154,7 +172,8 @@ namespace BrunoGUI_Dames
             if (!string.IsNullOrWhiteSpace(NomJoueurNoir)) texte.Append("NomJoueurNoir=").Append(UneLigne(NomJoueurNoir)).Append(Environment.NewLine);
             texte.Append("SonEmis=").Append(SonEmis ? "1" : "0").Append(Environment.NewLine);
             texte.Append("OrdinateurJoue=").Append(OrdinateurJoue ? "1" : "0").Append(Environment.NewLine);
-            texte.Append("DureeAnimation=").Append(DureeAnimation.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
+            texte.Append("DureeEtape=").Append(DureeEtape.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
+            texte.Append("VitesseLecture=").Append(VitesseLecture.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             texte.Append("VueCoteNoir=").Append(VueCoteNoir ? "1" : "0").Append(Environment.NewLine);
             texte.Append("Cadence=").Append(CadenceId ?? "sans").Append(Environment.NewLine);
             foreach (string nom in NomsCouleurs)

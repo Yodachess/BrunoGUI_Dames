@@ -37,22 +37,19 @@ namespace BrunoGUI_Dames
         private readonly Bitmap DameNoire = Properties.Resources.DameNoire;
         private static readonly Bitmap CadreGrisSansPrise = Properties.Resources.SansPrise;
         // les variables
-        public static Color CouleurCaseSombre = Color.Peru;         // Cases sombres damier
-        public static Color CouleurCaseClaire = Color.BurlyWood;    // Cases claires damier
-        public static Color CouleurCaseDepart = Color.SpringGreen;
-        public static Color CouleurTrajetSuivi = Color.YellowGreen;
-        public static Color CouleurCasePivot = Color.DarkKhaki;
-        public static Color CouleurCasePrise = Color.DarkOliveGreen;                        
-        public static Color CouleurCaseArrivee = Color.OliveDrab;
-        public static Color CouleurCaseEtape = Color.Orange;        // Cases d'arrivée intermédiaires d'une rafle
+        // Les couleurs du damier : celles de Preferences.CouleursParDefaut, changées par le fichier de préférences (ChargePreferences)
+        public static Color CouleurCaseSombre = CouleurParDefaut("CaseSombre");         // Cases sombres damier (les cases jouables)
+        public static Color CouleurCaseClaire = CouleurParDefaut("CaseClaire");         // Cases claires damier
+        public static Color CouleurCaseDepart = CouleurParDefaut("CaseDepart");         // La pièce sélectionnée
+        public static Color CouleurTrajetSuivi = CouleurParDefaut("TrajetSuivi");       // Les destinations possibles et le trajet du dernier coup
+        public static Color CouleurCasePivot = CouleurParDefaut("CasePivot");           // L'arrivée de chaque étape d'une rafle pendant son animation
+        public static Color CouleurCasePrise = CouleurParDefaut("CasePrise");           // Les pièces prises
+        public static Color CouleurCaseArrivee = CouleurParDefaut("CaseArrivee");       // L'arrivée du coup
+        public static Color CouleurCaseEtape = CouleurParDefaut("CaseEtape");           // Cases d'arrivée intermédiaires d'une rafle
         public static Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn BalisesPartie = new FichierPartiePdn.PartieDamesPdn();
-        public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeAnimation, TempsReflexion;
-        private const int DiviseurAnimationRejeu = 6;
-        // --- La durée de chaque attente de l'animation : DureeAnimation, ou son sixième pendant le déroulé d'une partie PDN chargée ---
-        private int DelaiAnimation => rejeuPdnEnCours ? DureeAnimation / DiviseurAnimationRejeu : DureeAnimation;
-        public static bool ExisteFENDebut;
+        public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeEtape, TempsReflexion;     // DureeEtape : millisecondes d'une étape d'animation (un glissement, une étape de rafle)
         public static bool OrdinateurActif, PartieTerminee, EmetUnSon;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
         private Piece pieceSelectionnee = Piece.Vide;     // Pièce sélectionnée au premier clic (Piece.Vide = aucune)
@@ -90,10 +87,10 @@ namespace BrunoGUI_Dames
             CouleurAuTrait = Couleur.Blanc;
             GestionDamier.Orientation = new OrientationDamier();       // On commence avec la vue côté Blanc
             OrdinateurActif = true;
-            ExisteFENDebut = analyseEnCours = false;
+            analyseEnCours = false;
             BoutonMasqueAffiche.Enabled = false;
             clickCaseSource = true;
-            DureeAnimation = 900;
+            DureeEtape = 250;
             ChargePreferences();                // Les couleurs et la durée d'animation avant la création du damier ; le reste des préférences plus bas (AppliquePreferences)
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";            // Affichage 
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
@@ -104,6 +101,7 @@ namespace BrunoGUI_Dames
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;
             BoxNomJoueurNoir.Text = NomJoueurNoir;
             CreePendule();                      // Les temps et le choix de la cadence (BrunoInterfaceGraphiqueDames.Pendule.cs), avant les préférences qui choisissent la cadence
+            CreeLecture();                      // Le bouton de lecture et sa vitesse, dans le groupe « Parcours partie » (BrunoInterfaceGraphiqueDames.Lecture.cs)
             AppliquePreferences();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);          // Position initiale
             AfficheListesPieces();

@@ -66,12 +66,12 @@ namespace BrunoGUI_Dames
                 }
             }
         }
-        private bool rejeuPdnEnCours;      // Vrai pendant qu'une partie PDN est rejouée sur le damier
-        public async void ChargerPartieDepuisPdn(PartieDamesPdn partie)
-        {   // --- Charge une partie depuis un fichier PDN lorsque'on double-clique ---
-            if (rejeuPdnEnCours || jeuMoteurEnCours || analyseEnCours)
+        public void ChargerPartieDepuisPdn(PartieDamesPdn partie)
+        {   // --- Charge une partie depuis un fichier PDN lorsqu'on double-clique : elle entre tout de suite dans l'historique et le damier montre sa position de départ.
+            // « Lecture » la déroule avec ses animations, « Suiv. » avance coup à coup (le groupe « Parcours partie ») ---
+            if (lecture != null || jeuMoteurEnCours || analyseEnCours)
             {
-                ReglagesDeTest.Message("Une partie est déjà en cours de chargement, ou le moteur réfléchit.\nAttends la fin avant d'en charger une autre.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message("Une lecture est en cours, ou le moteur réfléchit.\nAttends la fin avant de charger une partie.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             // La partie est d'abord rejouée par les règles, sans toucher à la fenêtre : un coup illégal n'empêche plus de charger ce qui est jouable et ne fait plus tomber l'application
@@ -90,7 +90,6 @@ namespace BrunoGUI_Dames
             foreach (string avertissement in partiePdn.Avertissements)
                 Journal.Ecrit($"Partie PDN ({partie.White} - {partie.Black}) : ignoré à la lecture : {avertissement}");
             NettoyageRapide();
-            BalisesPartie.CoupsPartiePDN = "";
             nomsDepuisPartie = true;       // Ces noms sont ceux de la partie chargée : ils ne deviennent pas des préférences
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
             BalisesPartie.Event = partie.Event;
@@ -105,70 +104,23 @@ namespace BrunoGUI_Dames
             BalisesPartie.FENDebut = partie.FENDebut;
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
-            ExisteFENDebut = !string.IsNullOrWhiteSpace(partie.FENDebut);     // Propre à CETTE partie (avant, le drapeau gardait la valeur de la dernière partie lue du fichier)
-            rejeuPdnEnCours = true;
-            try
-            {
-                await GenerationListesCoups(rejeu.Coups);
-                if (rejeu.Erreur != null)
-                {   // La partie est chargée jusqu'au dernier coup légal
-                    Journal.Ecrit($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
-                    ReglagesDeTest.Message($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+            // La partie entre d'un coup dans l'historique (chaque coup avec la position qu'il donne), puis le damier montre la position de départ
+            SessionPartie session = Partie.Courante;
+            session.Commencer(rejeu.Positions[0]);
+            for (int i = 0; i < rejeu.Coups.Count; i++)
+                session.AjouteCoup(ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(rejeu.Positions[i]), rejeu.Coups[i]), rejeu.Positions[i + 1]);
+            session.Debut();
+            MiseenplaceFen(session.Fen(0), false);
+            AfficheListesPieces();
+            LabelCoupJoue.Text = "Position initiale";
+            LabelPrisesPossibles.Text = $"Partie chargée : {rejeu.Coups.Count} coup(s).\nLecture la déroule, Suiv. avance coup à coup.";
+            LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+            ReinitialisePendule();      // Si l'on continue la partie chargée, la pendule part de son temps de base
+            AnalyseCoupObligatoire(CouleurAuTrait);     // Les cases jouables et la prise obligatoire éventuelle de la position de départ
+            if (rejeu.Erreur != null)
+            {   // La partie est chargée jusqu'au dernier coup légal
+                Journal.Ecrit($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
+                ReglagesDeTest.Message($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (Exception ex)
-            {   // Quoi qu'il arrive pendant l'animation, l'application ne tombe pas : on le dit et on rend la main
-                Journal.Ecrit($"ERREUR au rejeu d'une partie PDN ({partie.White} - {partie.Black}) : {ex}");
-                ReglagesDeTest.Message($"Le chargement de la partie s'est arrêté :\n{ex.Message}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                BloqueBoutons(false);
-                AnalyseCoupObligatoire(CouleurAuTrait);
-            }
-            finally
-            {
-                rejeuPdnEnCours = false;
-                ReinitialisePendule();      // La partie chargée est rejouée sans pendule ; si on la continue, elle part de son temps de base
-            }
-        }
-        public async Task GenerationListesCoups(IReadOnlyList<Coup> coupsDeLaPartie)
-        {   // --- Met la position de départ sur le damier, puis rejoue (avec animation) les coups déjà validés par les règles et remplit les listes de coups ---
-            if (ExisteFENDebut)         // MiseenplaceFen(..., true) fait repartir l'historique de zéro avant d'y ajouter les coups
-            {
-                MiseenplaceFen("[FEN \"" + BalisesPartie.FENDebut + "\"]", true);  // Position initiale
-                LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
-            }
-            else
-            {
-                MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);  // Position initiale
-            }
-            if (coupsDeLaPartie.Count == 0)                      // Vérifier si la liste est vide
-            {
-                ReglagesDeTest.Message("Aucun coup n'a été trouvé dans la partie.", "Information : Pas de coup", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LabelPrisesPossibles.Text = "Pas de coup trouvé dans la partie chargée";
-                AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
-                return;
-            }
-            // Blocage des boutons pendant le traitement
-            ActiveDamier(false);
-            BloqueBoutons(true);
-            try
-            {
-                CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
-                await Task.Delay(DelaiAnimation);
-                foreach (Coup coupPdn in coupsDeLaPartie)
-                {
-                    CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
-                    string notationCoupRejoue = await JoueCoupSurLeDamier(coupPdn);
-                    ChangerCouleurTrait();
-                    if (!coupPdn.EstPrise)
-                        await Task.Delay(DelaiAnimation);       // Attendre un peu pour l'effet visuel du déplacement (une rafle a déjà son animation)
-                    Partie.Courante.AjouteCoup(notationCoupRejoue, PositionDuDamier());     // Le coup et la position qu'il donne entrent dans l'historique
-                }
-                LabelPrisesPossibles.Text = "Fin des coups de la partie";
-            }
-            finally
-            {
-                BloqueBoutons(false);       // Même si un coup n'a pas pu être joué, l'interface est rendue
-            }
-        }
-    }
+        }    }
 }

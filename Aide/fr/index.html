@@ -71,7 +71,7 @@
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <h2 id="jouer">3. Jouer une partie</h2>
 <h3>Jouer un coup</h3>
-<p>Un premier clic sur une de vos pièces la sélectionne : son image devient le curseur de la souris, sa case est colorée et les cases où elle peut aller sont marquées. Un second clic sur une case d'arrivée joue le coup, avec une courte animation. Si vous cliquez sur une case où la pièce ne peut pas aller, elle revient à sa place et rien n'est joué.</p>
+<p>Un premier clic sur une de vos pièces la sélectionne : son image devient le curseur de la souris, sa case est colorée et les cases où elle peut aller sont marquées. Un second clic sur une case d'arrivée joue le coup. Le coup du moteur est animé : sa pièce glisse d'une case à l'autre ; une rafle s'anime étape par étape, et les pièces prises disparaissent ensemble à la fin. Si vous cliquez sur une case où la pièce ne peut pas aller, elle revient à sa place et rien n'est joué.</p>
 <h3>La prise obligatoire</h3>
 <p>Quand une prise est possible, seules les pièces qui peuvent prendre peuvent être jouées, et seules les prises qui prennent <b>le plus de pièces</b> sont autorisées. Les cases de départ et d'arrivée de ces prises sont colorées dès que c'est votre tour, et les rafles sont écrites dans la zone « Prises possibles » (de la forme « 28 -&gt; 19, 17 -&gt; 10 » : la case de la pièce prise puis la case où la pièce se pose).</p>
 <h3>Plusieurs rafles possibles pour le même clic</h3>
@@ -126,14 +126,16 @@
 <p>Le groupe <b>Parcours partie</b> sert à revoir la partie en cours ou une partie chargée, sans la modifier :</p>
 <ul>
     <li><span class="bouton">Préc.</span> et <span class="bouton">Suiv.</span> : un coup en arrière, un coup en avant ; « Mouvement » indique le numéro et le coup affiché ;</li>
-    <li><span class="bouton">Début</span> : la position de départ ; <span class="bouton">Fin</span> : la dernière position.</li>
+    <li><span class="bouton">Début</span> : la position de départ ; <span class="bouton">Fin</span> : la dernière position ;</li>
+    <li><span class="bouton">Lecture</span> : déroule les coups à partir de la position affichée, avec leurs animations. Pendant la lecture, le bouton devient <span class="bouton">Pause</span> : la lecture s'arrête après le coup en cours, et un nouveau clic sur <span class="bouton">Lecture</span> reprend là où l'on s'était arrêté. Pendant la lecture, les autres boutons sont inactifs et les clics sur le damier sont ignorés. Arrivé à la fin, un clic sur <span class="bouton">Lecture</span> recommence au début ;</li>
+    <li>le <b>curseur sous Lecture</b> règle la vitesse : cinq niveaux, de 1,5 seconde à 0,08 seconde de pause entre deux coups (survolez-le pour voir le niveau). Il est retenu d'une fois sur l'autre.</li>
 </ul>
 <p><span class="bouton">Analyse position</span> travaille sur la position affichée. Pour <b>jouer</b>, en cliquant sur le damier ou avec <span class="bouton">Ordinateur joue</span>, il faut être sur la <b>dernière</b> position de la partie : sinon le programme refuse et vous invite à utiliser <span class="bouton">Fin</span>, car un coup joué ailleurs ne serait pas la suite de la partie.</p>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <h2 id="pdn">7. Fichiers PDN (parties)</h2>
 <h3>Charger des parties</h3>
-<p><span class="bouton">Charge Parties</span> lit un fichier <code>.pdn</code> et affiche la liste de ses parties (joueurs, résultat, date, événement…). <b>Double-cliquez</b> sur une partie : elle est déroulée sur le damier, un peu plus vite que le jeu normal, et vous pouvez ensuite la parcourir. <span class="bouton">Masque parties</span> cache ou montre la liste.</p>
+<p><span class="bouton">Charge Parties</span> lit un fichier <code>.pdn</code> et affiche la liste de ses parties (joueurs, résultat, date, événement…). <b>Double-cliquez</b> sur une partie : elle est chargée tout de suite et le damier montre sa position de départ ; <span class="bouton">Lecture</span> la déroule (voir « Parcourir une partie »), <span class="bouton">Suiv.</span> avance coup à coup. <span class="bouton">Masque parties</span> cache ou montre la liste.</p>
 <p>La lecture est tolérante : balises sur une ou plusieurs lignes, commentaires <code>{…}</code>, variantes, numéros de coups collés aux coups, marqueurs de résultat variés. Si une partie contient un coup illégal, elle est chargée jusqu'au dernier coup légal, avec un message. Un fichier qui n'est pas du PDN, ou qui contient une simple position FEN, est refusé avec une explication.</p>
 <h3>Sauvegarder la partie</h3>
 <p><span class="bouton">Sauve Partie</span> ouvre la fenêtre d'enregistrement : la partie est écrite en PDN avec ses balises (joueurs, résultat, nombre de coups, et la position de départ si elle n'est pas la position initiale). On peut l'ajouter à la fin d'un fichier existant.</p>
@@ -152,8 +154,9 @@
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <h2 id="preferences">10. Préférences</h2>
 <p>À la fermeture, le programme retient le temps de réflexion, les noms des joueurs, les cases Ordinateur et Son, la cadence de la pendule et le sens du damier. Il les retrouve au lancement suivant. Elles sont écrites dans le fichier <code>BrunoGUI_Dames.preferences.ini</code>, à côté du programme.</p>
-<p>Ce fichier (texte, une ligne <code>Cle=Valeur</code> par réglage) permet aussi de changer, à la main, la <b>durée de l'animation</b> (<code>DureeAnimation</code>, en millisecondes, 900 par défaut ; 0 pour jouer sans animation) et les <b>huit couleurs du damier</b> (cases sombres, claires, de départ, du trajet, du pivot, de la prise, de l'arrivée, d'étape), écrites <code>#RRGGBB</code>. Une valeur absente ou invalide est ignorée et remplacée par la valeur par défaut. Fermez le programme avant de modifier le fichier.</p>
+<p>Ce fichier (texte, une ligne <code>Cle=Valeur</code> par réglage) permet aussi de changer, à la main, la <b>durée d'une étape d'animation</b> (<code>DureeEtape</code>, en millisecondes, 250 par défaut ; 0 pour jouer sans animation) et les <b>huit couleurs du damier</b> (cases sombres, claires, de départ, du trajet, du pivot, de la prise, de l'arrivée, d'étape), écrites <code>#RRGGBB</code>. Une valeur absente ou invalide est ignorée et remplacée par la valeur par défaut. Fermez le programme avant de modifier le fichier.</p>
 <p>Les noms des joueurs d'une partie PDN chargée ne deviennent pas des préférences.</p>
+<p>Les surbrillances par défaut sont des verts et des olives sur les cases en bois. Les numéros des cases sont blancs cernés de noir, pour se lire sur les cases comme sur les pièces blanches et noires. Dans le fichier, seules les couleurs que vous avez changées sont écrites.</p>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <h2 id="programme">11. Les fichiers du programme</h2>
