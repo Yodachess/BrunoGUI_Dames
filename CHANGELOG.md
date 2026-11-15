@@ -4,18 +4,16 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
-- Tests automatiques de l'interface : la vraie fenêtre est créée hors de l'écran et pilotée par les tests (clics, boutons, pendule à horloge simulée, fin au temps, parcours, préférences, et le vrai Scan en CI). Ils ont fait trouver trois défauts, corrigés : « Préc. », « Suiv. », « Début », « Fin » et « Retour arrière » effaçaient l'historique de la partie (défaut apparu le 2026-11-15 pendant le travail sur cette version, jamais publié) ; « Nouvelle partie » après une partie finie laissait le damier inactif ; une fin au temps pendant la réflexion du moteur réactivait des cases.
-- Un coup (au damier ou par « Ordinateur joue ») n'est plus accepté tant que le parcours de la partie n'est pas revenu sur la dernière position : avant, il s'ajoutait à la fin de l'historique sans en être la suite, et « Ordinateur joue » jouait sur une autre position que celle affichée.
-- Mise en page : le coup joué, les rafles possibles, les compteurs, les cases Ordinateur et Son, le cadre du temps de réflexion et le résultat sont au-dessus du damier, sous la ligne du moteur ; la colonne de boutons est régulièrement espacée.
-- Pendule avec les cadences de la FMJD (1 h 20 + 30 s, 90 min pour 45 coups, 2 h pour 50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s), désactivée par défaut : choix de la cadence dans le cadre « Pendule et temps de réflexion », temps des blancs et des noirs en haut à droite, drapeau tombé = partie perdue au temps, moteur compris (son temps de réflexion est limité par ce qui lui reste). La cadence est retenue dans les préférences. La pendule décompte le camp qui joue réellement, même si le coup est joué depuis une position parcourue.
-- Style du code décrit dans `.editorconfig` ; les avertissements de compilation font échouer la compilation (`Directory.Build.props`).
-- Dependabot surveille les paquets NuGet et les actions GitHub ; xunit 2.9.3, Microsoft.NET.Test.Sdk 18.12.0 et xunit.runner.visualstudio 4.0.1 (projet de tests seulement).
-- README : un seul fichier (`BrunoGUI_Readme.txt` supprimé) ; documents du moteur dans `Docs`.
-- Suppression de deux icônes non utilisées.
-- Le sens du damier (« Tourner damier ») est décrit par une classe testée (`OrientationDamier`) au lieu de deux tables recalculées à la main ; le clic trouve sa case par sa place à l'écran.
-- Le formulaire principal est découpé en fichiers (classe partielle : clics, moteur et préférences, dessin, boutons, PDN, pendule), sans changement de comportement.
-- L'historique de la partie est tenu par une classe testée (`SessionPartie`) au lieu de trois listes à synchroniser à la main. Au passage : « Retour arrière » pendant un parcours de partie replace le parcours sur la dernière position, et affiche le coup retiré (et non le résultat) quand la partie était finie.
+## 1.11 (2026-11-15)
 
+Pendule, nouvelle mise en page, parcours de partie plus sûr, et des tests automatiques de l'interface qui ont fait corriger plusieurs défauts.
+
+- **Pendule** avec les cadences de la FMJD (1 h 20 + 30 s, 90 min pour 45 coups, 2 h pour 50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s), désactivée par défaut : choix de la cadence dans le cadre « Pendule et temps de réflexion », temps des blancs et des noirs en haut à droite, drapeau tombé = partie perdue au temps, moteur compris (son temps de réflexion est limité par ce qui lui reste). La cadence est retenue dans les préférences. La pendule décompte le camp qui joue réellement.
+- **Mise en page** : le coup joué, les rafles possibles, les compteurs, les cases Ordinateur et Son, le cadre du temps de réflexion et le résultat sont au-dessus du damier, sous la ligne du moteur ; la colonne de boutons est régulièrement espacée.
+- **Parcours de partie** : un coup (au damier ou par « Ordinateur joue ») n'est plus accepté tant que le parcours n'est pas revenu sur la dernière position. Avant, il s'ajoutait à la fin de l'historique sans en être la suite, et « Ordinateur joue » jouait sur une autre position que celle affichée. « Retour arrière » pendant un parcours replace le parcours sur la dernière position et affiche le coup retiré (et non le résultat) quand la partie était finie.
+- **Corrections** : « Nouvelle partie » après une partie finie laissait le damier inactif ; une fin au temps pendant la réflexion du moteur réactivait des cases.
+- **Tests automatiques de l'interface** : la vraie fenêtre est créée hors de l'écran et pilotée par les tests (clics, boutons, pendule à horloge simulée, fin au temps, parcours, préférences, et le vrai Scan en CI). Ils ont aussi fait corriger un défaut apparu pendant ce travail : « Préc. », « Suiv. », « Début », « Fin » et « Retour arrière » effaçaient l'historique de la partie.
+- **Code** : le formulaire principal est découpé en fichiers (classe partielle) ; le sens du damier (`OrientationDamier`) et l'historique de la partie (`SessionPartie`) sont des classes testées ; style du code décrit dans `.editorconfig`, avertissements de compilation traités comme des erreurs ; Dependabot surveille les paquets NuGet et les actions GitHub ; README unique, documents du moteur dans `Docs` ; deux icônes inutilisées supprimées.
 ## 1.10 (2026-11-14)
 
 Première version numérotée depuis la 1.04, publiée sur GitHub (archive autonome : .NET et le moteur Scan sont inclus).

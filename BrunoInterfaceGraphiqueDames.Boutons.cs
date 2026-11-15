@@ -169,7 +169,7 @@ namespace BrunoGUI_Dames
                 BoutonMasqueAffiche.Text = "Masque parties";  // Changer le texte du bouton
             }
         }
-        // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.10), avec le mineur sur deux chiffres ---
+        // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.11), avec le mineur sur deux chiffres ---
         private static string VersionAffichee
         {
             get
@@ -183,6 +183,7 @@ namespace BrunoGUI_Dames
             string message = $"Version Interface graphique = {VersionAffichee} / Auteur : Bruno Courtois\n" +
                                 $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}\n\n" +
                                 "Historique :\n" +
+                                "1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n" +
                                 "1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n" +
                                 "1.04 : première version publiée.";
             ReglagesDeTest.Message(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
