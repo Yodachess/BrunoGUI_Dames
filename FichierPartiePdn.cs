@@ -93,7 +93,7 @@ namespace BrunoGUI_Dames
                     var mainForm = Application.OpenForms["BrunoInterfaceGraphiqueDames"] as BrunoInterfaceGraphiqueDames;
                     if (mainForm != null)
                     {   // Charge la partie sélectionnée dans la fenêtre principale
-                        mainForm.boutonMasqueAffiche_Click(null, EventArgs.Empty);
+                        mainForm.BoutonMasqueAffiche_Click(null, EventArgs.Empty);
                         mainForm.ChargerPartieDepuisPdn(partie);
                         this.Hide();        // Masque la fenêtre FichierPartiePdn
                     }

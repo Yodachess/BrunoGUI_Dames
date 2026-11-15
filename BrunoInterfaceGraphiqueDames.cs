@@ -30,7 +30,6 @@ namespace BrunoGUI_Dames
         // Les listes
         public static readonly List<PictureBox> CaseDamier = new List<PictureBox>();    // les 100 cases du jeu
         private readonly List<int> IndiceVisuCoteNoir = new List<int>();                // liste des indices si les noirs sont en bas de l'écran
-        private readonly List<Color> CouleurCaseOrigines = new List<Color>();           // Couleurs d'origine des cases
         public static readonly List<int> ListeCasesCoupSelectionne = new List<int>();
         public static readonly List<int> ListeCasesMouvementPrecedent = new List<int>();
         public static readonly List<int> ListeCasesDestination = new List<int>();
@@ -47,8 +46,8 @@ namespace BrunoGUI_Dames
         private static readonly Bitmap CadreRouge = Properties.Resources.CadreRougeSansPriseTransparent;
         private static readonly Bitmap CadreMarron = Properties.Resources.CadreMarronSansPriseTransparent;
         // les variables
-        public static Color CouleurCasesombre = Color.Peru;         // Cases sombres damier
-        public static Color CouleurCaseclaire = Color.BurlyWood;    // Cases claires damier
+        public static Color CouleurCaseSombre = Color.Peru;         // Cases sombres damier
+        public static Color CouleurCaseClaire = Color.BurlyWood;    // Cases claires damier
         public static Color CouleurCaseDepart = Color.SpringGreen;
         public static Color CouleurTrajetSuivi = Color.YellowGreen;
         public static Color CouleurCasePivot = Color.DarkKhaki;
@@ -63,7 +62,7 @@ namespace BrunoGUI_Dames
         // --- La durée de chaque attente de l'animation : DureeAnimation, ou son sixième pendant le déroulé d'une partie PDN chargée ---
         private int DelaiAnimation => rejeuPdnEnCours ? DureeAnimation / DiviseurAnimationRejeu : DureeAnimation;
         public static bool ExisteFENDebut, VisuCoteNoir;          // True quand les Noirs sont en bas de l'écran
-        public static bool AfficheNumeroBox, AfficheCaseLogique, PartieEnCours, PartieTerminee, FinPartie, EmetUnSon;
+        public static bool AfficheNumeroBox, AfficheCaseLogique, OrdinateurActif, PartieTerminee, EmetUnSon;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
         private ContenuCase pieceCouleurSource = new ContenuCase();     // Pièce sélectionnée au premier clic (case vide = aucune)
         private string[] donneesMoteurScan = Array.Empty<string>();        // Données en provenance du Moteur SCAN
@@ -108,9 +107,9 @@ namespace BrunoGUI_Dames
             // les variables
             CouleurAuTrait = "Blanc";
             VisuCoteNoir = false;                       // On commence avec la vue côté Blanc
-            PartieEnCours = true;
+            OrdinateurActif = true;
             AfficheNumeroBox = ExisteFENDebut = analyseEnCours = false;
-            boutonMasqueAffiche.Enabled = false;
+            BoutonMasqueAffiche.Enabled = false;
             AfficheCaseLogique = clickCaseSource = true;
             DureeAnimation = 900;
             ChargePreferences();                // Les couleurs et la durée d'animation avant la création du damier ; le reste des préférences plus bas (AppliquePreferences)
@@ -169,7 +168,7 @@ namespace BrunoGUI_Dames
                     }
                     if (clickCaseSource)     // Permet de savoir si c'est la sélection de la pièce ou le déplacement
                     {   // --- Sélection d'une pièce ---
-                        CouleurToutesCasesManoury(CouleurCasesombre);       // On réinitialise les couleurs des cases
+                        CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
                         IndexPictureBoxSource100 = indexCase100;
                         CaseSourceManoury = GestionDamier.ObtenirCaseManoury(IndexPictureBoxSource100);     // Quelle case Manoury est cliquée ?
                         pieceCouleurSource = GestionDamier.ContenuCaseIndice(IndexPictureBoxSource100);     // Quelle pièce est cliquée  ? (d'après la position)
@@ -184,7 +183,7 @@ namespace BrunoGUI_Dames
                             }
                             for (int i = 0; i < ListeCasesCoupSelectionne.Count; i++)    // On enlève tous les mouvements affichés précédemment
                             {   // On remet la couleur de base sur les cases
-                                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[ListeCasesCoupSelectionne[i] - 1]].BackColor = BrunoInterfaceGraphiqueDames.CouleurCasesombre;
+                                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[ListeCasesCoupSelectionne[i] - 1]].BackColor = BrunoInterfaceGraphiqueDames.CouleurCaseSombre;
                             }
                             ListeCasesCoupSelectionne.Clear();
                             EffacePiece(indexCase100);       // On efface l'image de la case d'origine ; la pièce reste dans la position jusqu'à la fin du coup
@@ -247,7 +246,7 @@ namespace BrunoGUI_Dames
                                 }
                                 LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
                                 // Le joueur vient de déplacer sa pièce, on va donc passer la main au moteur 
-                                if (PartieEnCours)
+                                if (OrdinateurActif)
                                 {   // --- Lancement du moteur SCAN pour réfléchir à un coup sur la position "hub2" pendant "TempsReflexion" ---
                                     ChangerCouleurTrait();
                                     await LancementReflexionMoteur(ListeCoupsHub2[ListeCoupsHub2.Count - 1], TempsReflexion);
@@ -261,14 +260,14 @@ namespace BrunoGUI_Dames
                             else
                             {   // Si le coup n'est pas valide, on remet la pièce sur sa case d'origine !
                                 DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
-                                CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCasesombre;
+                                CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCaseSombre;
                             }
                         }
                         catch (ArgumentOutOfRangeException ex)
                         {   // Une case hors du damier a été trouvée dans un calcul (anomalie : un clic sur une case claire est déjà traité plus haut), on redessine la pièce sur sa case d'origine
                             Journal.Ecrit($"ERREUR au clic de destination : {ex}");
                             DessinePiece(IndexPictureBoxSource100, pieceCouleurSource.TypePiece);
-                            CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCasesombre;
+                            CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCaseSombre;
                         }
                         finally
                         {
@@ -291,7 +290,7 @@ namespace BrunoGUI_Dames
         }
 
         private async Task LancementReflexionMoteur(string positionHub2, int tempsReflexion)
-        {   // --- Laancement du moteur SCAN pour réfléchir à un coup sur la position "positionHub2" pendant "tempsReflexion" ---
+        {   // --- Lancement du moteur SCAN pour réfléchir à un coup sur la position "positionHub2" pendant "tempsReflexion" ---
             if (!analyseEnCours && !PartieTerminee && NulleActuelle() != RaisonNulle.Aucune)
             {   // La partie est nulle : inutile d'interroger le moteur
                 FinPartieParNulle(NulleActuelle());
@@ -308,7 +307,7 @@ namespace BrunoGUI_Dames
             string couleurEnJeu = positionHub2[0] == 'W' ? "Blancs" : "Noirs";      // On récupère la couleur en jeu
             LabelInformationJoueur.Text = "Trait aux " + couleurEnJeu + ", le moteur réfléchit ...";
             ReponseMoteur? reponse = await MoteurDamesScan.ReflechirAsync(positionHub2, tempsReflexion);   // Au moteur de bosser .... :-)
-            CouleurToutesCasesManoury(CouleurCasesombre);
+            CouleurToutesCasesManoury(CouleurCaseSombre);
             if (reponse == null)
             {   // Le moteur n'a pas répondu (arrêté, trop long ou remplacé par une autre demande) : rien n'est joué, c'est noté dans le journal
                 LabelInformationJoueur.Text = "Le moteur n'a pas répondu";
@@ -317,7 +316,6 @@ namespace BrunoGUI_Dames
             {   // « done » sans coup : le moteur n'a aucun coup à jouer
                 if (!analyseEnCours)
                 {
-                    FinPartie = true;
                     LabelInformationJoueur.Text = "Le moteur n'a aucun coup à jouer";
                 }
             }
@@ -355,7 +353,7 @@ namespace BrunoGUI_Dames
                     LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
                 }
             }
-            PartieEnCours = true;
+            OrdinateurActif = true;
             jeuMoteurEnCours = false;
             ActiveCouleurDamier(CouleurAuTrait, true);
             BloqueBoutons(false);
@@ -396,7 +394,7 @@ namespace BrunoGUI_Dames
                 ActiveCouleurDamier(CouleurPasAuTrait(), false);    // Désactiver les cases de la couleur pas au trait
                 return;                 // Sortir de la méthode, rien à faire de plus
             }
-            CouleurToutesCasesManoury(CouleurCasesombre);       // On réinitialise les couleurs des cases
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
             var casesActivables = new HashSet<int>();           // Ensemble des cases à activer (départ et arrivée finale)
             foreach (Coup rafle in prises)
             {
@@ -734,7 +732,7 @@ namespace BrunoGUI_Dames
         private void DesactiveMoteur(string message)
         {   // --- Sans moteur : on désactive ce qui en dépend (l'ordinateur ne joue plus, pas d'analyse), le jeu entre humains reste possible ---
             moteurDisponible = false;
-            PartieEnCours = false;
+            OrdinateurActif = false;
             OrdinateurBosse.Checked = false;
             OrdinateurBosse.Enabled = false;
             OrdinateurJoue.Enabled = false;
@@ -750,8 +748,8 @@ namespace BrunoGUI_Dames
                 Journal.Ecrit("Préférences : " + avertissement);
             DureeAnimation = preferencesChargees.DureeAnimation;
             Color Choisie(string nom, Color parDefaut) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : parDefaut;
-            CouleurCasesombre = Choisie("CaseSombre", CouleurCasesombre);
-            CouleurCaseclaire = Choisie("CaseClaire", CouleurCaseclaire);
+            CouleurCaseSombre = Choisie("CaseSombre", CouleurCaseSombre);
+            CouleurCaseClaire = Choisie("CaseClaire", CouleurCaseClaire);
             CouleurCaseDepart = Choisie("CaseDepart", CouleurCaseDepart);
             CouleurTrajetSuivi = Choisie("TrajetSuivi", CouleurTrajetSuivi);
             CouleurCasePivot = Choisie("CasePivot", CouleurCasePivot);
@@ -784,8 +782,8 @@ namespace BrunoGUI_Dames
                 SonEmis = SonEmis.Checked,
                 OrdinateurJoue = moteurDisponible ? OrdinateurBosse.Checked : preferencesChargees.OrdinateurJoue     // Sans moteur la case est grisée : on garde le choix précédent
             };
-            aEnregistrer.Couleurs["CaseSombre"] = VersRgb(CouleurCasesombre);
-            aEnregistrer.Couleurs["CaseClaire"] = VersRgb(CouleurCaseclaire);
+            aEnregistrer.Couleurs["CaseSombre"] = VersRgb(CouleurCaseSombre);
+            aEnregistrer.Couleurs["CaseClaire"] = VersRgb(CouleurCaseClaire);
             aEnregistrer.Couleurs["CaseDepart"] = VersRgb(CouleurCaseDepart);
             aEnregistrer.Couleurs["TrajetSuivi"] = VersRgb(CouleurTrajetSuivi);
             aEnregistrer.Couleurs["CasePivot"] = VersRgb(CouleurCasePivot);
@@ -882,7 +880,7 @@ namespace BrunoGUI_Dames
             ListeCasesDestination.Clear();
             for (int i = 0; i < ListeCasesMouvementPrecedent.Count; i++)    // On enlève tous les mouvements affichés précédemment
             {   // On remet la couleur de base sur les cases
-                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[ListeCasesMouvementPrecedent[i] - 1]].BackColor = BrunoInterfaceGraphiqueDames.CouleurCasesombre;
+                CaseDamier[GestionDamier.ManouryVersIndexPictureBox[ListeCasesMouvementPrecedent[i] - 1]].BackColor = BrunoInterfaceGraphiqueDames.CouleurCaseSombre;
             }
             ListeCasesMouvementPrecedent.Clear();
         }
@@ -901,7 +899,7 @@ namespace BrunoGUI_Dames
             int caseLogique = 1;    // Les cases sombres (utilisées pour jouer) sont numérotées de 1 à 50 en partant du haut à gauche
             for (int ligne = 9; ligne >= 0; ligne--)
             {
-                couleur = ligne % 2 == 0 ? CouleurCasesombre : CouleurCaseclaire;       // Couleur des cases du damier
+                couleur = ligne % 2 == 0 ? CouleurCaseSombre : CouleurCaseClaire;       // Couleur des cases du damier
                 for (int colonne = 0; colonne <= 9; colonne++)
                 {
                     int indexCourant = index;               // Capturer la valeur actuelle de l'index 
@@ -924,13 +922,12 @@ namespace BrunoGUI_Dames
                         AfficheIndexBox(Pict, indexCourant, caseLogiqueCourant);
                         caseLogique++; // Passer à la case logique suivante
                     }
-                    CouleurCaseOrigines.Add(couleur);
                     Pict.BringToFront();
                     CaseDamier.Add(Pict);
                     Pict.MouseDown += CaseMouseDown;
                     Damier10x10.Controls.Add(Pict);
                     index++;
-                    couleur = couleur == CouleurCaseclaire ? CouleurCasesombre : CouleurCaseclaire;
+                    couleur = couleur == CouleurCaseClaire ? CouleurCaseSombre : CouleurCaseClaire;
                 }
             }
             IndiceVisuCoteNoir.Reverse();       // Inverser la liste des indices pour les cases sombres
@@ -990,14 +987,14 @@ namespace BrunoGUI_Dames
             if (GestionDamier.NombreDePieces(Couleur.Blanc) == 0)
             {   // Vérifier si les listes blanches sont vides
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                RadioGainNoir.Checked = PartieTerminee = FinPartie = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
+                RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de pièces";
                 MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
             {   // Vérifier si les listes noires sont vides
                 GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-                RadioGainBlanc.Checked = PartieTerminee = FinPartie = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
+                RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de pièces";
                 MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de pièces", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -1011,13 +1008,13 @@ namespace BrunoGUI_Dames
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
             if (couleurBloquee == "Blanc")
             {
-                RadioGainNoir.Checked = PartieTerminee = FinPartie = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
+                RadioGainNoir.Checked = PartieTerminee = true;  // Note : RadioGainNoir.Checked mis à true lance la méthode RadioGainNoir_CheckedChanged
                 LabelInformationJoueur.Text = "Les Noirs gagnent, les blancs n'ont plus de coup possible";
                 MessageBox.Show("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                RadioGainBlanc.Checked = PartieTerminee = FinPartie = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
+                RadioGainBlanc.Checked = PartieTerminee = true; // Note: RadioGainBlanc.Checked mis à true lance la méthode RadioGainBlanc_CheckedChanged
                 LabelInformationJoueur.Text = "Les Blancs gagnent, les noirs n'ont plus de coup possible";
                 MessageBox.Show("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -1047,13 +1044,13 @@ namespace BrunoGUI_Dames
                 _ => $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise"
             };
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            RadioNulle.Checked = PartieTerminee = FinPartie = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
+            RadioNulle.Checked = PartieTerminee = true;      // Note : RadioNulle.Checked mis à true lance la méthode RadioNulle_CheckedChanged
             LabelInformationJoueur.Text = "Partie nulle : " + motif;
             MessageBox.Show("Nulle possible, la partie est terminée :\n" + motif, "Partie nulle", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void MetEnEvidenceRafle(Coup rafle)
         {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---
-            CouleurToutesCasesManoury(CouleurCasesombre);
+            CouleurToutesCasesManoury(CouleurCaseSombre);
             CaseDamier[GestionDamier.ManouryVersIndexPictureBox[CaseSourceManoury - 1]].BackColor = CouleurCaseDepart;
             foreach (int caseDuChemin in rafle.Chemin)
                 CaseDamier[GestionDamier.ManouryVersIndexPictureBox[caseDuChemin - 1]].BackColor = CouleurCaseEtape;
@@ -1069,7 +1066,7 @@ namespace BrunoGUI_Dames
             dialogue.StartPosition = FormStartPosition.Manual;
             dialogue.Location = new Point(x, Top + 120);
             dialogue.ShowDialog(this);
-            CouleurToutesCasesManoury(CouleurCasesombre);       // Efface la mise en évidence
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // Efface la mise en évidence
             return dialogue.Choisie;
         }
         private bool EstCaseValide(int caseDestinationManoury)
@@ -1158,19 +1155,19 @@ namespace BrunoGUI_Dames
         }
         private void NettoyageRapide()
         {   // --- Nettoyage rapide du damier, labels et boutons  ---
-            CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
             GroupResultat.Enabled = true;                       // On remet à zéro le résultat
             RadioGainNoir.Checked = false;
             RadioGainBlanc.Checked = false;
             RadioNulle.Checked = false;
-            PartieTerminee = FinPartie = false;
+            PartieTerminee = false;
             LabelCoupJoue.Text = LabelInformationJoueur.Text = LabelPrisesPossibles.Text = "";
         }
         private void BloqueBoutons(bool bloque) 
         {   // --- Blocage (true) /déblocage (false) des boutons ---
             NouvellePartie.Enabled = OrdinateurJoue.Enabled = BoutonRetourArriere.Enabled = SauvePositionFen.Enabled = !bloque;
-            VisualisationPdn.Enabled = boutonMasqueAffiche.Enabled = groupParcoursPartie.Enabled = AnalysePosition.Enabled = !bloque;
-            ChargePartiesPdn.Enabled = boutonMasqueAffiche.Enabled = SauvePartiesPdn.Enabled = ChargePositionFen.Enabled = !bloque;
+            VisualisationPdn.Enabled = BoutonMasqueAffiche.Enabled = groupParcoursPartie.Enabled = AnalysePosition.Enabled = !bloque;
+            ChargePartiesPdn.Enabled = BoutonMasqueAffiche.Enabled = SauvePartiesPdn.Enabled = ChargePositionFen.Enabled = !bloque;
             if (!moteurDisponible)
                 OrdinateurJoue.Enabled = AnalysePosition.Enabled = false;      // Sans moteur, ces deux boutons restent désactivés
         }
@@ -1232,7 +1229,7 @@ namespace BrunoGUI_Dames
         }
         private void BoutonDebut_Click(object sender, EventArgs e)
         {   // --- Bouton pour aller au début de la partie ---
-            CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
             if (ListeCoupsFen.Count > 1) // Vérifie qu'il y a au moins un coup joué
             {
                 indexFenCoupActuel = 0; // La position de départ est à l'indice 0
@@ -1240,7 +1237,7 @@ namespace BrunoGUI_Dames
                 LabelCoupJoue.Text = "Début de partie";
             }
         }
-        private void BoutoonFin_Click(object sender, EventArgs e)
+        private void BoutonFin_Click(object sender, EventArgs e)
         {   // --- Bouton pour aller à la fin de la partie ---
             if (ListeCoupsFen.Count > 1) // Vérifie qu'il y a au moins un coup joué
             {
@@ -1252,7 +1249,7 @@ namespace BrunoGUI_Dames
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
         {   // --- L'ordinateur joue son meilleur coup ---
             await LancementReflexionMoteur(Partie.ListeCoupsHub2[Partie.ListeCoupsHub2.Count - 1], TempsReflexion);
-            PartieEnCours = true;
+            OrdinateurActif = true;
             ChangerCouleurTrait();      // Inverse le trait
             AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
         }
@@ -1299,7 +1296,7 @@ namespace BrunoGUI_Dames
                         + " partie(s) dans le fichier  " + cheminFichier.Substring(cheminFichier.LastIndexOf('\\') + 1); ;
                     fichierPartiePdn.AfficherListeParties(ListePartiesPdn); 
                     fichierPartiePdn.Show();
-                    boutonMasqueAffiche.Enabled = true; // Active le bouton pour masquer/afficher la liste
+                    BoutonMasqueAffiche.Enabled = true; // Active le bouton pour masquer/afficher la liste
                 }
                 catch (Exception ex)
                 {
@@ -1397,11 +1394,11 @@ namespace BrunoGUI_Dames
             BloqueBoutons(true);
             try
             {
-                CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
+                CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
                 await Task.Delay(DelaiAnimation);
                 foreach (Coup coupPdn in coupsDeLaPartie)
                 {
-                    CouleurToutesCasesManoury(CouleurCasesombre);       // On efface les couleurs des cases
+                    CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
                     int indexSourceBox = GestionDamier.ObtenirIndicePictureBox(coupPdn.Depart);
                     ContenuCase pieceSource = GestionDamier.ContenuCaseCaseManoury(coupPdn.Depart);
                     if (coupPdn.EstPrise)       // Prise (rafle)
@@ -1427,23 +1424,24 @@ namespace BrunoGUI_Dames
             {
                 BloqueBoutons(false);       // Même si un coup n'a pas pu être joué, l'interface est rendue
             }
-        }        public void boutonMasqueAffiche_Click(object? sender, EventArgs e)
+        }
+        public void BoutonMasqueAffiche_Click(object? sender, EventArgs e)
         {   // --- Masque ou affiche la fenêtre de parties PDN ---
             if (fichierPartiePdn == null || fichierPartiePdn.IsDisposed)
             {   // Vérifier si la fenêtre a été fermée
-                boutonMasqueAffiche.Enabled = false;
-                boutonMasqueAffiche.Text = "Affiche parties";
+                BoutonMasqueAffiche.Enabled = false;
+                BoutonMasqueAffiche.Text = "Affiche parties";
                 return;     // La fenêtre a été fermée, on s'assure que le bouton affiche "Affiche parties" et on sort
             }
             if (fichierPartiePdn.Visible)
             {   // Si la fenêtre est actuellement visible, on la masque
                 fichierPartiePdn.Hide();    // Masquer la fenêtre
-                boutonMasqueAffiche.Text = "Affiche parties";  // Changer le texte du bouton
+                BoutonMasqueAffiche.Text = "Affiche parties";  // Changer le texte du bouton
             }
             else
             {
                 fichierPartiePdn.Show();    // Afficher la fenêtre
-                boutonMasqueAffiche.Text = "Masque parties";  // Changer le texte du bouton
+                BoutonMasqueAffiche.Text = "Masque parties";  // Changer le texte du bouton
             }
         }
         // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.10), avec le mineur sur deux chiffres ---
@@ -1562,7 +1560,7 @@ namespace BrunoGUI_Dames
         }
         private void OrdinateurBosse_CheckedChanged(object sender, EventArgs e)
         {   // L'ordinateur joue si la case est cochée (avant, la valeur était basculée, et pouvait se désynchroniser de la case)
-            PartieEnCours = OrdinateurBosse.Checked;
+            OrdinateurActif = OrdinateurBosse.Checked;
         }
         private void SonEmis_CheckedChanged(object sender, EventArgs e)
         {   // Le son est émis si la case est cochée
@@ -1602,7 +1600,7 @@ namespace BrunoGUI_Dames
             PartieCourante.Black = NomJoueurNoir;
             PartieCourante.Result = resultat.Trim(); 
             GroupResultat.Enabled = false;   // Désactive le groupe de boutons
-            PartieTerminee = FinPartie = true;
+            PartieTerminee = true;
         }
         private void BoutonRetourArriere_Click(object sender, EventArgs e)
         {   // --- Retour en arrière d'un coup en récupérant l'avant-dernier FEN et en effaçant le dernier ---
@@ -1612,7 +1610,6 @@ namespace BrunoGUI_Dames
                                 "Retour arrière", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
-            GestionDamier.ViderDamier();
             int dernierIndex = ListeCoupsPdn.Count - 1;
             string coupEfface = ListeCoupsPdn[dernierIndex]; // Récupère le dernier coup
             if (coupEfface == " 1-0" || coupEfface == " 0-1" || coupEfface == " 1/2-1/2")
@@ -1626,6 +1623,7 @@ namespace BrunoGUI_Dames
                     return;
                 }
             }
+            GestionDamier.ViderDamier();            // Après les vérifications : un retour anticipé ne laisse plus un damier vide
             MiseenplaceFen(ListeCoupsFen[ListeCoupsFen.Count - 2], false);       // Met en place la position précédente
             AfficheListesPieces();
             ListeCoupsPdn.RemoveAt(dernierIndex);   // Supprime les derniers éléments des listes
@@ -1635,7 +1633,7 @@ namespace BrunoGUI_Dames
             NettoyageRapide();
             LabelCoupJoue.Text = $"Mouvement effacé = {coupEfface}"; // Met à jour le label avec le mouvement.
             AnalyseCoupObligatoire(CouleurAuTrait);
-            PartieEnCours = false;
+            OrdinateurActif = false;
         }
         private void BoutonTournerDamier_Click(object sender, EventArgs e)
         {   // --- Rotation du damier de 180° incluant les indices ---
