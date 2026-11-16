@@ -9,7 +9,7 @@
 
 // Les vérifications de la vraie fenêtre : le formulaire est créé hors de l'écran, les tests cliquent sur les cases par le chemin de la souris (CaseMouseDown),
 // appuient sur les boutons par leurs gestionnaires, remplacent l'horloge de la pendule et les boîtes de message (ReglagesDeTest) et regardent l'état du
-// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (la position, l'historique et le moteur sont encore globaux : GestionDamier, Partie, MoteurDamesScan),
+// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (le moteur est encore global : MoteurDamesScan),
 // dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le moteur Scan joue aussi.
 
 using System;
@@ -86,8 +86,8 @@ public static class ScenarioInterface
 
     private static void Scenarios(bool avecMoteur, string fichierPreferences)
     {
-        Position pos() => GestionDamier.PositionCourante;
-        SessionPartie session() => Partie.Courante;
+        Position pos() => fenetre.Damier.PositionCourante;
+        SessionPartie session() => fenetre.Session;
         Pendule? pendule() => Champ<Pendule?>(fenetre, "pendule");
         string temps(string cadre) => Trouve(cadre).Text;
 
@@ -159,8 +159,8 @@ public static class ScenarioInterface
         Task<string> glissement = AppelleRetour<Task<string>>(fenetre, "JoueCoupSurLeDamier", coupGlisse!, true);
         Pompe(60);        // Au milieu du glissement
         PictureBox? vole = Champ<PictureBox?>(fenetre, "glisseur");
-        bool enVol = vole != null && vole.Visible && !ImagePresente(32) && !ImagePresente(28) && vole.Location != fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)].Location
-                     && vole.Location != fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(28)].Location && vole.Region != null && !vole.Enabled;
+        bool enVol = vole != null && vole.Visible && !ImagePresente(32) && !ImagePresente(28) && vole.Location != fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)].Location
+                     && vole.Location != fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(28)].Location && vole.Region != null && !vole.Enabled;
         bool glisseFini = Attendre(() => glissement.IsCompleted, 3000);
         chrono.Stop();
         verifie("Interface : un coup glissé (moteur, rejeu) : pendant le glissement la pièce est dans un contrôle à part, entre les deux cases (de la forme de la pièce, sans clic) ; à la fin elle est sur sa case et le contrôle disparaît",
@@ -309,7 +309,7 @@ public static class ScenarioInterface
         // Le style du repère du dernier coup (préférence RepereDernierCoup) : ce qui est dessiné dans la case de départ du dernier coup (32)
         Nouvelle();
         Joue(32, 28);
-        PictureBox case32 = fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)];
+        PictureBox case32 = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)];
         bool BrunA(Bitmap b, int x, int y) { Color c = b.GetPixel(x, y); return Math.Abs(c.R - 0x4A) < 12 && Math.Abs(c.G - 0x2A) < 12 && Math.Abs(c.B - 0x12) < 12; }
         (bool coin, bool milieuGauche) Reperes(string style)
         {
@@ -348,7 +348,7 @@ public static class ScenarioInterface
         fenetre.MiseenplaceFen("[FEN \"W:WK44:B12,18,19,39\"]", true);     // Deux rafles possibles pour la même pièce
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         List<Coup> prisesPossibles = ReglesDames.CoupsLegaux(session().DernierePosition).ToList();
-        bool departSeul = prisesPossibles.Count > 1 && CouleurCase(44) == fenetre.CouleurCaseDepart && prisesPossibles.All(c => !ImagePresente(c.Arrivee) && fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(c.Arrivee)].Enabled);
+        bool departSeul = prisesPossibles.Count > 1 && CouleurCase(44) == fenetre.CouleurCaseDepart && prisesPossibles.All(c => !ImagePresente(c.Arrivee) && fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(c.Arrivee)].Enabled);
         fenetre.ArriveesDebutTour = true;
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         bool arriveesAvecPreference = prisesPossibles.All(c => ImagePresente(c.Arrivee));
@@ -510,46 +510,46 @@ public static class ScenarioInterface
     // Un clic de souris sur la case Manoury : le chemin du vrai clic (CaseMouseDown)
     private static void Clique(int caseManoury)
     {
-        PictureBox caseClic = fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)];
+        PictureBox caseClic = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(caseManoury)];
         Appelle(fenetre, "CaseMouseDown", caseClic, new MouseEventArgs(MouseButtons.Left, 1, 10, 10, 0));
     }
 
     // Deux clics (départ puis arrivée) ; attend que le coup soit dans l'historique (les rafles et le moteur sont asynchrones)
     private static void Joue(int depart, int arrivee, bool attendCoups = true)
     {
-        int avant = Partie.Courante.CoupsPdn.Count;
+        int avant = fenetre.Session.CoupsPdn.Count;
         Clique(depart);
         bool selectionne = !Champ<bool>(fenetre, "clickCaseSource");
         Clique(arrivee);
-        if (attendCoups && !Attendre(() => Partie.Courante.CoupsPdn.Count == avant + 1, 5000))
-            Console.WriteLine($"      (coup {depart}-{arrivee} non joué : sélection faite {selectionne}, {Partie.Courante.CoupsPdn.Count} coup(s), trait {fenetre.CouleurAuTrait}, partie terminée {fenetre.PartieTerminee}, messages : {string.Join(" / ", messages)})");
+        if (attendCoups && !Attendre(() => fenetre.Session.CoupsPdn.Count == avant + 1, 5000))
+            Console.WriteLine($"      (coup {depart}-{arrivee} non joué : sélection faite {selectionne}, {fenetre.Session.CoupsPdn.Count} coup(s), trait {fenetre.CouleurAuTrait}, partie terminée {fenetre.PartieTerminee}, messages : {string.Join(" / ", messages)})");
     }
 
     // Joue le premier coup légal de la dernière position (deux clics) ; null s'il n'y en a pas
     private static Coup? JoueLegal()
     {
-        Coup? coup = ReglesDames.CoupsLegaux(Partie.Courante.DernierePosition).FirstOrDefault();
+        Coup? coup = ReglesDames.CoupsLegaux(fenetre.Session.DernierePosition).FirstOrDefault();
         if (coup != null)
             Joue(coup.Depart, coup.Arrivee);
         return coup;
     }
 
     private static void Tick() => Appelle(fenetre, "MinuteriePendule_Tick", null, EventArgs.Empty);
-    private static bool ImagePresente(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Image != null;
-    private static Color CouleurCase(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].BackColor;
+    private static bool ImagePresente(int caseManoury) => fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(caseManoury)].Image != null;
+    private static Color CouleurCase(int caseManoury) => fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(caseManoury)].BackColor;
     // Chaque case sombre porte l'image de sa pièce, ou aucune image si elle est vide : pas de cadre gris oublié, pas de pièce fantôme
     private static bool ImagesCoherentes()
     {
         for (int numero = 1; numero <= 50; numero++)
         {
-            Piece piece = GestionDamier.PositionCourante[numero];
+            Piece piece = fenetre.Damier.PositionCourante[numero];
             Image? attendue = piece == Piece.Vide ? null : fenetre.ListeBitmapsPiece[piece];
-            if (!ReferenceEquals(fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(numero)].Image, attendue))
+            if (!ReferenceEquals(fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(numero)].Image, attendue))
                 return false;
         }
         return true;
     }
-    private static bool CaseActive(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled;
+    private static bool CaseActive(int caseManoury) => fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(caseManoury)].Enabled;
 
     private static Control Trouve(string nom)
     {

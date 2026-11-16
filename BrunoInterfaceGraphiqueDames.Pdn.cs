@@ -105,7 +105,7 @@ namespace BrunoGUI_Dames
             LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
             LabelScore.Text = $"Résultat : {partie.Result}";
             // La partie entre d'un coup dans l'historique (chaque coup avec la position qu'il donne), puis le damier montre la position de départ
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             session.Commencer(rejeu.Positions[0]);
             for (int i = 0; i < rejeu.Coups.Count; i++)
                 session.AjouteCoup(ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(rejeu.Positions[i]), rejeu.Coups[i]), rejeu.Positions[i + 1]);

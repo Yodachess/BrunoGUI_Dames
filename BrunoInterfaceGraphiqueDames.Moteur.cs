@@ -150,7 +150,7 @@ namespace BrunoGUI_Dames
                 DureeEtape = DureeEtape,
                 ArriveesDebutTour = ArriveesDebutTour,
                 RepereDernierCoup = RepereDernierCoup,
-                VueCoteNoir = GestionDamier.Orientation.CoteNoir,
+                VueCoteNoir = Damier.Orientation.CoteNoir,
                 NomJoueurBlanc = nomBlancPrefere,
                 NomJoueurNoir = nomNoirPrefere,
                 SonEmis = SonEmis.Checked,

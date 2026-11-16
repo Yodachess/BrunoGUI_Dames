@@ -17,7 +17,7 @@ namespace BrunoGUI_Dames
 {
     public partial class BrunoInterfaceGraphiqueDames
     {
-        // La lecture d'une partie : à partir de la position affichée, les coups de l'historique (Partie.Courante) sont joués un à un sur le damier, avec leurs animations,
+        // La lecture d'une partie : à partir de la position affichée, les coups de l'historique (Session) sont joués un à un sur le damier, avec leurs animations,
         // à la vitesse choisie. « Pause » l'arrête après le coup en cours ; « Lecture » reprend où l'on en est (ou recommence au début si l'on est à la fin).
         // Pendant la lecture les autres boutons sont inactifs et les clics sur le damier sont ignorés.
         private CancellationTokenSource? lecture;                      // Non null pendant la lecture
@@ -65,7 +65,7 @@ namespace BrunoGUI_Dames
         // --- Joue sur le damier les coups de l'historique, depuis la position affichée jusqu'à la dernière, tant que la pause n'est pas demandée ---
         private async Task LitLaPartie()
         {
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             if (jeuMoteurEnCours || analyseEnCours)
                 return;
             if (session.Positions.Count <= 1)

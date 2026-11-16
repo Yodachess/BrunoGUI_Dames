@@ -35,7 +35,7 @@ namespace BrunoGUI_Dames
         // --- Le dernier coup de la position affichée par le parcours de la partie (aucun au départ) : appelée après la mise en place d'une position ---
         private void MarqueDernierCoupAffiche()
         {
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             int i = session.IndexAffiche;
             Coup? coup = i > 0 && i - 1 < session.CoupsPdn.Count ? ReglesDames.TrouverCoupPdn(session.Positions[i - 1], session.CoupsPdn[i - 1]) : null;
             MarqueDernierCoup(coup?.Depart ?? 0, coup?.Arrivee ?? 0);

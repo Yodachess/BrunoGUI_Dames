@@ -31,8 +31,8 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         private void NouvellePartie_Click(object sender, EventArgs e)
         {   // --- Initialisation du damier et mise à zéro des diverses listes --- 
-            GestionDamier.ViderDamier();
-            GestionDamier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
+            Damier.ViderDamier();
+            Damier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
             NettoyageRapide();                  // Remet PartieTerminee à faux : à faire AVANT d'activer les cases (ActiveDamier(true) ne fait rien tant que la partie est finie)
             ActiveDamier(true);
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);   // Position initiale : la nouvelle partie repart de zéro (historique, résultat, parcours)
@@ -82,7 +82,7 @@ namespace BrunoGUI_Dames
         }
         private void BoutonPrecedent_Click(object sender, EventArgs e)
         {   // --- Bouton pour reculer d'un coup (parcours de partie) ---
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             if (session.Precedent())    // Faux si l'on est déjà au début
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
@@ -96,7 +96,7 @@ namespace BrunoGUI_Dames
         private void BoutonSuivant_Click(object sender, EventArgs e)
         {   // --- Bouton pour avancer d'un coup (parcours de partie) ---
             // SessionPartie.IndexAffiche est toujours l'indice de la position affichée (0 : position de départ) : Suivant passe à la suivante, Précédent à la précédente
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             if (session.Suivant())      // Faux si l'on est déjà à la fin
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
@@ -110,7 +110,7 @@ namespace BrunoGUI_Dames
         private void BoutonDebut_Click(object sender, EventArgs e)
         {   // --- Bouton pour aller au début de la partie ---
             CouleurToutesCasesManoury(CouleurCaseSombre);       // On efface les couleurs des cases
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             if (session.Positions.Count > 1)    // Vérifie qu'il y a au moins un coup joué
             {
                 session.Debut();                // La position de départ est à l'indice 0
@@ -120,7 +120,7 @@ namespace BrunoGUI_Dames
         }
         private void BoutonFin_Click(object sender, EventArgs e)
         {   // --- Bouton pour aller à la fin de la partie ---
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             if (session.Positions.Count > 1)    // Vérifie qu'il y a au moins un coup joué
             {
                 session.Fin();                  // Dernière position
@@ -132,7 +132,7 @@ namespace BrunoGUI_Dames
         {   // --- L'ordinateur joue son meilleur coup (sur la dernière position de la partie) ---
             if (RefuseSiPartieParcourue())
                 return;
-            await LancementReflexionMoteur(Partie.Courante.Hub2Dernier(), TempsReflexion);
+            await LancementReflexionMoteur(Session.Hub2Dernier(), TempsReflexion);
             OrdinateurActif = true;
             ChangerCouleurTrait();      // Inverse le trait
             AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
@@ -143,7 +143,7 @@ namespace BrunoGUI_Dames
             LabelInformationJoueur.Text = "Analyse de la position en cours ... (" + TempsReflexion + ")";
             BloqueBoutons(true);
             analyseEnCours = true;
-            await LancementReflexionMoteur(Partie.Courante.Hub2(Partie.Courante.IndexAffiche), TempsReflexion);
+            await LancementReflexionMoteur(Session.Hub2(Session.IndexAffiche), TempsReflexion);
             LabelInformationJoueur.Text = "Analyse terminée !";
             BloqueBoutons(false);
             analyseEnCours = false;
@@ -315,7 +315,7 @@ namespace BrunoGUI_Dames
         }
         private void MiseaJourFinPartie(string resultat)
         {   // --- Met à jour certains éléments à la fin de la partie ---
-            Partie.Courante.FixeResultat(resultat);     // Le résultat entre dans la partie (il est écrit à la fin des coups PDN)
+            Session.FixeResultat(resultat);     // Le résultat entre dans la partie (il est écrit à la fin des coups PDN)
             BalisesPartie.Event = "Entrainement";
             BalisesPartie.Site = "Interface graphique";
             BalisesPartie.Date = DateTime.Now.ToString("yyyy-MM-dd");      // Stocke la date au format AAAA-MM-JJ
@@ -328,7 +328,7 @@ namespace BrunoGUI_Dames
         }
         private void BoutonRetourArriere_Click(object sender, EventArgs e)
         {   // --- Retour en arrière d'un coup : la session retire le dernier coup (et le résultat s'il y en a un), la position précédente est remise sur le damier ---
-            SessionPartie session = Partie.Courante;
+            SessionPartie session = Session;
             string? coupEfface = session.RetireDernierCoup();
             if (coupEfface == null)
             {
@@ -336,7 +336,7 @@ namespace BrunoGUI_Dames
                                 "Retour arrière", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
-            GestionDamier.ViderDamier();
+            Damier.ViderDamier();
             MiseenplaceFen(session.Fen(session.IndexAffiche), false);       // Met en place la nouvelle dernière position
             AfficheListesPieces();
             NettoyageRapide();
@@ -346,7 +346,7 @@ namespace BrunoGUI_Dames
             OrdinateurActif = false;
         }        private void BoutonTournerDamier_Click(object sender, EventArgs e)
         {   // --- Rotation du damier de 180° : l'orientation change, CaseDamier suit les places à l'écran (la case i va à la place 99 - i) ---
-            GestionDamier.Orientation.Tourner();
+            Damier.Orientation.Tourner();
             CaseDamier.Reverse();
             for (int place = 0; place < CaseDamier.Count; place++)
                 CaseDamier[place].Location = new Point(20 + (place % 10) * 60, 20 + (place / 10) * 60);

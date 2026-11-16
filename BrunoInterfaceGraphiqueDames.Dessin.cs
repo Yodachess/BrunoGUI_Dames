@@ -44,7 +44,7 @@ namespace BrunoGUI_Dames
         }        public void DessineMouvements(int caseSourceManoury, List<Coup> coups)
         {   // --- Dessine tous les mouvements légaux de la pièce en case source (coups : ses coups selon ReglesDames, déjà limités aux rafles les plus longues) ---
             EffaceNumerosEtape();
-            CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseSourceManoury)].BackColor = CouleurCaseDepart; // Colorier la case source
+            CaseDamier[Damier.ObtenirIndicePictureBox(caseSourceManoury)].BackColor = CouleurCaseDepart; // Colorier la case source
             if (coups.Any(coup => coup.EstPrise))
             {   // Rafles : s'il en existe plusieurs de même longueur, elles sont toutes signalées, c'est au joueur de choisir
                 // Étape 1 : traiter les rafles (une étape par pièce prise : case de la pièce prise et case d'arrivée)
@@ -52,8 +52,8 @@ namespace BrunoGUI_Dames
                 {
                     foreach (var (prise, arrivee) in rafle.Prises.Zip(rafle.Chemin, (prise, arrivee) => (prise, arrivee)))
                     {
-                        int indexPrise = GestionDamier.ObtenirIndicePictureBox(prise);
-                        int indexArrivee = GestionDamier.ObtenirIndicePictureBox(arrivee);
+                        int indexPrise = Damier.ObtenirIndicePictureBox(prise);
+                        int indexArrivee = Damier.ObtenirIndicePictureBox(arrivee);
                         if (CaseDamier[indexArrivee].Image == null || CaseDamier[indexArrivee].Image == CadreGrisSansPrise)       // Ne pas effacer les pièces si la case est occupée (un cadre gris, déjà posé au début du tour, compte comme une case vide)
                         {
                             CaseDamier[indexPrise].BackColor = CouleurCasePrise;
@@ -64,7 +64,7 @@ namespace BrunoGUI_Dames
                 }
                 // Étape 2 : colorier uniquement les cases d'arrivée finale en CouleurCaseArrivee
                 foreach (Coup rafle in coups)
-                    CaseDamier[GestionDamier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
+                    CaseDamier[Damier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
                 // Étape 3 : l'ordre des étapes quand il n'y a qu'une rafle (avec plusieurs, les numéros se mélangeraient : la fenêtre de choix les montre une à une)
                 List<Coup> rafles = coups.Where(coup => coup.EstPrise).ToList();
                 if (rafles.Count == 1)
@@ -74,7 +74,7 @@ namespace BrunoGUI_Dames
             {   // Déplacements simples (uniquement si aucune rafle n'existe), affichés en CouleurTrajetSuivi avec un cadre gris
                 foreach (Coup coup in coups)
                 {
-                    int index = GestionDamier.ObtenirIndicePictureBox(coup.Arrivee);
+                    int index = Damier.ObtenirIndicePictureBox(coup.Arrivee);
                     CaseDamier[index].Image = CadreGrisSansPrise;         // On affiche un cadre gris sur les cases de déplacement simple
                     CaseDamier[index].BackColor = CouleurTrajetSuivi;     // On colorie les cases de déplacement simple avec CouleurTrajetSuivi
                 }
@@ -153,14 +153,14 @@ namespace BrunoGUI_Dames
         {   // Active (statut = true) ou désactive les cases qui portent une pièce de cette couleur dans la position
             for (int i = 0; i <= 99; i++)
             {
-                int numeroCase = GestionDamier.Orientation.CaseManoury(i);      // 0 : case claire, qui ne porte jamais de pièce
-                if (numeroCase != 0 && Position.Appartient(GestionDamier.PositionCourante[numeroCase], couleur))
+                int numeroCase = Damier.Orientation.CaseManoury(i);      // 0 : case claire, qui ne porte jamais de pièce
+                if (numeroCase != 0 && Position.Appartient(Damier.PositionCourante[numeroCase], couleur))
                     CaseDamier[i].Enabled = statut;
             }
         }
         public void ActiverCaseManoury(int caseManoury, bool statut)
         {   // --- Active ou désactive une case Manoury (1 à 50) ---
-            CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled = statut;
+            CaseDamier[Damier.ObtenirIndicePictureBox(caseManoury)].Enabled = statut;
         }
         public void CouleurToutesCasesManoury(Color couleur)
         {   // --- Colorie toutes les cases actives (Manoury) avec la couleur demandée ---
@@ -194,9 +194,9 @@ namespace BrunoGUI_Dames
         {   // --- Vérifie le gain par l'absence de pièces (pas pendant la lecture d'une partie : elle ne fait que revoir des coups déjà joués) ---
             if (lecture != null)
                 return;
-            if (GestionDamier.NombreDePieces(Couleur.Blanc) == 0)
+            if (Damier.NombreDePieces(Couleur.Blanc) == 0)
                 TermineLaPartie(Couleur.Noir, "Les Noirs gagnent, les blancs n'ont plus de pièces", "Les Noirs gagnent !\n Les blancs n'ont plus de pièces");
-            if (GestionDamier.NombreDePieces(Couleur.Noir) == 0)
+            if (Damier.NombreDePieces(Couleur.Noir) == 0)
                 TermineLaPartie(Couleur.Blanc, "Les Blancs gagnent, les noirs n'ont plus de pièces", "Les Blancs gagnent !\n Les noirs n'ont plus de pièces");
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
             // Les parties nulles (répétition, coups de dames, finales) : NulleActuelle et FinPartieParNulle
@@ -210,7 +210,7 @@ namespace BrunoGUI_Dames
             TermineLaPartie(Position.Adversaire(couleurBloquee), $"Les {gagnants} gagnent, les {perdants} n'ont plus de coup possible", $"Les {gagnants} gagnent !\n Les {perdants} n'ont plus de coup possible");
         }        private RaisonNulle NulleActuelle()
         {   // --- Les règles de nulle (NullesDames) appliquées à l'historique de la partie : la position de départ puis celle après chaque demi-coup ---
-            return NullesDames.Detecte(Partie.Courante.Positions);
+            return NullesDames.Detecte(Session.Positions);
         }
         private void FinPartieParNulle(RaisonNulle raison)
         {   // --- La partie est nulle (répétition de position ou coups de dames) : on l'annonce et on la termine (résultat 1/2-1/2) ---
@@ -228,12 +228,12 @@ namespace BrunoGUI_Dames
         private void MetEnEvidenceRafle(Coup rafle)
         {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---
             CouleurToutesCasesManoury(CouleurCaseSombre);
-            CaseDamier[GestionDamier.ObtenirIndicePictureBox(CaseSourceManoury)].BackColor = CouleurCaseDepart;
+            CaseDamier[Damier.ObtenirIndicePictureBox(CaseSourceManoury)].BackColor = CouleurCaseDepart;
             foreach (int caseDuChemin in rafle.Chemin)
-                CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseDuChemin)].BackColor = CouleurCaseEtape;
-            CaseDamier[GestionDamier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
+                CaseDamier[Damier.ObtenirIndicePictureBox(caseDuChemin)].BackColor = CouleurCaseEtape;
+            CaseDamier[Damier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
             foreach (int prise in rafle.Prises)
-                CaseDamier[GestionDamier.ObtenirIndicePictureBox(prise)].BackColor = Color.Red;
+                CaseDamier[Damier.ObtenirIndicePictureBox(prise)].BackColor = Color.Red;
             EffaceNumerosEtape();
             MarqueEtapes(rafle);
         }
@@ -263,7 +263,7 @@ namespace BrunoGUI_Dames
         }
         public void AfficheListesPieces()
         {   // --- Affiche les nombres de pions blancs et noirs, de dames blanches et noires de la position ---
-            Position position = GestionDamier.PositionCourante;
+            Position position = Damier.PositionCourante;
             LabelPionsBlancs.Text = position.Compte(Piece.PionBlanc) + " pions blancs";
             LabelPionsNoirs.Text = position.Compte(Piece.PionNoir) + " pions noirs";
             LabelDamesBlanches.Text = position.Compte(Piece.DameBlanche) + " Dames blanches";

@@ -32,41 +32,41 @@ namespace BrunoGUI_Dames
     // Le damier de droite représente le damier de 100 cases avec les 50 cases réelles du jeu.
     // Les cases marquées d'un chiffre (01 à 50) sont les 50 cases actives du damier de 100 cases.
     // Les cases marquées  ".."  sur le damier de 100 cases sont les cases claires inutilisées.
-    public static class GestionDamier
+    public class GestionDamier
     {
         // Le sens dans lequel on voit le damier : la correspondance entre les cases Manoury (1-50) et les places à l'écran (0-99), voir OrientationDamier
-        public static OrientationDamier Orientation = new OrientationDamier();
+        public OrientationDamier Orientation = new OrientationDamier();
 
         // Les pièces du jeu par numéro de case Manoury (indépendant du sens d'affichage du damier) : c'est la seule description du contenu du damier.
         // Elle change à la mise en place d'une position (MiseenplaceFen, InitialiserDamier, ViderDamier) et une fois par coup, à la fin du coup
         // (AppliqueCoupALaPosition, par ReglesDames.Jouer) ; DessinePiece et EffacePiece ne touchent qu'aux images. Le trait n'y est pas suivi (c'est CouleurAuTrait, lu par RecupereFEN).
-        public static Position PositionCourante = new Position();
+        public Position PositionCourante = new Position();
 
         // --- Nombre de pièces (pions et dames) d'une couleur ---
-        public static int NombreDePieces(Couleur couleur)
+        public int NombreDePieces(Couleur couleur)
         {
             return couleur == Couleur.Blanc ? PositionCourante.Compte(Piece.PionBlanc) + PositionCourante.Compte(Piece.DameBlanche)
                                             : PositionCourante.Compte(Piece.PionNoir) + PositionCourante.Compte(Piece.DameNoire);
         }
 
-        public static void InitialiserDamier()
+        public void InitialiserDamier()
         {   // --- Met la position initiale dans PositionCourante (sans rien afficher) ---
             PositionCourante = Position.Initiale();
         }
-        public static void ViderDamier()
+        public void ViderDamier()
         {   // --- Vide la position (sans rien afficher) ---
             PositionCourante = new Position();
         }
 
-        public static bool EstCaseManouryValide(int numeroCaseManoury)
+        public bool EstCaseManouryValide(int numeroCaseManoury)
         {   // --- Vérifie si une case Manoury est valide ---
             return numeroCaseManoury >= 1 && numeroCaseManoury <= 50;
         }
-        public static int ObtenirIndicePictureBox(int caseManoury)
+        public int ObtenirIndicePictureBox(int caseManoury)
         {   // --- Obtenir la place à l'écran (index de PictureBox) à partir de la caseManoury (ArgumentOutOfRangeException hors de 1 à 50) ---
             return Orientation.IndexEcran(caseManoury);
         }
-        public static int ObtenirCaseManoury(int indicePictureBox)
+        public int ObtenirCaseManoury(int indicePictureBox)
         {   // --- Obtenir case Manoury à partir d'un indicePictureBox ---
             int numeroCase = Orientation.CaseManoury(indicePictureBox);
             if (numeroCase == 0)

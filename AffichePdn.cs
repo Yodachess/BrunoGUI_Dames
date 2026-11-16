@@ -38,13 +38,13 @@ namespace BrunoGUI_Dames
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
             FichierPartiePdn.PartieDamesPdn courante = fenetrePrincipale.BalisesPartie;
             PartiePdn partie = PartiePdn.Creer(courante.Event, courante.Site, courante.Date, courante.Round, courante.White, courante.Black,
-                                               courante.Result, FenDepartPartie(), Partie.Courante.CoupsPdnAvecResultat());
+                                               courante.Result, FenDepartPartie(), fenetrePrincipale.Session.CoupsPdnAvecResultat());
             return partie.VersTexte();
         }
-        private static string? FenDepartPartie()
+        private string? FenDepartPartie()
         {   // --- Le FEN de la position de départ s'il diffère de la position initiale (partie chargée d'un PDN ou d'un fichier FEN), sinon null ---
-            if (Partie.Courante.EstVide) return null;
-            Position depart = Partie.Courante.Positions[0];
+            if (fenetrePrincipale.Session.EstVide) return null;
+            Position depart = fenetrePrincipale.Session.Positions[0];
             return depart.Equals(Position.Initiale()) ? null : depart.VersFen();
         }        public void AffichePdnDansZone()
         {
@@ -59,20 +59,20 @@ namespace BrunoGUI_Dames
         private void ListeFenAffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
-            string contenuFen = "Nombre de 1/2 coups = " + Partie.Courante.Positions.Count + "\n";
-            for (int i = 0; i < Partie.Courante.Positions.Count; i++)     // Parcours de la liste des FEN
+            string contenuFen = "Nombre de 1/2 coups = " + fenetrePrincipale.Session.Positions.Count + "\n";
+            for (int i = 0; i < fenetrePrincipale.Session.Positions.Count; i++)     // Parcours de la liste des FEN
             {
-                contenuFen = contenuFen + "  [" + i + "]: \"" + Partie.Courante.Fen(i) + "\"" + " \n";
+                contenuFen = contenuFen + "  [" + i + "]: \"" + fenetrePrincipale.Session.Fen(i) + "\"" + " \n";
             }
             afficheZone.ZoneAffichage.Text = contenuFen;
         }
         private void ListeHub2AffichePdn_Click(object? sender, EventArgs e)
         {
             afficheZone.Show();
-            string contenuHub2 = "Nombre de 1/2 coups = " + Partie.Courante.Positions.Count + "\n";
-            for (int i = 0; i < Partie.Courante.Positions.Count; i++)     // Parcours de la liste des FEN
+            string contenuHub2 = "Nombre de 1/2 coups = " + fenetrePrincipale.Session.Positions.Count + "\n";
+            for (int i = 0; i < fenetrePrincipale.Session.Positions.Count; i++)     // Parcours de la liste des FEN
             {
-                contenuHub2 = contenuHub2 + "  [" + i + "]: \"" + Partie.Courante.Hub2(i) + "\"" + " \n";
+                contenuHub2 = contenuHub2 + "  [" + i + "]: \"" + fenetrePrincipale.Session.Hub2(i) + "\"" + " \n";
             }
             afficheZone.ZoneAffichage.Text = contenuHub2;
         }

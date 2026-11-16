@@ -66,7 +66,9 @@ namespace BrunoGUI_Dames
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
         private AffichePdn? affichePdn;   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
         private FichierPartiePdn? fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
-        // GestionDamier (position du damier, correspondance des cases) dans GestionDamier.cs ; Partie (historique) dans Partie.cs
+        // La position du damier et le sens d'affichage (GestionDamier.cs) et l'historique de la partie (SessionPartie.cs) appartiennent à la fenêtre
+        public readonly GestionDamier Damier = new GestionDamier();
+        public readonly SessionPartie Session = new SessionPartie();
 
         public BrunoInterfaceGraphiqueDames()
         {
@@ -86,7 +88,7 @@ namespace BrunoGUI_Dames
             ListeBitmapsPiece.Add(Piece.DameNoire, DameNoire);       // Dame noire
             // les variables
             CouleurAuTrait = Couleur.Blanc;
-            GestionDamier.Orientation = new OrientationDamier();       // On commence avec la vue côté Blanc
+            Damier.Orientation = new OrientationDamier();       // On commence avec la vue côté Blanc
             OrdinateurActif = true;
             analyseEnCours = false;
             BoutonMasqueAffiche.Enabled = false;
@@ -97,7 +99,7 @@ namespace BrunoGUI_Dames
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
 
             CreeDamier();                       // Crée les 100 PictureBox correspondant aux cases SANS afficher de pièce
-            GestionDamier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
+            Damier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
             ActiveDamier(true);
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;
             BoxNomJoueurNoir.Text = NomJoueurNoir;
