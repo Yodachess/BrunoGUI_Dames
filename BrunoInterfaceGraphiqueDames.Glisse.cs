@@ -22,10 +22,10 @@ namespace BrunoGUI_Dames
         // Le glissement d'une pièce d'une case à l'autre (le coup du moteur, le rejeu d'une partie, les étapes d'une rafle) : une image de pièce, de la forme de la pièce,
         // se déplace au-dessus des cases pendant DureeEtape millisecondes. Les cases ne sont touchées qu'au début (la pièce quitte son départ) et à la fin (elle arrive).
         private PictureBox? glisseur;
-        private static readonly Dictionary<Piece, (Bitmap image, Region forme)> formesDesPieces = new Dictionary<Piece, (Bitmap, Region)>();
+        private readonly Dictionary<Piece, (Bitmap image, Region forme)> formesDesPieces = new Dictionary<Piece, (Bitmap, Region)>();
 
         // --- L'image de la pièce à la taille d'une case et sa silhouette (les points assez opaques), calculées une fois par type de pièce ---
-        private static (Bitmap image, Region forme) FormeDeLaPiece(Piece piece)
+        private (Bitmap image, Region forme) FormeDeLaPiece(Piece piece)
         {
             if (formesDesPieces.TryGetValue(piece, out (Bitmap image, Region forme) connue))
                 return connue;

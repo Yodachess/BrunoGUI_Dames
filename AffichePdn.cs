@@ -26,15 +26,17 @@ namespace BrunoGUI_Dames
         private Krypton.Toolkit.KryptonButton AfficheListeHub2;
         private SaveFileDialog EnregistrerFichierPdn;
 
-        public AffichePdn()
+        private readonly BrunoInterfaceGraphiqueDames fenetrePrincipale;      // La fenêtre dont cette fenêtre montre la partie
+        public AffichePdn(BrunoInterfaceGraphiqueDames fenetre)
         {
+            fenetrePrincipale = fenetre;
             InitializeComponent();
             ThemeInterface.Applique(this);
             afficheZone = this;
         }
         public string GenerationPdn()
         {   // --- Génération de la partie au format Pdn (Portable Draughts Notation) ---        https://pdn.fmjd.org/index.html
-            FichierPartiePdn.PartieDamesPdn courante = BrunoInterfaceGraphiqueDames.BalisesPartie;
+            FichierPartiePdn.PartieDamesPdn courante = fenetrePrincipale.BalisesPartie;
             PartiePdn partie = PartiePdn.Creer(courante.Event, courante.Site, courante.Date, courante.Round, courante.White, courante.Black,
                                                courante.Result, FenDepartPartie(), Partie.Courante.CoupsPdnAvecResultat());
             return partie.VersTexte();

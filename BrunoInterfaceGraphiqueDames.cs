@@ -26,56 +26,55 @@ namespace BrunoGUI_Dames
     public partial class BrunoInterfaceGraphiqueDames : Form
     {
         // Les listes
-        public static readonly List<PictureBox> CaseDamier = new List<PictureBox>();    // les 100 cases du jeu
-        public static List<PartieDamesPdn> ListePartiesPdn = new List<PartieDamesPdn>();
+        public readonly List<PictureBox> CaseDamier = new List<PictureBox>();    // les 100 cases du jeu
+        public List<PartieDamesPdn> ListePartiesPdn = new List<PartieDamesPdn>();
         // liste des Bitmaps pour les pièces
-        public static readonly Dictionary<Piece, Bitmap> ListeBitmapsPiece = new Dictionary<Piece, Bitmap>();
+        public readonly Dictionary<Piece, Bitmap> ListeBitmapsPiece = new Dictionary<Piece, Bitmap>();
         // les Bitmaps
         private readonly Bitmap PionBlanc = Properties.Resources.DamesPionBlanc_transparent;
         private readonly Bitmap PionNoir = Properties.Resources.DamesPionNoir_transparent;
         private readonly Bitmap DameBlanche = Properties.Resources.DameBlanche;
         private readonly Bitmap DameNoire = Properties.Resources.DameNoire;
-        private static readonly Bitmap CadreGrisSansPrise = Properties.Resources.SansPrise;
+        private readonly Bitmap CadreGrisSansPrise = Properties.Resources.SansPrise;
         // les variables
         // Les couleurs du damier : celles de Preferences.CouleursParDefaut, changées par le fichier de préférences (ChargePreferences)
-        public static Color CouleurCaseSombre = CouleurParDefaut("CaseSombre");         // Cases sombres damier (les cases jouables)
-        public static Color CouleurCaseClaire = CouleurParDefaut("CaseClaire");         // Cases claires damier
-        public static Color CouleurCaseDepart = CouleurParDefaut("CaseDepart");         // La pièce sélectionnée
-        public static Color CouleurTrajetSuivi = CouleurParDefaut("TrajetSuivi");       // Les destinations possibles et le trajet du dernier coup
-        public static Color CouleurCasePivot = CouleurParDefaut("CasePivot");           // L'arrivée de chaque étape d'une rafle pendant son animation
-        public static Color CouleurCasePrise = CouleurParDefaut("CasePrise");           // Les pièces prises
-        public static Color CouleurCaseArrivee = CouleurParDefaut("CaseArrivee");       // L'arrivée du coup
-        public static Color CouleurCaseEtape = CouleurParDefaut("CaseEtape");           // Cases d'arrivée intermédiaires d'une rafle
-        public static Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
-        public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
-        public static FichierPartiePdn.PartieDamesPdn BalisesPartie = new FichierPartiePdn.PartieDamesPdn();
-        public static bool ArriveesDebutTour;                           // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (préférence ArriveesDebutTour)
-        public static string RepereDernierCoup = "coin";                // Le repère du dernier coup : coin, cadre ou aucun (préférence RepereDernierCoup)
-        public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeEtape, TempsReflexion;     // DureeEtape : millisecondes d'une étape d'animation (un glissement, une étape de rafle)
-        public static bool OrdinateurActif, PartieTerminee, EmetUnSon;
-        private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
+        public Color CouleurCaseSombre = CouleurParDefaut("CaseSombre");         // Cases sombres damier (les cases jouables)
+        public Color CouleurCaseClaire = CouleurParDefaut("CaseClaire");         // Cases claires damier
+        public Color CouleurCaseDepart = CouleurParDefaut("CaseDepart");         // La pièce sélectionnée
+        public Color CouleurTrajetSuivi = CouleurParDefaut("TrajetSuivi");       // Les destinations possibles et le trajet du dernier coup
+        public Color CouleurCasePivot = CouleurParDefaut("CasePivot");           // L'arrivée de chaque étape d'une rafle pendant son animation
+        public Color CouleurCasePrise = CouleurParDefaut("CasePrise");           // Les pièces prises
+        public Color CouleurCaseArrivee = CouleurParDefaut("CaseArrivee");       // L'arrivée du coup
+        public Color CouleurCaseEtape = CouleurParDefaut("CaseEtape");           // Cases d'arrivée intermédiaires d'une rafle
+        public Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
+        public string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
+        public FichierPartiePdn.PartieDamesPdn BalisesPartie = new FichierPartiePdn.PartieDamesPdn();
+        public bool ArriveesDebutTour;                           // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (préférence ArriveesDebutTour)
+        public string RepereDernierCoup = "coin";                // Le repère du dernier coup : coin, cadre ou aucun (préférence RepereDernierCoup)
+        public int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeEtape, TempsReflexion;     // DureeEtape : millisecondes d'une étape d'animation (un glissement, une étape de rafle)
+        public bool OrdinateurActif, PartieTerminee, EmetUnSon;
+        private bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
         private Piece pieceSelectionnee = Piece.Vide;     // Pièce sélectionnée au premier clic (Piece.Vide = aucune)
         private string cheminMoteur = "";
         private Preferences preferencesChargees = new Preferences();     // Celles lues au démarrage (gardées si le moteur est absent)
         private string nomBlancPrefere = "", nomNoirPrefere = "";        // Les noms tapés par le joueur (pas ceux d'une partie PDN chargée)
         private bool nomsDepuisPartie;                                   // Vrai pendant que les noms d'une partie PDN chargée sont mis dans les zones de texte
         private static string FichierPreferences => ReglagesDeTest.FichierPreferences ?? Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
-        private static bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
+        private bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
         // -- les classes --
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
-        private AffichePdn? affichePdn = new AffichePdn();   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
+        private AffichePdn? affichePdn;   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
         private FichierPartiePdn? fichierPartiePdn = new FichierPartiePdn();     // idem pour fichierPartiePdn
         // GestionDamier (position du damier, correspondance des cases) dans GestionDamier.cs ; Partie (historique) dans Partie.cs
 
         public BrunoInterfaceGraphiqueDames()
         {
             InitializeComponent();
+            affichePdn = new AffichePdn(this);
         }
-        private static BrunoInterfaceGraphiqueDames? fenetrePrincipale;     // La fenêtre affichée, pour mettre à jour les décomptes de pièces depuis les méthodes statiques
         private void BrunoInterfaceGraphiqueDames_Load(object sender, EventArgs e)
         {
-            fenetrePrincipale = this;
             // les évènements dans les classes
             MoteurDamesScan.AfficheScan += AfficheScan;
             MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;

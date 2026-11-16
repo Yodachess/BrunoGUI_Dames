@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -71,7 +71,7 @@ namespace BrunoGUI_Dames
         {   // --- Bouton pour voir la partie en Pdn ---
             if (affichePdn == null || affichePdn.IsDisposed)
             {   // Traitement pour prendre en compte la fermeture par croix rouge en haut à droite ...
-                affichePdn = new AffichePdn();      // Crée une nouvelle instance si nécessaire
+                affichePdn = new AffichePdn(this);      // Crée une nouvelle instance si nécessaire
                 affichePdn.FormClosed += (s, args) =>
                 {   // On évite que la référence de affichePdn pointe vers un objet supprimé.
                     affichePdn = null;  // S'assure que la référence est libérée à la fermeture
@@ -169,7 +169,7 @@ namespace BrunoGUI_Dames
             }
         }
         // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.11), avec le mineur sur deux chiffres ---
-        private static string VersionAffichee
+        private string VersionAffichee
         {
             get
             {

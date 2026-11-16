@@ -316,7 +316,7 @@ namespace BrunoGUI_Dames
             List<string> raflesText = prises.Select(rafle => string.Join(", ", rafle.Prises.Zip(rafle.Chemin, (prise, arrivee) => $"{prise} -> {arrivee}"))).ToList();
             LabelPrisesPossibles.Text = raflesText.Count + " Rafle(s) possible(s) de " + prises[0].Prises.Count + " pièce(s) \n" + string.Join("\n", raflesText);
         }
-        public static void MiseenplaceFen(string fenAutiliser, bool commenceLaPartie)     // Préparation du logiciel avec la position FEN
+        public void MiseenplaceFen(string fenAutiliser, bool commenceLaPartie)     // Préparation du logiciel avec la position FEN
         {   // --- La méthode met la position FEN sur le damier (PositionCourante et images) ; si commenceLaPartie, c'est la position de départ d'une nouvelle partie (Partie.Courante) ---
             GestionDamier.ViderDamier();
             foreach (var pict in CaseDamier)
@@ -352,12 +352,12 @@ namespace BrunoGUI_Dames
                 Journal.Ecrit($"ERREUR MiseenplaceFen : aucun texte entre guillemets dans « {fenAutiliser} », le damier reste vide");
             }
         }
-        public static string RecupereFEN()
+        public string RecupereFEN()
         {   // --- Génère et renvoie le FEN de la position actuelle (GestionDamier.PositionCourante, avec le trait CouleurAuTrait) ---
             return "[FEN \"" + PositionDuDamier().VersFen() + "\"]";
         }
         // --- La position du damier avec le trait CouleurAuTrait : celle qu'on met dans l'historique après un coup ---
-        private static Position PositionDuDamier()
+        private Position PositionDuDamier()
         {
             Position position = GestionDamier.PositionCourante.Copie();
             position.Trait = CouleurAuTrait;
@@ -377,7 +377,7 @@ namespace BrunoGUI_Dames
                 Journal.Ecrit($"ERREUR calcul des coups légaux : {ex.Message}");
             }
         }
-        private static Coup? TrouveCoupDuMoteur(string positionHub2, string coupScan)
+        private Coup? TrouveCoupDuMoteur(string positionHub2, string coupScan)
         {   // --- Le coup légal que désigne la notation Hub2 de Scan (« 28x19x23 », « 32-28 ») dans la position qu'on lui a envoyée, ou null (journal) ---
             // La position vient de la chaîne Hub2 envoyée au moteur, pas de CouleurAuTrait : pendant que le moteur réfléchit, cette couleur est celle de l'humain
             try
@@ -454,7 +454,7 @@ namespace BrunoGUI_Dames
             return notationPdn;
         }
         // --- Met la position à jour avec le coup qui vient d'être joué sur le damier (une seule fois par coup), puis les décomptes affichés ---
-        private static void AppliqueCoupALaPosition(Position apres)
+        private void AppliqueCoupALaPosition(Position apres)
         {
             GestionDamier.PositionCourante = apres;
             AfficheListesPieces();

@@ -9,7 +9,7 @@
 
 // Les vérifications de la vraie fenêtre : le formulaire est créé hors de l'écran, les tests cliquent sur les cases par le chemin de la souris (CaseMouseDown),
 // appuient sur les boutons par leurs gestionnaires, remplacent l'horloge de la pendule et les boîtes de message (ReglagesDeTest) et regardent l'état du
-// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (le formulaire a des champs statiques, dont les 100 cases du damier),
+// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (la position, l'historique et le moteur sont encore globaux : GestionDamier, Partie, MoteurDamesScan),
 // dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le moteur Scan joue aussi.
 
 using System;
@@ -74,7 +74,7 @@ public static class ScenarioInterface
             fenetre.Location = new Point(-32000, -32000);       // Hors de l'écran
             fenetre.Show();
             Pompe(300);
-            BrunoInterfaceGraphiqueDames.DureeEtape = 0;    // Pas d'attente ni de glissement : les rafles et les coups du moteur sont immédiats
+            fenetre.DureeEtape = 0;    // Pas d'attente ni de glissement : les rafles et les coups du moteur sont immédiats
             Scenarios(complet && scan != null, fichierPreferences);
         }
         finally
@@ -93,9 +93,9 @@ public static class ScenarioInterface
 
         // ═══════════════ Démarrage ═══════════════
         verifie("Interface : la fenêtre démarre avec 100 cases, la position initiale, le trait aux blancs et aucun message",
-                BrunoInterfaceGraphiqueDames.CaseDamier.Count == 100 && pos().Compte(Piece.PionBlanc) == 20 && pos().Compte(Piece.PionNoir) == 20 && pos()[32] == Piece.PionBlanc && pos()[1] == Piece.PionNoir
-                && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc && session().Positions.Count == 1 && messages.Count == 0,
-                $"{BrunoInterfaceGraphiqueDames.CaseDamier.Count} cases, {pos().Compte(Piece.PionBlanc)} pions blancs, messages : {string.Join(" / ", messages)}");
+                fenetre.CaseDamier.Count == 100 && pos().Compte(Piece.PionBlanc) == 20 && pos().Compte(Piece.PionNoir) == 20 && pos()[32] == Piece.PionBlanc && pos()[1] == Piece.PionNoir
+                && fenetre.CouleurAuTrait == Couleur.Blanc && session().Positions.Count == 1 && messages.Count == 0,
+                $"{fenetre.CaseDamier.Count} cases, {pos().Compte(Piece.PionBlanc)} pions blancs, messages : {string.Join(" / ", messages)}");
         verifie("Interface : sans pendule, les deux cadres affichent « --:-- » et la liste propose « Sans pendule »",
                 temps("LabelPenduleBlanc") == "B --:--" && temps("LabelPenduleNoir") == "N --:--" && ((ComboBox)Trouve("ComboCadence")).SelectedIndex == 0 && pendule() == null,
                 $"{temps("LabelPenduleBlanc")} / {temps("LabelPenduleNoir")}");
@@ -104,32 +104,32 @@ public static class ScenarioInterface
         Nouvelle();
         Clique(32);
         verifie("Interface : un premier clic sélectionne la pièce (son image quitte la case, elle est « en main »)",
-                !ImagePresente(32) && Champ<bool>(fenetre, "pieceEnMain") && pos()[32] == Piece.PionBlanc && !Statique<bool>("clickCaseSource"), "");
+                !ImagePresente(32) && Champ<bool>(fenetre, "pieceEnMain") && pos()[32] == Piece.PionBlanc && !Champ<bool>(fenetre, "clickCaseSource"), "");
         verifie("Interface : la sélection montre les destinations possibles (cadres gris sur les cases vides 27 et 28, couleur du trajet) et la case de départ en couleur de départ",
-                ImagePresente(27) && ImagePresente(28) && pos()[27] == Piece.Vide && pos()[28] == Piece.Vide && CouleurCase(27) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi && CouleurCase(28) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi
-                && CouleurCase(32) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart, $"27 : {CouleurCase(27)}, départ : {CouleurCase(32)}");
+                ImagePresente(27) && ImagePresente(28) && pos()[27] == Piece.Vide && pos()[28] == Piece.Vide && CouleurCase(27) == fenetre.CouleurTrajetSuivi && CouleurCase(28) == fenetre.CouleurTrajetSuivi
+                && CouleurCase(32) == fenetre.CouleurCaseDepart, $"27 : {CouleurCase(27)}, départ : {CouleurCase(32)}");
         Clique(28);
         verifie("Interface : après le coup, plus aucun cadre gris (chaque image est celle de la pièce de sa case) et les couleurs sont remises : arrivée, trajet, le reste en couleur de base",
-                ImagesCoherentes() && CouleurCase(28) == BrunoInterfaceGraphiqueDames.CouleurCaseArrivee && CouleurCase(32) == BrunoInterfaceGraphiqueDames.CouleurTrajetSuivi && CouleurCase(27) == BrunoInterfaceGraphiqueDames.CouleurCaseSombre
-                && Enumerable.Range(1, 50).Where(n => n != 28 && n != 32).All(n => CouleurCase(n) == BrunoInterfaceGraphiqueDames.CouleurCaseSombre), $"27 : {CouleurCase(27)}");
+                ImagesCoherentes() && CouleurCase(28) == fenetre.CouleurCaseArrivee && CouleurCase(32) == fenetre.CouleurTrajetSuivi && CouleurCase(27) == fenetre.CouleurCaseSombre
+                && Enumerable.Range(1, 50).Where(n => n != 28 && n != 32).All(n => CouleurCase(n) == fenetre.CouleurCaseSombre), $"27 : {CouleurCase(27)}");
         verifie("Interface : le second clic joue 32-28 : position, images, historique et trait",
                 pos()[28] == Piece.PionBlanc && pos()[32] == Piece.Vide && ImagePresente(28) && !ImagePresente(32) && session().CoupsPdn.SequenceEqual(["32-28"])
-                && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Noir && Statique<bool>("clickCaseSource") && !Champ<bool>(fenetre, "pieceEnMain"),
-                $"{string.Join(" ", session().CoupsPdn)}, trait {BrunoInterfaceGraphiqueDames.CouleurAuTrait}");
+                && fenetre.CouleurAuTrait == Couleur.Noir && Champ<bool>(fenetre, "clickCaseSource") && !Champ<bool>(fenetre, "pieceEnMain"),
+                $"{string.Join(" ", session().CoupsPdn)}, trait {fenetre.CouleurAuTrait}");
         verifie("Interface : l'historique garde la position après le coup, avec le trait aux noirs", session().DernierePosition[28] == Piece.PionBlanc && session().DernierePosition.Trait == Couleur.Noir, "");
 
         Clique(19);
         Clique(14);         // Un pion noir ne recule pas, et la case est occupée
         verifie("Interface : un coup illégal est refusé, la pièce revient sur sa case et l'historique ne change pas",
-                pos()[19] == Piece.PionNoir && pos()[14] == Piece.PionNoir && ImagePresente(19) && session().CoupsPdn.Count == 1 && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Noir
-                && Statique<bool>("clickCaseSource") && ImagesCoherentes(), "");
+                pos()[19] == Piece.PionNoir && pos()[14] == Piece.PionNoir && ImagePresente(19) && session().CoupsPdn.Count == 1 && fenetre.CouleurAuTrait == Couleur.Noir
+                && Champ<bool>(fenetre, "clickCaseSource") && ImagesCoherentes(), "");
         Coup? coupNoir = JoueLegal();
         verifie("Interface : le coup légal suivant (noirs) s'ajoute et rend le trait aux blancs",
-                coupNoir != null && session().CoupsPdn.Count == 2 && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc && pos()[coupNoir.Arrivee] == Piece.PionNoir, coupNoir?.Hub2() ?? "(aucun)");
+                coupNoir != null && session().CoupsPdn.Count == 2 && fenetre.CouleurAuTrait == Couleur.Blanc && pos()[coupNoir.Arrivee] == Piece.PionNoir, coupNoir?.Hub2() ?? "(aucun)");
 
         // ═══════════════ Une rafle animée, fin de partie par prise de la dernière pièce ═══════════════
         Nouvelle();
-        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:W28:B22\"]", true);
+        fenetre.MiseenplaceFen("[FEN \"W:W28:B22\"]", true);
         Coup? rafle = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault();
         if (rafle == null)
         {
@@ -137,9 +137,9 @@ public static class ScenarioInterface
         }
         else
         {
-            BrunoInterfaceGraphiqueDames.ArriveesDebutTour = false;
+            fenetre.ArriveesDebutTour = false;
             Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);      // Une seule prise possible : le coup est forcé, son départ ET son arrivée sont signalés (cadre gris sur la case d'arrivée)
-            bool prisesSignalees = ImagePresente(rafle.Arrivee) && pos()[rafle.Arrivee] == Piece.Vide && CouleurCase(rafle.Depart) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart;            Clique(rafle.Depart);
+            bool prisesSignalees = ImagePresente(rafle.Arrivee) && pos()[rafle.Arrivee] == Piece.Vide && CouleurCase(rafle.Depart) == fenetre.CouleurCaseDepart;            Clique(rafle.Depart);
             Clique(rafle.Arrivee);
             bool jouee = Attendre(() => session().CoupsPdn.Count == 1, 5000);
             verifie("Interface : la prise obligatoire est signalée avant le coup (coup forcé : départ coloré et cadre gris à l'arrivée) et, après la rafle, aucun cadre gris ne reste",
@@ -148,19 +148,19 @@ public static class ScenarioInterface
                     jouee && pos()[rafle.Arrivee] == Piece.PionBlanc && pos()[22] == Piece.Vide && pos()[rafle.Depart] == Piece.Vide && !ImagePresente(22) && ImagePresente(rafle.Arrivee) && session().CoupsPdn[0].Contains('x'),
                     jouee ? string.Join(" ", session().CoupsPdn) : "pas de coup joué");
             verifie("Interface : les noirs n'ont plus de pièce : partie terminée, résultat 1-0, message annoncé, case « Gain blanc » cochée",
-                    BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == "1-0" && ((RadioButton)Trouve("RadioGainBlanc")).Checked && messages.Any(m => m.Contains("Les Blancs gagnent")),
+                    fenetre.PartieTerminee && session().Resultat == "1-0" && ((RadioButton)Trouve("RadioGainBlanc")).Checked && messages.Any(m => m.Contains("Les Blancs gagnent")),
                     $"résultat {session().Resultat}, messages : {string.Join(" / ", messages)}");
         }
         // ═══════════════ Animations : glissement des pièces et durée des étapes ═══════════════
         Nouvelle();
-        BrunoInterfaceGraphiqueDames.DureeEtape = 120;
+        fenetre.DureeEtape = 120;
         Coup? coupGlisse = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault(c => c.Depart == 32 && c.Arrivee == 28);
         Stopwatch chrono = Stopwatch.StartNew();
         Task<string> glissement = AppelleRetour<Task<string>>(fenetre, "JoueCoupSurLeDamier", coupGlisse!, true);
         Pompe(60);        // Au milieu du glissement
         PictureBox? vole = Champ<PictureBox?>(fenetre, "glisseur");
-        bool enVol = vole != null && vole.Visible && !ImagePresente(32) && !ImagePresente(28) && vole.Location != BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)].Location
-                     && vole.Location != BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(28)].Location && vole.Region != null && !vole.Enabled;
+        bool enVol = vole != null && vole.Visible && !ImagePresente(32) && !ImagePresente(28) && vole.Location != fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)].Location
+                     && vole.Location != fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(28)].Location && vole.Region != null && !vole.Enabled;
         bool glisseFini = Attendre(() => glissement.IsCompleted, 3000);
         chrono.Stop();
         verifie("Interface : un coup glissé (moteur, rejeu) : pendant le glissement la pièce est dans un contrôle à part, entre les deux cases (de la forme de la pièce, sans clic) ; à la fin elle est sur sa case et le contrôle disparaît",
@@ -168,7 +168,7 @@ public static class ScenarioInterface
                 $"en vol : {enVol}, fini : {glisseFini}, {chrono.ElapsedMilliseconds} ms, tâche {glissement.Status} {glissement.Exception?.GetBaseException().Message}, contexte {SynchronizationContext.Current?.GetType().Name}");
 
         Nouvelle();
-        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:W28:B22\"]", true);
+        fenetre.MiseenplaceFen("[FEN \"W:W28:B22\"]", true);
         Coup? petiteRafle = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault();
         chrono.Restart();
         Task<string> tacheRafle = AppelleRetour<Task<string>>(fenetre, "JoueCoupSurLeDamier", petiteRafle!, false);
@@ -177,10 +177,10 @@ public static class ScenarioInterface
         verifie("Interface : une rafle d'une pièce dure deux étapes (une par prise, plus une pause) : 2 × 120 ms au moins pour le joueur, et aucune pièce prise ne reste",
                 rafleHumaineFinie && chrono.ElapsedMilliseconds >= 200 && chrono.ElapsedMilliseconds < 2000 && pos().Compte(Piece.PionNoir) == 0 && ImagesCoherentes(), $"{chrono.ElapsedMilliseconds} ms");
 
-        BrunoInterfaceGraphiqueDames.DureeEtape = 0;
+        fenetre.DureeEtape = 0;
         Nouvelle();
         verifie("Interface : « Nouvelle partie » après une partie finie remet tout en route : position initiale, cases actives, plus de résultat",
-                pos().Compte(Piece.PionBlanc) == 20 && !BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == null && session().Positions.Count == 1
+                pos().Compte(Piece.PionBlanc) == 20 && !fenetre.PartieTerminee && session().Resultat == null && session().Positions.Count == 1
                 && CaseActive(32),
                 $"case 32 active : {CaseActive(32)}");
 
@@ -204,10 +204,10 @@ public static class ScenarioInterface
         maintenant += TimeSpan.FromSeconds(30);
         Tick();
         verifie("Interface : le drapeau des blancs tombe : les noirs gagnent au temps (résultat 0-1, message, statut, case « Gain noir » cochée)",
-                BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == "0-1" && ((RadioButton)Trouve("RadioGainNoir")).Checked && Trouve("LabelInformationJoueur").Text == "Les Noirs gagnent au temps"
+                fenetre.PartieTerminee && session().Resultat == "0-1" && ((RadioButton)Trouve("RadioGainNoir")).Checked && Trouve("LabelInformationJoueur").Text == "Les Noirs gagnent au temps"
                 && messages.Any(m => m.Contains("Les Noirs gagnent") && m.Contains("des blancs")) && temps("LabelPenduleBlanc") == "B 00:00",
                 $"résultat {session().Resultat}, statut « {Trouve("LabelInformationJoueur").Text} »");
-        verifie("Interface : après la chute du drapeau, le damier est inactif et la pendule arrêtée", BrunoInterfaceGraphiqueDames.CaseDamier.All(c => !c.Enabled) && pendule()?.Etat == EtatPendule.Arretee, "");
+        verifie("Interface : après la chute du drapeau, le damier est inactif et la pendule arrêtée", fenetre.CaseDamier.All(c => !c.Enabled) && pendule()?.Etat == EtatPendule.Arretee, "");
         maintenant += TimeSpan.FromMinutes(10);
         Tick();
         verifie("Interface : le temps qui passe ensuite ne change plus rien (un seul message de fin)", messages.Count(m => m.StartsWith("Partie terminée")) == 1, $"{messages.Count} messages");
@@ -220,7 +220,7 @@ public static class ScenarioInterface
         maintenant += TimeSpan.FromMinutes(6);
         Tick();
         verifie("Interface : si le drapeau tombe pendant qu'une pièce est en main, elle revient sur sa case (image, curseur, sélection)",
-                enMain && BrunoInterfaceGraphiqueDames.PartieTerminee && ImagePresente(17) && !Champ<bool>(fenetre, "pieceEnMain") && Statique<bool>("clickCaseSource") && fenetre.Cursor == Cursors.Default,
+                enMain && fenetre.PartieTerminee && ImagePresente(17) && !Champ<bool>(fenetre, "pieceEnMain") && Champ<bool>(fenetre, "clickCaseSource") && fenetre.Cursor == Cursors.Default,
                 $"enMain avant : {enMain}, image : {ImagePresente(17)}");
 
         // Le curseur « pièce en main » ne fait pas fuir de handle GDI (150 sélections suivies d'un clic qui repose la pièce)
@@ -291,49 +291,49 @@ public static class ScenarioInterface
         verifie("Interface : dans la fenêtre du protocole, un espace sépare « [SCAN 3.1] » (comme « [BrunoGUI_Dames] ») des données", protocole.Contains("[SCAN 3.1]    pong") && protocole.Contains("[BrunoGUI_Dames]    ping"), protocole);
 
         // ═══════════════ Repères du damier : dernier coup, croix sur les pièces à prendre, numéros des étapes ═══════════════
-        BrunoInterfaceGraphiqueDames.DureeEtape = 0;
+        fenetre.DureeEtape = 0;
         Nouvelle();
         Joue(32, 28);
-        bool traceApresCoup = Statique<int>("dernierDepartManoury") == 32 && Statique<int>("dernierArriveeManoury") == 28;
+        bool traceApresCoup = Champ<int>(fenetre, "dernierDepartManoury") == 32 && Champ<int>(fenetre, "dernierArriveeManoury") == 28;
         JoueLegal();                            // Les noirs répondent : le dernier coup est le leur
         Coup? reponseNoire = null;
         if (session().CoupsPdn.Count == 2) reponseNoire = ReglesDames.TrouverCoupPdn(session().Positions[1], session().CoupsPdn[1]);
-        bool traceReponse = reponseNoire != null && Statique<int>("dernierDepartManoury") == reponseNoire.Depart && Statique<int>("dernierArriveeManoury") == reponseNoire.Arrivee;
+        bool traceReponse = reponseNoire != null && Champ<int>(fenetre, "dernierDepartManoury") == reponseNoire.Depart && Champ<int>(fenetre, "dernierArriveeManoury") == reponseNoire.Arrivee;
         Appelle(fenetre, "BoutonPrecedent_Click", null, EventArgs.Empty);
-        bool traceParcours = Statique<int>("dernierDepartManoury") == 32 && Statique<int>("dernierArriveeManoury") == 28;       // Le parcours montre le coup de la position affichée
+        bool traceParcours = Champ<int>(fenetre, "dernierDepartManoury") == 32 && Champ<int>(fenetre, "dernierArriveeManoury") == 28;       // Le parcours montre le coup de la position affichée
         Appelle(fenetre, "BoutonDebut_Click", null, EventArgs.Empty);
-        bool traceDebut = Statique<int>("dernierDepartManoury") == 0 && Statique<int>("dernierArriveeManoury") == 0;
+        bool traceDebut = Champ<int>(fenetre, "dernierDepartManoury") == 0 && Champ<int>(fenetre, "dernierArriveeManoury") == 0;
         verifie("Interface : le dernier coup est repéré par un cadre sur ses deux cases (celui du coup joué, de la réponse, du coup affiché par le parcours ; aucun au début)",
                 traceApresCoup && traceReponse && traceParcours && traceDebut, $"après le coup {traceApresCoup}, réponse {traceReponse}, parcours {traceParcours}, début {traceDebut}");
 
         // Le style du repère du dernier coup (préférence RepereDernierCoup) : ce qui est dessiné dans la case de départ du dernier coup (32)
         Nouvelle();
         Joue(32, 28);
-        PictureBox case32 = BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)];
+        PictureBox case32 = fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)];
         bool BrunA(Bitmap b, int x, int y) { Color c = b.GetPixel(x, y); return Math.Abs(c.R - 0x4A) < 12 && Math.Abs(c.G - 0x2A) < 12 && Math.Abs(c.B - 0x12) < 12; }
         (bool coin, bool milieuGauche) Reperes(string style)
         {
-            BrunoInterfaceGraphiqueDames.RepereDernierCoup = style;
+            fenetre.RepereDernierCoup = style;
             case32.Invalidate();
             using Bitmap dessin = new Bitmap(case32.Width, case32.Height);
             case32.DrawToBitmap(dessin, new Rectangle(0, 0, case32.Width, case32.Height));
             return (BrunA(dessin, 6, case32.Height - 7), BrunA(dessin, 3, case32.Height / 2));      // Près du coin en bas à gauche ; au milieu du bord gauche
         }
         (bool coin, bool milieuGauche) styleCoin = Reperes("coin"), styleCadre = Reperes("cadre"), styleAucun = Reperes("aucun");
-        BrunoInterfaceGraphiqueDames.RepereDernierCoup = "coin";
+        fenetre.RepereDernierCoup = "coin";
         verifie("Interface : le repère du dernier coup est un triangle dans un coin (par défaut), un cadre, ou rien selon la préférence RepereDernierCoup",
                 styleCoin == (true, false) && styleCadre == (false, true) && styleAucun == (false, false), $"coin {styleCoin}, cadre {styleCadre}, aucun {styleAucun}");
         Nouvelle();
-        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:W32:B28,19\"]", true);       // Une rafle en deux étapes
+        fenetre.MiseenplaceFen("[FEN \"W:W32:B28,19\"]", true);       // Une rafle en deux étapes
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         Coup? deuxEtapes = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault();
-        bool forceMontre = deuxEtapes != null && ImagePresente(deuxEtapes.Arrivee) && Statique<Dictionary<int, string>>("numerosEtape").Count == 2;
-        verifie("Interface : une rafle forcée est montrée dès le début du tour avec sa destination et l'ordre de ses étapes", forceMontre, $"numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}");
+        bool forceMontre = deuxEtapes != null && ImagePresente(deuxEtapes.Arrivee) && Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count == 2;
+        verifie("Interface : une rafle forcée est montrée dès le début du tour avec sa destination et l'ordre de ses étapes", forceMontre, $"numéros {Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count}");
         Clique(32);
-        bool couleursEtapes = deuxEtapes != null && CouleurCase(deuxEtapes.Prises[0]) == BrunoInterfaceGraphiqueDames.CouleurCasePrise && CouleurCase(deuxEtapes.Chemin[0]) == BrunoInterfaceGraphiqueDames.CouleurCaseEtape
-                              && CouleurCase(deuxEtapes.Arrivee) == BrunoInterfaceGraphiqueDames.CouleurCaseArrivee;
+        bool couleursEtapes = deuxEtapes != null && CouleurCase(deuxEtapes.Prises[0]) == fenetre.CouleurCasePrise && CouleurCase(deuxEtapes.Chemin[0]) == fenetre.CouleurCaseEtape
+                              && CouleurCase(deuxEtapes.Arrivee) == fenetre.CouleurCaseArrivee;
         verifie("Interface : à la sélection d'une prise forcée, la pièce à prendre, la case d'étape et l'arrivée ont chacune leur couleur (malgré le cadre gris posé au début du tour)", couleursEtapes,
-                deuxEtapes == null ? "pas de rafle" : $"prise {CouleurCase(deuxEtapes.Prises[0])}, étape {CouleurCase(deuxEtapes.Chemin[0])}, arrivée {CouleurCase(deuxEtapes.Arrivee)}");        Dictionary<int, string> etapes = Statique<Dictionary<int, string>>("numerosEtape");
+                deuxEtapes == null ? "pas de rafle" : $"prise {CouleurCase(deuxEtapes.Prises[0])}, étape {CouleurCase(deuxEtapes.Chemin[0])}, arrivée {CouleurCase(deuxEtapes.Arrivee)}");        Dictionary<int, string> etapes = Champ<Dictionary<int, string>>(fenetre, "numerosEtape");
         verifie("Interface : à la sélection d'une rafle unique, ses cases d'arrivée sont numérotées 1, 2…",
                 deuxEtapes != null && deuxEtapes.Chemin.Count == 2 && etapes.Count == 2 && etapes[deuxEtapes.Chemin[0]] == "1" && etapes[deuxEtapes.Chemin[1]] == "2",
                 $"rafle {deuxEtapes?.PdnComplet()} ({deuxEtapes?.Chemin.Count} étape(s)), étapes {string.Join(",", etapes)}");
@@ -341,25 +341,25 @@ public static class ScenarioInterface
             Clique(deuxEtapes.Arrivee);
         bool rafleJouee = Attendre(() => session().CoupsPdn.Count == 1, 5000);
         verifie("Interface : après la rafle, les numéros disparaissent et le dernier coup est celui de la rafle",
-                rafleJouee && deuxEtapes != null && Statique<Dictionary<int, string>>("numerosEtape").Count == 0
-                && Statique<int>("dernierDepartManoury") == deuxEtapes.Depart && Statique<int>("dernierArriveeManoury") == deuxEtapes.Arrivee,
-                $"numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}, dernier coup {Statique<int>("dernierDepartManoury")}-{Statique<int>("dernierArriveeManoury")}");
+                rafleJouee && deuxEtapes != null && Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count == 0
+                && Champ<int>(fenetre, "dernierDepartManoury") == deuxEtapes.Depart && Champ<int>(fenetre, "dernierArriveeManoury") == deuxEtapes.Arrivee,
+                $"numéros {Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count}, dernier coup {Champ<int>(fenetre, "dernierDepartManoury")}-{Champ<int>(fenetre, "dernierArriveeManoury")}");
         Nouvelle();
-        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:WK44:B12,18,19,39\"]", true);     // Deux rafles possibles pour la même pièce
+        fenetre.MiseenplaceFen("[FEN \"W:WK44:B12,18,19,39\"]", true);     // Deux rafles possibles pour la même pièce
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         List<Coup> prisesPossibles = ReglesDames.CoupsLegaux(session().DernierePosition).ToList();
-        bool departSeul = prisesPossibles.Count > 1 && CouleurCase(44) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart && prisesPossibles.All(c => !ImagePresente(c.Arrivee) && BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(c.Arrivee)].Enabled);
-        BrunoInterfaceGraphiqueDames.ArriveesDebutTour = true;
+        bool departSeul = prisesPossibles.Count > 1 && CouleurCase(44) == fenetre.CouleurCaseDepart && prisesPossibles.All(c => !ImagePresente(c.Arrivee) && fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(c.Arrivee)].Enabled);
+        fenetre.ArriveesDebutTour = true;
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         bool arriveesAvecPreference = prisesPossibles.All(c => ImagePresente(c.Arrivee));
-        BrunoInterfaceGraphiqueDames.ArriveesDebutTour = false;
+        fenetre.ArriveesDebutTour = false;
         Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
         verifie("Interface : avec plusieurs prises possibles, seule la pièce est signalée au début du tour (arrivées cliquables mais discrètes) ; la préférence ArriveesDebutTour montre toutes les arrivées",
                 departSeul && arriveesAvecPreference, $"départ seul {departSeul}, arrivées avec la préférence {arriveesAvecPreference}");
         Clique(44);
         verifie("Interface : avec plusieurs rafles possibles, les étapes ne sont pas numérotées (leurs numéros se mélangeraient)",
-                Champ<bool>(fenetre, "pieceEnMain") && Statique<Dictionary<int, string>>("numerosEtape").Count == 0,
-                $"pièce en main {Champ<bool>(fenetre, "pieceEnMain")}, numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}");        Clique(44);                             // Un clic sur sa propre case : la pièce revient (ce n'est pas une rafle en boucle)
+                Champ<bool>(fenetre, "pieceEnMain") && Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count == 0,
+                $"pièce en main {Champ<bool>(fenetre, "pieceEnMain")}, numéros {Champ<Dictionary<int, string>>(fenetre, "numerosEtape").Count}");        Clique(44);                             // Un clic sur sa propre case : la pièce revient (ce n'est pas une rafle en boucle)
         Pompe(30);
         Appelle(fenetre, "EffaceMouvements");
 
@@ -372,8 +372,8 @@ public static class ScenarioInterface
         Appelle(fenetre, "BoutonRetourArriere_Click", null, EventArgs.Empty);
         Tick();
         verifie("Interface : « Retour arrière » retire le coup, garde les temps (noirs 4:53), arme la pendule (elle n'avance plus) et redonne le trait aux noirs",
-                session().CoupsPdn.Count == 1 && pendule()?.Etat == EtatPendule.Armee && temps("LabelPenduleNoir") == "N 04:53" && pendule()?.Trait == Couleur.Noir && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Noir,
-                $"{temps("LabelPenduleNoir")}, {pendule()?.Etat}, {session().CoupsPdn.Count} coup(s), trait de la pendule {pendule()?.Trait}, trait du jeu {BrunoInterfaceGraphiqueDames.CouleurAuTrait}");
+                session().CoupsPdn.Count == 1 && pendule()?.Etat == EtatPendule.Armee && temps("LabelPenduleNoir") == "N 04:53" && pendule()?.Trait == Couleur.Noir && fenetre.CouleurAuTrait == Couleur.Noir,
+                $"{temps("LabelPenduleNoir")}, {pendule()?.Etat}, {session().CoupsPdn.Count} coup(s), trait de la pendule {pendule()?.Trait}, trait du jeu {fenetre.CouleurAuTrait}");
         maintenant += TimeSpan.FromSeconds(20);
         Tick();
         verifie("Interface : armée, la pendule ne décompte pas avant le prochain coup", temps("LabelPenduleNoir") == "N 04:53", temps("LabelPenduleNoir"));
@@ -394,8 +394,8 @@ public static class ScenarioInterface
         messages.Clear();
         Clique(31);
         verifie("Interface : sur une position parcourue (Préc.), un clic sur une pièce est refusé avec un message, rien n'est sélectionné ni joué",
-                messages.Count == 1 && messages[0].StartsWith("Partie parcourue") && session().CoupsPdn.Count == 2 && Statique<bool>("clickCaseSource") && ImagePresente(31) && !Champ<bool>(fenetre, "pieceEnMain"),
-                $"messages : {string.Join(" / ", messages)} ; {session().CoupsPdn.Count} coup(s), indice {session().IndexAffiche}/{session().Positions.Count - 1}, clickCaseSource {Statique<bool>("clickCaseSource")}, partie terminée {BrunoInterfaceGraphiqueDames.PartieTerminee}");
+                messages.Count == 1 && messages[0].StartsWith("Partie parcourue") && session().CoupsPdn.Count == 2 && Champ<bool>(fenetre, "clickCaseSource") && ImagePresente(31) && !Champ<bool>(fenetre, "pieceEnMain"),
+                $"messages : {string.Join(" / ", messages)} ; {session().CoupsPdn.Count} coup(s), indice {session().IndexAffiche}/{session().Positions.Count - 1}, clickCaseSource {Champ<bool>(fenetre, "clickCaseSource")}, partie terminée {fenetre.PartieTerminee}");
         messages.Clear();
         Appelle(fenetre, "OrdinateurJoue_Click", null, EventArgs.Empty);
         verifie("Interface : « Ordinateur joue » est refusé de la même façon sur une position parcourue", messages.Count == 1 && messages[0].StartsWith("Partie parcourue") && session().CoupsPdn.Count == 2, string.Join(" / ", messages));
@@ -410,7 +410,7 @@ public static class ScenarioInterface
         fenetre.ChargerPartieDepuisPdn(partiesExemple[0]);      // 12 demi-coups (6 coups de chaque camp), dont plusieurs prises
         verifie("Interface : une partie PDN chargée entre tout de suite dans l'historique (12 demi-coups, 13 positions), le damier montre la position de départ, sans message ni attente",
                 session().Positions.Count == 13 && session().CoupsPdn.Count == 12 && session().IndexAffiche == 0 && pos().Compte(Piece.PionBlanc) == 20 && pos().Compte(Piece.PionNoir) == 20 && ImagesCoherentes()
-                && messages.Count == 0 && BrunoInterfaceGraphiqueDames.BalisesPartie.White == "Bruno" && Trouve("LabelCoupJoue").Text == "Position initiale" && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc,
+                && messages.Count == 0 && fenetre.BalisesPartie.White == "Bruno" && Trouve("LabelCoupJoue").Text == "Position initiale" && fenetre.CouleurAuTrait == Couleur.Blanc,
                 $"{session().Positions.Count} positions, indice {session().IndexAffiche}, messages : {string.Join(" / ", messages)}");
         Clique(31);
         verifie("Interface : sur la position de départ d'une partie chargée, on ne joue pas (message « Partie parcourue »)", messages.Count == 1 && messages[0].StartsWith("Partie parcourue") && session().CoupsPdn.Count == 12, string.Join(" / ", messages));
@@ -422,10 +422,10 @@ public static class ScenarioInterface
         bool enLecture = Champ<CancellationTokenSource?>(fenetre, "lecture") != null;
         bool boutonsBloques = !Trouve("BoutonPrecedent").Enabled && !Trouve("BoutonFin").Enabled && !Trouve("NouvellePartie").Enabled && Trouve("BoutonLecture").Enabled && Trouve("BoutonLecture").Text == "Pause";
         Clique(31);       // Un clic sur le damier est ignoré pendant la lecture
-        bool clicIgnore = messages.Count == 0 && Statique<bool>("clickCaseSource");
+        bool clicIgnore = messages.Count == 0 && Champ<bool>(fenetre, "clickCaseSource");
         bool luJusquAuBout = Attendre(() => Champ<CancellationTokenSource?>(fenetre, "lecture") == null, 20000);
         Position visible = pos().Copie();
-        visible.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait;
+        visible.Trait = fenetre.CouleurAuTrait;
         verifie("Interface : pendant la lecture, les boutons sont inactifs sauf Pause et la vitesse, et un clic sur le damier est ignoré sans message",
                 enLecture && boutonsBloques && clicIgnore, $"en lecture : {enLecture}, boutons bloqués : {boutonsBloques}, clic ignoré : {clicIgnore}");
         verifie("Interface : la lecture déroule toute la partie : dernière position, damier identique à l'historique, boutons de nouveau actifs, « Lecture » sur le bouton, dernier coup affiché",
@@ -440,7 +440,7 @@ public static class ScenarioInterface
         bool arretee = Attendre(() => Champ<CancellationTokenSource?>(fenetre, "lecture") == null, 20000);
         int indexPause = session().IndexAffiche;
         Position apresPause = pos().Copie();
-        apresPause.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait;
+        apresPause.Trait = fenetre.CouleurAuTrait;
         verifie("Interface : « Pause » arrête la lecture après le coup en cours : on est entre le début et la fin, le damier montre la position de l'historique à cet indice et le bouton redevient « Lecture »",
                 arretee && indexPause > 0 && indexPause < 12 && apresPause.VersFen() == session().Positions[indexPause].VersFen() && ImagesCoherentes() && Trouve("BoutonLecture").Text == "Lecture" && Trouve("BoutonPrecedent").Enabled,
                 $"arrêtée : {arretee}, indice {indexPause}");
@@ -467,26 +467,26 @@ public static class ScenarioInterface
         ((TrackBar)Trouve("trackBarTempsReflexion")).Value = 1;     // 1 seconde de réflexion
         Nouvelle(5, avecMoteur: true);
         Joue(32, 28, attendCoups: false);
-        bool repondu = Attendre(() => session().CoupsPdn.Count == 2 && !Statique<bool>("jeuMoteurEnCours"), 30000);
+        bool repondu = Attendre(() => session().CoupsPdn.Count == 2 && !Champ<bool>(fenetre, "jeuMoteurEnCours"), 30000);
         Position affichee = pos().Copie();
-        affichee.Trait = BrunoInterfaceGraphiqueDames.CouleurAuTrait;
+        affichee.Trait = fenetre.CouleurAuTrait;
         verifie("Interface + Scan : après le coup de l'humain, le moteur répond : deux coups, trait aux blancs, la position du damier est celle de l'historique",
-                repondu && BrunoInterfaceGraphiqueDames.CouleurAuTrait == Couleur.Blanc && affichee.VersFen() == session().DernierePosition.VersFen(), $"{string.Join(" ", session().CoupsPdn)}");
+                repondu && fenetre.CouleurAuTrait == Couleur.Blanc && affichee.VersFen() == session().DernierePosition.VersFen(), $"{string.Join(" ", session().CoupsPdn)}");
         verifie("Interface + Scan : la pendule a compté le coup du moteur (noirs : 1 coup, 5:00 + 3 s puisque l'horloge simulée n'a pas bougé) ; les blancs sont au trait",
                 pendule()?.CoupsJoues(Couleur.Noir) == 1 && temps("LabelPenduleNoir") == "N 05:03" && pendule()?.Trait == Couleur.Blanc, $"{temps("LabelPenduleNoir")}, noirs : {pendule()?.CoupsJoues(Couleur.Noir)} coup(s)");
 
         // Le drapeau du moteur tombe pendant qu'il réfléchit : il perd, son coup n'est pas joué
         Nouvelle(5, avecMoteur: true);
         Joue(32, 28, attendCoups: false);
-        bool reflechit = Statique<bool>("jeuMoteurEnCours");
+        bool reflechit = Champ<bool>(fenetre, "jeuMoteurEnCours");
         maintenant += TimeSpan.FromMinutes(10);
         Tick();
-        bool fini = Attendre(() => !Statique<bool>("jeuMoteurEnCours"), 30000);
+        bool fini = Attendre(() => !Champ<bool>(fenetre, "jeuMoteurEnCours"), 30000);
         Pompe(300);
         verifie("Interface + Scan : le drapeau du moteur tombe pendant sa réflexion : les blancs gagnent au temps, le moteur est arrêté et son coup n'est pas joué",
-                reflechit && fini && BrunoInterfaceGraphiqueDames.PartieTerminee && session().Resultat == "1-0" && session().CoupsPdn.Count == 1 && messages.Any(m => m.Contains("Les Blancs gagnent") && m.Contains("des noirs")),
+                reflechit && fini && fenetre.PartieTerminee && session().Resultat == "1-0" && session().CoupsPdn.Count == 1 && messages.Any(m => m.Contains("Les Blancs gagnent") && m.Contains("des noirs")),
                 $"réfléchissait : {reflechit}, fini : {fini}, coups : {string.Join(" ", session().CoupsPdn)}, résultat {session().Resultat}");
-        verifie("Interface + Scan : après cette fin, le damier reste inactif (le retour du moteur ne le réactive pas)", BrunoInterfaceGraphiqueDames.CaseDamier.All(c => !c.Enabled), "");
+        verifie("Interface + Scan : après cette fin, le damier reste inactif (le retour du moteur ne le réactive pas)", fenetre.CaseDamier.All(c => !c.Enabled), "");
     }
 
     // ───────────────────────────── Aides ─────────────────────────────
@@ -510,7 +510,7 @@ public static class ScenarioInterface
     // Un clic de souris sur la case Manoury : le chemin du vrai clic (CaseMouseDown)
     private static void Clique(int caseManoury)
     {
-        PictureBox caseClic = BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)];
+        PictureBox caseClic = fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)];
         Appelle(fenetre, "CaseMouseDown", caseClic, new MouseEventArgs(MouseButtons.Left, 1, 10, 10, 0));
     }
 
@@ -519,10 +519,10 @@ public static class ScenarioInterface
     {
         int avant = Partie.Courante.CoupsPdn.Count;
         Clique(depart);
-        bool selectionne = !Statique<bool>("clickCaseSource");
+        bool selectionne = !Champ<bool>(fenetre, "clickCaseSource");
         Clique(arrivee);
         if (attendCoups && !Attendre(() => Partie.Courante.CoupsPdn.Count == avant + 1, 5000))
-            Console.WriteLine($"      (coup {depart}-{arrivee} non joué : sélection faite {selectionne}, {Partie.Courante.CoupsPdn.Count} coup(s), trait {BrunoInterfaceGraphiqueDames.CouleurAuTrait}, partie terminée {BrunoInterfaceGraphiqueDames.PartieTerminee}, messages : {string.Join(" / ", messages)})");
+            Console.WriteLine($"      (coup {depart}-{arrivee} non joué : sélection faite {selectionne}, {Partie.Courante.CoupsPdn.Count} coup(s), trait {fenetre.CouleurAuTrait}, partie terminée {fenetre.PartieTerminee}, messages : {string.Join(" / ", messages)})");
     }
 
     // Joue le premier coup légal de la dernière position (deux clics) ; null s'il n'y en a pas
@@ -535,21 +535,21 @@ public static class ScenarioInterface
     }
 
     private static void Tick() => Appelle(fenetre, "MinuteriePendule_Tick", null, EventArgs.Empty);
-    private static bool ImagePresente(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Image != null;
-    private static Color CouleurCase(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].BackColor;
+    private static bool ImagePresente(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Image != null;
+    private static Color CouleurCase(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].BackColor;
     // Chaque case sombre porte l'image de sa pièce, ou aucune image si elle est vide : pas de cadre gris oublié, pas de pièce fantôme
     private static bool ImagesCoherentes()
     {
         for (int numero = 1; numero <= 50; numero++)
         {
             Piece piece = GestionDamier.PositionCourante[numero];
-            Image? attendue = piece == Piece.Vide ? null : BrunoInterfaceGraphiqueDames.ListeBitmapsPiece[piece];
-            if (!ReferenceEquals(BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(numero)].Image, attendue))
+            Image? attendue = piece == Piece.Vide ? null : fenetre.ListeBitmapsPiece[piece];
+            if (!ReferenceEquals(fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(numero)].Image, attendue))
                 return false;
         }
         return true;
     }
-    private static bool CaseActive(int caseManoury) => BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled;
+    private static bool CaseActive(int caseManoury) => fenetre.CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseManoury)].Enabled;
 
     private static Control Trouve(string nom)
     {
@@ -563,11 +563,6 @@ public static class ScenarioInterface
     {
         FieldInfo champ = objet.GetType().GetField(nom, Tous) ?? throw new InvalidOperationException($"Champ « {nom} » introuvable");
         return (T)champ.GetValue(objet)!;
-    }
-    private static T Statique<T>(string nom)
-    {
-        FieldInfo champ = typeof(BrunoInterfaceGraphiqueDames).GetField(nom, Tous) ?? throw new InvalidOperationException($"Champ statique « {nom} » introuvable");
-        return (T)champ.GetValue(null)!;
     }
 
     // Comme Application.Run : les suites des « await » doivent revenir sur le thread de la fenêtre, quand la boucle de messages tourne (Pompe, Attendre). Application.DoEvents remet à chaque

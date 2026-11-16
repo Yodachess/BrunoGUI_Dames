@@ -21,19 +21,19 @@ namespace BrunoGUI_Dames
         // et le numéro d'ordre des étapes d'une rafle. Ils ne changent pas les couleurs du damier.
         private static readonly Color CouleurDernierCoup = Color.FromArgb(0x4A, 0x2A, 0x12);       // Repère du dernier coup : brun foncé (choisi le 2026-11-16 ; un bleu puis un jaune vif avaient été essayés)
         private static readonly Color CouleurBordDernierCoup = Color.FromArgb(0xFF, 0xF6, 0xE3);    // Son liseré : crème, pour qu'il se lise aussi sur les pièces noires et les cases foncées
-        private static int dernierDepartManoury;                        // Les cases du dernier coup (0 : aucun)
-        private static int dernierArriveeManoury;
-        private static readonly Dictionary<int, string> numerosEtape = new Dictionary<int, string>();     // Numéro d'ordre des cases d'arrivée d'une rafle : « 1 », « 2 » (« 1,3 » si elle repasse sur une case)
+        private int dernierDepartManoury;                        // Les cases du dernier coup (0 : aucun)
+        private int dernierArriveeManoury;
+        private readonly Dictionary<int, string> numerosEtape = new Dictionary<int, string>();     // Numéro d'ordre des cases d'arrivée d'une rafle : « 1 », « 2 » (« 1,3 » si elle repasse sur une case)
 
         // --- Le dernier coup (0, 0 : aucun) ---
-        private static void MarqueDernierCoup(int depart, int arrivee)
+        private void MarqueDernierCoup(int depart, int arrivee)
         {
             dernierDepartManoury = depart;
             dernierArriveeManoury = arrivee;
             RafraichitDamier();
         }
         // --- Le dernier coup de la position affichée par le parcours de la partie (aucun au départ) : appelée après la mise en place d'une position ---
-        private static void MarqueDernierCoupAffiche()
+        private void MarqueDernierCoupAffiche()
         {
             SessionPartie session = Partie.Courante;
             int i = session.IndexAffiche;
@@ -41,7 +41,7 @@ namespace BrunoGUI_Dames
             MarqueDernierCoup(coup?.Depart ?? 0, coup?.Arrivee ?? 0);
         }
         // --- Les numéros d'ordre des étapes d'une rafle ; une rafle d'une seule étape n'en a pas besoin ---
-        private static void MarqueEtapes(Coup rafle)
+        private void MarqueEtapes(Coup rafle)
         {
             numerosEtape.Clear();
             if (rafle.Chemin.Count >= 2)
@@ -50,21 +50,21 @@ namespace BrunoGUI_Dames
             RafraichitDamier();
         }
         // --- Efface les numéros d'étapes (pas le dernier coup) ---
-        private static void EffaceNumerosEtape()
+        private void EffaceNumerosEtape()
         {
             if (numerosEtape.Count == 0)
                 return;
             numerosEtape.Clear();
             RafraichitDamier();
         }
-        private static void RafraichitDamier()
+        private void RafraichitDamier()
         {
             foreach (PictureBox c in CaseDamier)
                 c.Invalidate();
         }
 
         // --- Dessine les repères de la case Manoury numero (taille largeur × hauteur) par-dessus son image ---
-        private static void DessineMarques(Graphics g, int numero, int largeur, int hauteur)
+        private void DessineMarques(Graphics g, int numero, int largeur, int hauteur)
         {
             SmoothingMode ancien = g.SmoothingMode;
             g.SmoothingMode = SmoothingMode.AntiAlias;
