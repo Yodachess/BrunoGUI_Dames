@@ -256,7 +256,39 @@ public static class ScenarioInterface
         string boutonsIllisibles = string.Join(", ", new[] { "NouvellePartie", "BoutonQuitterApplication", "BoutonAide", "BoutonMasqueAffiche" }
             .Where(n => new[] { "StateCommon", "StateNormal", "StateTracking", "StatePressed", "OverrideDefault" }.Any(e => Contraste(Krypton(n, e, "Texte"), Krypton(n, e, "Back")) < 4.5)));
         verifie("Interface : le thème est appliqué (fond du thème) et chaque texte est lisible sur son fond (contraste d'au moins 4,5), boutons Krypton compris dans tous leurs états",
-                fenetre.BackColor == Statique<Color>("ThemeFond") && illisibles.Length == 0 && boutonsIllisibles.Length == 0, $"illisibles : {illisibles} / boutons : {boutonsIllisibles}");
+                fenetre.BackColor == ThemeInterface.Fond && illisibles.Length == 0 && boutonsIllisibles.Length == 0, $"illisibles : {illisibles} / boutons : {boutonsIllisibles}");
+
+        // Les fenêtres secondaires portent le même thème : fond du thème, et chaque texte lisible sur son fond
+        List<string> fenetresIllisibles = new List<string>();
+        void VerifieFenetre(string nom, Form f)
+        {
+            if (f.BackColor != ThemeInterface.Fond) fenetresIllisibles.Add($"{nom} : fond {f.BackColor.Name}");
+            void Parcours(Control.ControlCollection cc)
+            {
+                foreach (Control c in cc)
+                {
+                    if (c is Button b && Contraste(b.ForeColor, b.BackColor) < 4.5) fenetresIllisibles.Add($"{nom} : bouton {b.Name}");
+                    if (c is RichTextBox r && Contraste(r.ForeColor, r.BackColor) < 4.5) fenetresIllisibles.Add($"{nom} : texte {r.Name}");
+                    if (c is Label l && l.BackColor != Color.Transparent && l.BackColor != SystemColors.Control && Contraste(l.ForeColor, l.BackColor) < 4.5) fenetresIllisibles.Add($"{nom} : étiquette {l.Name}");
+                    if (c is DataGridView g && (Contraste(g.DefaultCellStyle.ForeColor, g.DefaultCellStyle.BackColor) < 4.5 || Contraste(g.ColumnHeadersDefaultCellStyle.ForeColor, g.ColumnHeadersDefaultCellStyle.BackColor) < 4.5
+                                                  || Contraste(g.DefaultCellStyle.SelectionForeColor, g.DefaultCellStyle.SelectionBackColor) < 4.5)) fenetresIllisibles.Add($"{nom} : grille {g.Name}");
+                    if (c.HasChildren) Parcours(c.Controls);
+                }
+            }
+            Parcours(f.Controls);
+        }
+        VerifieFenetre("Liste des coups", Champ<Form>(fenetre, "affichePdn"));
+        VerifieFenetre("Liste des parties", Champ<Form>(fenetre, "fichierPartiePdn"));
+        VerifieFenetre("Protocole", Champ<Form>(fenetre, "donneesBrutesDames"));
+        using (ChoixRafleForm choix = new ChoixRafleForm(new List<Coup> { new Coup(1, 2, Array.Empty<int>(), Array.Empty<int>()) }, _ => { }))
+            VerifieFenetre("Choix de la rafle", choix);
+        verifie("Interface : les fenêtres secondaires (liste des coups, liste des parties, protocole, choix de la rafle) ont le thème et des textes lisibles", fenetresIllisibles.Count == 0, string.Join(" / ", fenetresIllisibles));
+
+        // La fenêtre du protocole sépare le nom de l'émetteur des données
+        Appelle(fenetre, "AfficheDonneesBrutes", "pong", true);
+        Appelle(fenetre, "AfficheDonneesBrutes", "ping", false);
+        string protocole = Champ<Form>(fenetre, "donneesBrutesDames") is DonneesBrutesDames fenetreProtocole ? fenetreProtocole.DonneesBrutesVue.Text : "";
+        verifie("Interface : dans la fenêtre du protocole, un espace sépare « [SCAN 3.1] » (comme « [BrunoGUI_Dames] ») des données", protocole.Contains("[SCAN 3.1]    pong") && protocole.Contains("[BrunoGUI_Dames]    ping"), protocole);
 
         // Retour arrière : les temps sont gardés, la pendule attend le prochain coup
         Nouvelle(5);

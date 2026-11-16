@@ -79,7 +79,7 @@ namespace BrunoGUI_Dames
             }
             RichTextBox vue = donneesBrutesDames.DonneesBrutesVue;
             if (venantDuMoteur)
-                vue.AppendText(Environment.NewLine + "[" + "SCAN 3.1" + "]" + ligne);
+                vue.AppendText(Environment.NewLine + "[SCAN 3.1]    " + ligne);       // Même séparation que pour les lignes de l'interface
             else
                 vue.AppendText(Environment.NewLine + " [BrunoGUI_Dames]    " + ligne);
             vue.SelectionStart = vue.TextLength;
