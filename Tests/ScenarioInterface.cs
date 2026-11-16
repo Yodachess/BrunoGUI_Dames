@@ -462,6 +462,7 @@ public static class ScenarioInterface
 
         // ═══════════════ Retour arrière après une partie décidée ═══════════════
         RetourApresPartieDecidee();
+        ParcoursAuClavier();
 
         // ═══════════════ Deux fenêtres à la fois ═══════════════
         DeuxFenetres();
@@ -493,6 +494,40 @@ public static class ScenarioInterface
                 reflechit && fini && fenetre.PartieTerminee && session().Resultat == "1-0" && session().CoupsPdn.Count == 1 && messages.Any(m => m.Contains("Les Blancs gagnent") && m.Contains("des noirs")),
                 $"réfléchissait : {reflechit}, fini : {fini}, coups : {string.Join(" ", session().CoupsPdn)}, résultat {session().Resultat}");
         verifie("Interface + Scan : après cette fin, le damier reste inactif (le retour du moteur ne le réactive pas)", fenetre.CaseDamier.All(c => !c.Enabled), "");
+    }
+
+    // Le parcours au clavier : ← → Début Fin font comme les boutons, sans message aux extrémités, et laissent leur rôle aux flèches d'une zone de texte
+    private static void ParcoursAuClavier()
+    {
+        Nouvelle();
+        Joue(32, 28);
+        Joue(17, 22);
+        Joue(28, 17);       // La prise est obligatoire
+        bool Touche(Keys k) => AppelleRetour<bool>(fenetre, "ToucheParcours", k);
+        int indice() => fenetre.Session.IndexAffiche;
+        bool gauche = Touche(Keys.Left) && indice() == 2;
+        bool debut = Touche(Keys.Home) && indice() == 0;
+        bool auDebut = Touche(Keys.Left) && indice() == 0 && messages.Count == 0;
+        bool droite = Touche(Keys.Right) && indice() == 1;
+        bool fin = Touche(Keys.End) && indice() == 3;
+        bool alaFin = Touche(Keys.Right) && indice() == 3 && messages.Count == 0;
+        verifie("Interface : au clavier, ← → Début Fin parcourent la partie comme les boutons, sans message aux extrémités",
+                gauche && debut && auDebut && droite && fin && alaFin && !Touche(Keys.A) && !Touche(Keys.Up), $"gauche {gauche}, début {debut}, au début {auDebut}, droite {droite}, fin {fin}, à la fin {alaFin} ; messages : {string.Join(" / ", messages)}");
+        string traitAffiche() => Trouve("LabelInformationJoueur").Text;
+        Touche(Keys.Left);      // Deux coups joués : trait aux blancs
+        string t2 = traitAffiche();
+        Touche(Keys.Left);      // Un coup : trait aux noirs
+        string t1 = traitAffiche();
+        Touche(Keys.Home);      // Départ : trait aux blancs
+        string t0 = traitAffiche();
+        Touche(Keys.End);
+        verifie("Interface : le parcours met à jour le trait affiché en haut (Préc., Début, Fin)", t2 == "Trait aux Blancs" && t1 == "Trait aux Noirs" && t0 == "Trait aux Blancs" && indice() == 3, $"{t2} / {t1} / {t0}");        fenetre.ActiveControl = Trouve("BoxNomJoueurBlanc");
+        bool saisie = !Touche(Keys.Left) && indice() == 3;
+        fenetre.ActiveControl = null;
+        verifie("Interface : dans la zone du nom d'un joueur, les flèches gardent leur rôle (le parcours ne bouge pas)", saisie, $"indice {indice()}");
+        bool viaCommande = AppelleRetour<bool>(fenetre, "ProcessCmdKey", new Message(), Keys.Left) && indice() == 2;
+        verifie("Interface : la touche passe par ProcessCmdKey (le chemin de la vraie touche)", viaCommande, $"indice {indice()}");
+        Nouvelle();
     }
 
     // Les cases colorées du damier (autres que le fond normal) : numéros Manoury

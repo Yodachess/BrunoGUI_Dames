@@ -80,12 +80,20 @@ namespace BrunoGUI_Dames
             affichePdn.Show();          // Affiche la fenêtre et met à jour son contenu
             affichePdn.AffichePdnDansZone();
         }
+        // --- Le trait de la position affichée par le parcours (en haut) ; sur la dernière position d'une partie finie, le résultat annoncé reste ---
+        private void AfficheTraitParcours()
+        {
+            if (PartieTerminee && Session.EstSurLaDernierePosition)
+                return;
+            LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+        }
         private void BoutonPrecedent_Click(object sender, EventArgs e)
         {   // --- Bouton pour reculer d'un coup (parcours de partie) ---
             SessionPartie session = Session;
             if (session.Precedent())    // Faux si l'on est déjà au début
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
+                AfficheTraitParcours();
                 LabelCoupJoue.Text = session.CoupAffiche != null ? $"Coup {session.IndexAffiche} : {session.CoupAffiche}" : "Position initiale";
             }
             else
@@ -100,6 +108,7 @@ namespace BrunoGUI_Dames
             if (session.Suivant())      // Faux si l'on est déjà à la fin
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
+                AfficheTraitParcours();
                 LabelCoupJoue.Text = $"Coup {session.IndexAffiche} : {session.CoupAffiche}";
             }
             else
@@ -115,6 +124,7 @@ namespace BrunoGUI_Dames
             {
                 session.Debut();                // La position de départ est à l'indice 0
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
+                AfficheTraitParcours();
                 LabelCoupJoue.Text = "Début de partie";
             }
         }
@@ -125,6 +135,7 @@ namespace BrunoGUI_Dames
             {
                 session.Fin();                  // Dernière position
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
+                AfficheTraitParcours();
                 LabelCoupJoue.Text = $"Coup {session.IndexAffiche} : {session.CoupAffiche}";
             }
         }
@@ -208,13 +219,36 @@ namespace BrunoGUI_Dames
             }
         }
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {   // --- F1 ouvre l'aide ---
+        {   // --- F1 ouvre l'aide ; les flèches gauche et droite, Début et Fin parcourent la partie ---
             if (keyData == Keys.F1)
             {
                 BoutonAide_Click(this, EventArgs.Empty);
                 return true;
             }
+            if (ToucheParcours(keyData))
+                return true;
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+        // --- Le parcours au clavier, comme les boutons : ← Préc., → Suiv., Début, Fin. Rend vrai si la touche a servi. Sans effet quand les flèches ont un autre rôle : saisie d'un nom, liste ou curseur
+        // qui ont le focus, pièce en main, lecture en cours ou boutons bloqués ---
+        private bool ToucheParcours(Keys touche)
+        {
+            if (touche != Keys.Left && touche != Keys.Right && touche != Keys.Home && touche != Keys.End)
+                return false;
+            Control? actif = ActiveControl;
+            while (actif is ContainerControl conteneur && conteneur.ActiveControl != null)
+                actif = conteneur.ActiveControl;
+            string typeActif = actif?.GetType().Name ?? "";
+            if (typeActif.Contains("TextBox") || typeActif.Contains("ComboBox") || typeActif.Contains("TrackBar") || typeActif.Contains("UpDown"))
+                return false;
+            if (!groupParcoursPartie.Enabled || lecture != null || pieceEnMain)
+                return false;
+            // Aux extrémités, les flèches ne font rien (les boutons, eux, l'expliquent par un message : trop pesant pour une touche qu'on répète)
+            if (touche == Keys.Left) { if (Session.IndexAffiche > 0) BoutonPrecedent_Click(this, EventArgs.Empty); }
+            else if (touche == Keys.Right) { if (!Session.EstSurLaDernierePosition) BoutonSuivant_Click(this, EventArgs.Empty); }
+            else if (touche == Keys.Home) BoutonDebut_Click(this, EventArgs.Empty);
+            else BoutonFin_Click(this, EventArgs.Empty);
+            return true;
         }        private void SauvePartiesPdn_Click(object sender, EventArgs e)
         {   // --- Ouvre la feneêtre de sauvegarde de fichier ---
             affichePdn?.LancerEnregistrementPdn();
@@ -340,6 +374,7 @@ namespace BrunoGUI_Dames
             MiseenplaceFen(session.Fen(session.IndexAffiche), false);       // Met en place la nouvelle dernière position
             AfficheListesPieces();
             NettoyageRapide();
+            AfficheTraitParcours();     // NettoyageRapide a vidé l'affichage du trait (une prise obligatoire le réécrit plus bas)
             ArmePendule();      // La pendule garde les temps et attend le prochain coup
             LabelCoupJoue.Text = $"Mouvement effacé = {coupEfface}"; // Met à jour le label avec le mouvement.
             AnalyseCoupObligatoire(CouleurAuTrait);

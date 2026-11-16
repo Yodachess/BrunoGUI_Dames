@@ -32,7 +32,7 @@ Boutons disponibles :
 * "Tourner damier" : fait pivoter le damier de 180° (par défaut, vue côté blancs)
 * "Analyse position" : lance la réflexion du moteur et donne le résultat SANS jouer le coup sur le damier
 * "Liste des coups" : affiche la liste des coups joués, aux formats PDN, FEN et Hub2
-* "Parcours partie" (Début, Préc., Suiv., Fin) : parcourt la partie coup par coup ; "Lecture" la déroule avec ses animations (bouton "Pause" pendant la lecture, curseur de vitesse)
+* "Parcours partie" (Début, Préc., Suiv., Fin) : parcourt la partie coup par coup (au clavier : flèches ← →, touches Début et Fin) ; "Lecture" la déroule avec ses animations (bouton "Pause" pendant la lecture, curseur de vitesse)
 * "Charge Parties" : lecture d'un fichier PDN et affichage de la liste de ses parties (double-clic pour dérouler une partie)
 * "Masque parties" : cache ou montre la liste des parties
 * "Sauve Partie" : sauvegarde de la partie au format PDN, peut être ajoutée à la fin d'un fichier existant
@@ -106,7 +106,7 @@ Available buttons:
 * "Tourner damier" (Rotate board): rotates the board by 180° (default: White's perspective)
 * "Analyse position" (Analyse position): runs the engine's calculation but does NOT play the move on the board
 * "Liste des coups" (Move list): displays the moves played in PDN, FEN and Hub2 formats
-* "Parcours partie" (Début, Préc., Suiv., Fin): steps through the game move by move; "Lecture" (Play) plays it back with animations ("Pause" while playing, speed slider)
+* "Parcours partie" (Début, Préc., Suiv., Fin): steps through the game move by move (on the keyboard: ← → arrows, Home and End keys); "Lecture" (Play) plays it back with animations ("Pause" while playing, speed slider)
 * "Charge Parties" (Load games): reads a PDN file and displays the list of its games (double-click to play a game back)
 * "Masque parties" (Hide games): hides or shows the list of games
 * "Sauve Partie" (Save game): saves the game in PDN format, with the option to append it to an existing file
