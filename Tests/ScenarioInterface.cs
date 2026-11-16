@@ -9,7 +9,7 @@
 
 // Les vérifications de la vraie fenêtre : le formulaire est créé hors de l'écran, les tests cliquent sur les cases par le chemin de la souris (CaseMouseDown),
 // appuient sur les boutons par leurs gestionnaires, remplacent l'horloge de la pendule et les boîtes de message (ReglagesDeTest) et regardent l'état du
-// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (ReglagesDeTest reste global),
+// damier, des cadres, de l'historique et de la pendule. Une fenêtre est créée pour l'ensemble, et une seconde pour le test des deux fenêtres (ReglagesDeTest reste global),
 // dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le moteur Scan joue aussi.
 
 using System;
@@ -460,6 +460,9 @@ public static class ScenarioInterface
         Appelle(fenetre, "EnregistrePreferences");
         verifie("Interface : « Sans pendule » est écrit aussi (pas de cadence au prochain lancement)", Preferences.Lire(fichierPreferences).CadenceId == null, "");
 
+        // ═══════════════ Deux fenêtres à la fois ═══════════════
+        DeuxFenetres();
+
         if (!avecMoteur)
             return;
 
@@ -487,6 +490,46 @@ public static class ScenarioInterface
                 reflechit && fini && fenetre.PartieTerminee && session().Resultat == "1-0" && session().CoupsPdn.Count == 1 && messages.Any(m => m.Contains("Les Blancs gagnent") && m.Contains("des noirs")),
                 $"réfléchissait : {reflechit}, fini : {fini}, coups : {string.Join(" ", session().CoupsPdn)}, résultat {session().Resultat}");
         verifie("Interface + Scan : après cette fin, le damier reste inactif (le retour du moteur ne le réactive pas)", fenetre.CaseDamier.All(c => !c.Enabled), "");
+    }
+
+    // Deux fenêtres ouvertes en même temps ne partagent plus rien (position, historique, sens du damier, moteur) : un coup, un damier tourné ou la fermeture de l'une ne touche pas l'autre.
+    // Les aides du test visent la variable « fenetre » : on la fait pointer tour à tour sur chacune.
+    private static void DeuxFenetres()
+    {
+        BrunoInterfaceGraphiqueDames a = fenetre;
+        Nouvelle();
+        Joue(32, 28);
+        BrunoInterfaceGraphiqueDames b = new BrunoInterfaceGraphiqueDames();
+        b.ShowInTaskbar = false;
+        b.StartPosition = FormStartPosition.Manual;
+        b.Location = new Point(-32000, -32000);
+        b.Show();
+        Pompe(300);
+        b.DureeEtape = 0;
+        try
+        {
+            fenetre = b;
+            Nouvelle();
+            Joue(34, 30);
+            Appelle(b, "BoutonTournerDamier_Click", null, EventArgs.Empty);
+            Pompe(30);
+            fenetre = a;
+            verifie("Interface, deux fenêtres : un coup joué dans la seconde ne change ni la position, ni l'historique, ni le trait de la première, et tourner le damier de la seconde laisse la première dans son sens",
+                    string.Join(" ", a.Session.CoupsPdn) == "32-28" && string.Join(" ", b.Session.CoupsPdn) == "34-30" && a.Damier.PositionCourante[28] == Piece.PionBlanc && a.Damier.PositionCourante[34] == Piece.PionBlanc
+                    && b.Damier.PositionCourante[30] == Piece.PionBlanc && b.Damier.PositionCourante[32] == Piece.PionBlanc && !a.Damier.Orientation.CoteNoir && b.Damier.Orientation.CoteNoir,
+                    $"première : {string.Join(" ", a.Session.CoupsPdn)}, seconde : {string.Join(" ", b.Session.CoupsPdn)}");
+            Joue(17, 22);
+            verifie("Interface, deux fenêtres : un coup joué dans la première n'ajoute rien à l'historique de la seconde, et chacune a son propre moteur",
+                    a.Session.CoupsPdn.Count == 2 && b.Session.CoupsPdn.Count == 1 && !ReferenceEquals(Champ<object>(a, "moteur"), Champ<object>(b, "moteur")), $"{a.Session.CoupsPdn.Count} / {b.Session.CoupsPdn.Count} coup(s)");
+        }
+        finally
+        {
+            fenetre = a;
+            try { b.Close(); } catch (Exception ex) { Console.WriteLine("Fermeture de la seconde fenêtre de test : " + ex.Message); }
+        }
+        Pompe(100);
+        verifie("Interface, deux fenêtres : après la fermeture de la seconde, la première est intacte et joue encore", !a.IsDisposed && b.IsDisposed && a.Session.CoupsPdn.Count == 2 && JoueLegal() != null && a.Session.CoupsPdn.Count == 3, $"{a.Session.CoupsPdn.Count} coup(s)");
+        Nouvelle();
     }
 
     // ───────────────────────────── Aides ─────────────────────────────
