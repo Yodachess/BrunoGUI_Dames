@@ -31,8 +31,6 @@ namespace BrunoGUI_Dames
             boutonLecture.Name = "BoutonLecture";
             boutonLecture.Location = new Point(5, 62);
             boutonLecture.Size = new Size(99, 24);
-            boutonLecture.BackColor = Color.Tan;
-            boutonLecture.UseVisualStyleBackColor = false;
             boutonLecture.Text = "Lecture";
             boutonLecture.Click += BoutonLecture_Click;
             trackBarVitesseLecture.Name = "TrackBarVitesseLecture";

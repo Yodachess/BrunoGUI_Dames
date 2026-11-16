@@ -236,6 +236,28 @@ public static class ScenarioInterface
         verifie("Interface : 150 sélections de pièce ne laissent pas de handle GDI (le curseur de la pièce est libéré)", objetsGdiApres - objetsGdiAvant < 20 && fenetre.Cursor == Cursors.Default,
                 $"{objetsGdiAvant} puis {objetsGdiApres} objets GDI");
 
+        // Les couleurs de l'interface (thème « noyer et crème ») : chaque texte est lisible sur son fond (contraste WCAG d'au moins 4,5)
+        double Lum(Color c)
+        {
+            double Lin(byte v) { double s = v / 255.0; return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4); }
+            return 0.2126 * Lin(c.R) + 0.7152 * Lin(c.G) + 0.0722 * Lin(c.B);
+        }
+        double Contraste(Color a, Color b) { double x = Lum(a), y = Lum(b); return (Math.Max(x, y) + 0.05) / (Math.Min(x, y) + 0.05); }
+        string[] nomsThemes = { "LabelCoupJoue", "LabelInformationJoueur", "groupBox1", "groupParcoursPartie", "LabelAfficheScan", "LabelScore", "LabelPrisesPossibles", "LabelPionsBlancs", "LabelPionsNoirs",
+                                "LabelDamesBlanches", "LabelDamesNoires", "OrdinateurBosse", "SonEmis", "GroupResultat", "BoutonPrecedent", "BoutonSuivant", "BoutonDebut", "BoutonFin", "BoutonLecture" };
+        string illisibles = string.Join(", ", nomsThemes.Where(n => Contraste(Trouve(n).ForeColor, Trouve(n).BackColor) < 4.5).Select(n => n));
+        Color Krypton(string nom, string etat, string propriete)
+        {   // fenetre.<nom>.<etat>.<Back|Content.ShortText>.<Color1> par réflexion (le projet de tests ne référence pas Krypton)
+            object? bouton = Trouve(nom), triple = bouton.GetType().GetProperty(etat)!.GetValue(bouton);
+            object? partie = triple!.GetType().GetProperty(propriete == "Back" ? "Back" : "Content")!.GetValue(triple);
+            if (propriete != "Back") partie = partie!.GetType().GetProperty("ShortText")!.GetValue(partie);
+            return (Color)partie!.GetType().GetProperty("Color1")!.GetValue(partie)!;
+        }
+        string boutonsIllisibles = string.Join(", ", new[] { "NouvellePartie", "BoutonQuitterApplication", "BoutonAide", "BoutonMasqueAffiche" }
+            .Where(n => new[] { "StateCommon", "StateNormal", "StateTracking", "StatePressed", "OverrideDefault" }.Any(e => Contraste(Krypton(n, e, "Texte"), Krypton(n, e, "Back")) < 4.5)));
+        verifie("Interface : le thème est appliqué (fond du thème) et chaque texte est lisible sur son fond (contraste d'au moins 4,5), boutons Krypton compris dans tous leurs états",
+                fenetre.BackColor == Statique<Color>("ThemeFond") && illisibles.Length == 0 && boutonsIllisibles.Length == 0, $"illisibles : {illisibles} / boutons : {boutonsIllisibles}");
+
         // Retour arrière : les temps sont gardés, la pendule attend le prochain coup
         Nouvelle(5);
         Joue(32, 28);

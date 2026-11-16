@@ -102,6 +102,7 @@ namespace BrunoGUI_Dames
             BoxNomJoueurNoir.Text = NomJoueurNoir;
             CreePendule();                      // Les temps et le choix de la cadence (BrunoInterfaceGraphiqueDames.Pendule.cs), avant les préférences qui choisissent la cadence
             CreeLecture();                      // Le bouton de lecture et sa vitesse, dans le groupe « Parcours partie » (BrunoInterfaceGraphiqueDames.Lecture.cs)
+            AppliqueTheme();                    // Les couleurs de l'interface, une fois tous les contrôles créés (BrunoInterfaceGraphiqueDames.Theme.cs)
             AppliquePreferences();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);          // Position initiale
             AfficheListesPieces();
