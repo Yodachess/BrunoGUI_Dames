@@ -460,6 +460,9 @@ public static class ScenarioInterface
         Appelle(fenetre, "EnregistrePreferences");
         verifie("Interface : « Sans pendule » est écrit aussi (pas de cadence au prochain lancement)", Preferences.Lire(fichierPreferences).CadenceId == null, "");
 
+        // ═══════════════ Retour arrière après une partie décidée ═══════════════
+        RetourApresPartieDecidee();
+
         // ═══════════════ Deux fenêtres à la fois ═══════════════
         DeuxFenetres();
 
@@ -492,6 +495,28 @@ public static class ScenarioInterface
         verifie("Interface + Scan : après cette fin, le damier reste inactif (le retour du moteur ne le réactive pas)", fenetre.CaseDamier.All(c => !c.Enabled), "");
     }
 
+    // Les cases colorées du damier (autres que le fond normal) : numéros Manoury
+    private static List<int> CasesColorees() => Enumerable.Range(1, 50).Where(n => { Color c = CouleurCase(n); return c != fenetre.CouleurCaseSombre && c != fenetre.CouleurCaseClaire; }).ToList();
+
+    // Après une partie décidée (ici par le drapeau), revenir en arrière par « Précédent » ou « Retour arrière » efface les cases colorées du dernier coup ; le repère brun suit la position affichée
+    private static void RetourApresPartieDecidee()
+    {
+        Nouvelle(5);
+        Joue(32, 28);
+        Joue(17, 22);
+        maintenant += TimeSpan.FromMinutes(10);
+        Tick();
+        Pompe(100);
+        bool decidee = fenetre.PartieTerminee && CasesColorees().Count > 0;
+        Appelle(fenetre, "BoutonPrecedent_Click", null, EventArgs.Empty);
+        verifie("Interface : après une partie décidée, « Précédent » efface les cases colorées du dernier coup et le repère montre le coup de la position affichée",
+                decidee && CasesColorees().Count == 0 && Champ<int>(fenetre, "dernierDepartManoury") == 32 && Champ<int>(fenetre, "dernierArriveeManoury") == 28, $"décidée : {decidee}, colorées : {string.Join(",", CasesColorees())}");
+        Appelle(fenetre, "BoutonSuivant_Click", null, EventArgs.Empty);
+        verifie("Interface : « Suivant » ne laisse pas non plus de cases colorées d'un coup précédent", CasesColorees().Count == 0 && Champ<int>(fenetre, "dernierArriveeManoury") == 22, string.Join(",", CasesColorees()));
+        Appelle(fenetre, "BoutonRetourArriere_Click", null, EventArgs.Empty);
+        verifie("Interface : après une partie décidée, « Retour arrière » efface aussi les cases colorées", !fenetre.PartieTerminee && CasesColorees().Count == 0 && Champ<int>(fenetre, "dernierArriveeManoury") == 28, string.Join(",", CasesColorees()));
+        Nouvelle();
+    }
     // Deux fenêtres ouvertes en même temps ne partagent plus rien (position, historique, sens du damier, moteur) : un coup, un damier tourné ou la fermeture de l'une ne touche pas l'autre.
     // Les aides du test visent la variable « fenetre » : on la fait pointer tour à tour sur chacune.
     private static void DeuxFenetres()

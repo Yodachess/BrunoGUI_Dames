@@ -319,6 +319,7 @@ namespace BrunoGUI_Dames
         public void MiseenplaceFen(string fenAutiliser, bool commenceLaPartie)     // Préparation du logiciel avec la position FEN
         {   // --- La méthode met la position FEN sur le damier (PositionCourante et images) ; si commenceLaPartie, c'est la position de départ d'une nouvelle partie (Session) ---
             Damier.ViderDamier();
+            CouleurToutesCasesManoury(CouleurCaseSombre);       // Les cases colorées par le coup précédent (départ, arrivée) ne sont plus celles de cette position : le parcours de la partie les laissait
             foreach (var pict in CaseDamier)
             {
                 pict.Image = null;          // Efface l'image de chaque PictureBox
