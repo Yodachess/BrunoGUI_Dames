@@ -26,22 +26,22 @@ namespace BrunoGUI_Dames
 
     public class MoteurDamesScan
     {
-        public static event AfficheMoteurDamesScan? AfficheScan;                  // Une ligne reçue du moteur (thread du pool)
-        public static event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;  // Une ligne échangée, avec son sens (thread du pool ou de l'interface)
-        public static event Action<string>? MoteurArrete;                         // Le moteur s'est arrêté sans qu'on le lui demande (thread du pool)
+        public event AfficheMoteurDamesScan? AfficheScan;                  // Une ligne reçue du moteur (thread du pool)
+        public event AfficheDonneesBrutesDamesScan? AfficheDonneesBrutes;  // Une ligne échangée, avec son sens (thread du pool ou de l'interface)
+        public event Action<string>? MoteurArrete;                         // Le moteur s'est arrêté sans qu'on le lui demande (thread du pool)
 
-        private static Process? Proc;
-        private static readonly object verrou = new object();
-        private static TaskCompletionSource<ReponseMoteur?>? demande;             // La demande de coup en cours, ou null
-        private static bool arretVoulu;
+        private Process? Proc;
+        private readonly object verrou = new object();
+        private TaskCompletionSource<ReponseMoteur?>? demande;             // La demande de coup en cours, ou null
+        private bool arretVoulu;
 
-        public static bool EstDemarre
+        public bool EstDemarre
         {
             get { lock (verrou) { return Proc != null && !Proc.HasExited; } }
         }
 
         // --- Lance « scan.exe hub » dans son dossier. Lève FileNotFoundException si le moteur n'existe pas, et l'exception du système s'il ne peut pas démarrer ---
-        public static void Demarre(string fichierMoteurDames)
+        public void Demarre(string fichierMoteurDames)
         {
             if (!File.Exists(fichierMoteurDames))
                 throw new FileNotFoundException("Le moteur Scan est introuvable : " + fichierMoteurDames, fichierMoteurDames);
@@ -70,7 +70,7 @@ namespace BrunoGUI_Dames
         }
 
         // --- Demande un coup pour la position Hub2 en réfléchissant secondes secondes ; null si le moteur ne répond pas (arrêté, délai dépassé, remplacé par une autre demande) ---
-        public static async Task<ReponseMoteur?> ReflechirAsync(string positionHub2, int secondes)
+        public async Task<ReponseMoteur?> ReflechirAsync(string positionHub2, int secondes)
         {
             TaskCompletionSource<ReponseMoteur?> cetteDemande = new TaskCompletionSource<ReponseMoteur?>(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (verrou)
@@ -102,7 +102,7 @@ namespace BrunoGUI_Dames
         }
 
         // --- Envoi d'une commande de l'interface vers le moteur ---
-        public static void Envoie(string data)
+        public void Envoie(string data)
         {
             Process processus;
             lock (verrou)
@@ -112,7 +112,7 @@ namespace BrunoGUI_Dames
         }
 
         // --- Arrête le moteur : « quit », puis arrêt forcé s'il ne s'est pas terminé tout seul ; sans effet s'il n'est pas démarré ---
-        public static void Quitte()
+        public void Quitte()
         {
             Process? processus;
             lock (verrou)
@@ -148,7 +148,7 @@ namespace BrunoGUI_Dames
         }
 
         // Une ligne de sortie du moteur SCAN (thread du pool)
-        private static void ProcOutputDataReceived(object sender, DataReceivedEventArgs e)
+        private void ProcOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             string? ligne = e.Data;
             if (string.IsNullOrWhiteSpace(ligne))
@@ -180,7 +180,7 @@ namespace BrunoGUI_Dames
         }
 
         // Le processus s'est terminé (thread du pool) : si on ne l'a pas demandé, la demande en cours reçoit null et l'interface est prévenue
-        private static void ProcExited(object? sender, EventArgs e)
+        private void ProcExited(object? sender, EventArgs e)
         {
             TaskCompletionSource<ReponseMoteur?>? attendante;
             bool voulu;
@@ -199,7 +199,7 @@ namespace BrunoGUI_Dames
         }
 
         // --- Exécute une notification vers l'interface sans que l'exception d'un abonné (fenêtre déjà fermée…) ne fasse tomber le thread du pool ---
-        private static void Declenche(Action notification)
+        private void Declenche(Action notification)
         {
             try { notification(); }
             catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException)

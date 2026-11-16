@@ -69,6 +69,7 @@ namespace BrunoGUI_Dames
         // La position du damier et le sens d'affichage (GestionDamier.cs) et l'historique de la partie (SessionPartie.cs) appartiennent à la fenêtre
         public readonly GestionDamier Damier = new GestionDamier();
         public readonly SessionPartie Session = new SessionPartie();
+        private readonly MoteurDamesScan moteur = new MoteurDamesScan();      // Le moteur Scan de cette fenêtre
 
         public BrunoInterfaceGraphiqueDames()
         {
@@ -78,9 +79,9 @@ namespace BrunoGUI_Dames
         private void BrunoInterfaceGraphiqueDames_Load(object sender, EventArgs e)
         {
             // les évènements dans les classes
-            MoteurDamesScan.AfficheScan += AfficheScan;
-            MoteurDamesScan.AfficheDonneesBrutes += AfficheDonneesBrutes;
-            MoteurDamesScan.MoteurArrete += MoteurArrete;
+            moteur.AfficheScan += AfficheScan;
+            moteur.AfficheDonneesBrutes += AfficheDonneesBrutes;
+            moteur.MoteurArrete += MoteurArrete;
             // Liste des pièces du jeu
             ListeBitmapsPiece.Add(Piece.PionBlanc, PionBlanc);       // pion blanc
             ListeBitmapsPiece.Add(Piece.PionNoir, PionNoir);         // pion noir
@@ -125,7 +126,7 @@ namespace BrunoGUI_Dames
             cheminMoteur = ReglagesDeTest.CheminMoteur ?? Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
             try
             {   // Démarrage du moteur
-                MoteurDamesScan.Demarre(cheminMoteur);
+                moteur.Demarre(cheminMoteur);
             }
             catch (Exception ex) when (ex is IOException || ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {   // Sans moteur on peut jouer entre humains : on désactive ce qui en dépend

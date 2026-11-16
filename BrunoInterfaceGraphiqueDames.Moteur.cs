@@ -193,7 +193,7 @@ namespace BrunoGUI_Dames
                 minuteriePendule.Stop();
                 lecture?.Cancel();
                 EnregistrePreferences();
-                MoteurDamesScan.Quitte();
+                moteur.Quitte();
             }
         }
     }

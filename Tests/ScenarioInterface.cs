@@ -9,7 +9,7 @@
 
 // Les vérifications de la vraie fenêtre : le formulaire est créé hors de l'écran, les tests cliquent sur les cases par le chemin de la souris (CaseMouseDown),
 // appuient sur les boutons par leurs gestionnaires, remplacent l'horloge de la pendule et les boîtes de message (ReglagesDeTest) et regardent l'état du
-// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (le moteur est encore global : MoteurDamesScan),
+// damier, des cadres, de l'historique et de la pendule. Une seule fenêtre est créée (ReglagesDeTest reste global),
 // dans un thread à part (Windows Forms l'exige : STA). Avec « complet », le moteur Scan joue aussi.
 
 using System;

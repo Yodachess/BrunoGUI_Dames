@@ -205,7 +205,7 @@ namespace BrunoGUI_Dames
             ActiveCouleurDamier(CouleurAuTrait, false);
             string couleurEnJeu = positionHub2[0] == 'W' ? "Blancs" : "Noirs";      // On récupère la couleur en jeu
             LabelInformationJoueur.Text = "Trait aux " + couleurEnJeu + ", le moteur réfléchit ...";
-            ReponseMoteur? reponse = await MoteurDamesScan.ReflechirAsync(positionHub2, tempsReflexion);   // Au moteur de bosser .... :-)
+            ReponseMoteur? reponse = await moteur.ReflechirAsync(positionHub2, tempsReflexion);   // Au moteur de bosser .... :-)
             CouleurToutesCasesManoury(CouleurCaseSombre);
             if (reponse == null)
             {   // Le moteur n'a pas répondu (arrêté, trop long ou remplacé par une autre demande) : rien n'est joué, c'est noté dans le journal

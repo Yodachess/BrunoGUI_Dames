@@ -153,7 +153,7 @@ namespace BrunoGUI_Dames
                 return;
             if (jeuMoteurEnCours)
             {   // Son coup, quand il arrivera, ne sera pas joué (PartieTerminee) ; on lui demande de s'arrêter
-                try { MoteurDamesScan.Envoie("stop"); }
+                try { moteur.Envoie("stop"); }
                 catch (Exception ex) when (ex is IOException || ex is InvalidOperationException)
                 {
                     Journal.Ecrit("Moteur : « stop » non envoyé à la chute du drapeau : " + ex.Message);

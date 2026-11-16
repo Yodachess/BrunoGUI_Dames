@@ -691,14 +691,16 @@ public static class Scenario
         // ═══════════════ Moteur Scan ═══════════════
         Console.WriteLine("── Moteur Scan ──");
 
-        MoteurDamesScan.Quitte();       // Sans effet : le moteur n'est pas démarré
-        Verifie("Moteur : arrêter un moteur non démarré est sans effet", !MoteurDamesScan.EstDemarre, "");
-        ReponseMoteur? sansMoteur = MoteurDamesScan.ReflechirAsync(Position.Initiale().VersHub2(), 1).GetAwaiter().GetResult();
+        MoteurDamesScan moteurTest = new MoteurDamesScan();
+        moteurTest.Quitte();       // Sans effet : le moteur n'est pas démarré
+        Verifie("Moteur : arrêter un moteur non démarré est sans effet", !moteurTest.EstDemarre, "");
+        Verifie("Moteur : deux instances sont indépendantes (aucune n'est démarrée par l'autre)", !new MoteurDamesScan().EstDemarre && !moteurTest.EstDemarre, "");
+        ReponseMoteur? sansMoteur = moteurTest.ReflechirAsync(Position.Initiale().VersHub2(), 1).GetAwaiter().GetResult();
         Verifie("Moteur : une demande sans moteur démarré rend null tout de suite (pas d'attente sans fin)", sansMoteur == null, "");
         bool moteurIntrouvable = false;
-        try { MoteurDamesScan.Demarre(Path.Combine(AppContext.BaseDirectory, "scan_inexistant.exe")); }
+        try { moteurTest.Demarre(Path.Combine(AppContext.BaseDirectory, "scan_inexistant.exe")); }
         catch (FileNotFoundException) { moteurIntrouvable = true; }
-        Verifie("Moteur : un moteur introuvable lève FileNotFoundException", moteurIntrouvable && !MoteurDamesScan.EstDemarre, "");
+        Verifie("Moteur : un moteur introuvable lève FileNotFoundException", moteurIntrouvable && !moteurTest.EstDemarre, "");
 
         if (complet)
         {   // Avec le moteur Scan (dossier Dames_Scan31_FabienLetouzey du dépôt) : il répond par un coup que ReglesDames trouve légal
@@ -714,23 +716,23 @@ public static class Scenario
             }
             else
             {
-                MoteurDamesScan.Demarre(scan);
+                moteurTest.Demarre(scan);
                 try
                 {
                     Position positionDeDepart = Position.Initiale();
-                    ReponseMoteur? premiere = MoteurDamesScan.ReflechirAsync(positionDeDepart.VersHub2(), 1).GetAwaiter().GetResult();
+                    ReponseMoteur? premiere = moteurTest.ReflechirAsync(positionDeDepart.VersHub2(), 1).GetAwaiter().GetResult();
                     Coup? coupBlanc = premiere == null ? null : ReglesDames.TrouverCoup(positionDeDepart, premiere.Coup);
                     Verifie("Moteur : Scan répond à la position initiale par un coup légal", coupBlanc != null, premiere?.Coup ?? "(pas de réponse)");
                     Position apres = coupBlanc == null ? positionDeDepart : ReglesDames.Jouer(positionDeDepart, coupBlanc);
-                    ReponseMoteur? seconde = MoteurDamesScan.ReflechirAsync(apres.VersHub2(), 1).GetAwaiter().GetResult();
+                    ReponseMoteur? seconde = moteurTest.ReflechirAsync(apres.VersHub2(), 1).GetAwaiter().GetResult();
                     Coup? coupNoir = seconde == null ? null : ReglesDames.TrouverCoup(apres, seconde.Coup);
                     Verifie("Moteur : une seconde demande (les noirs au trait) reçoit aussi un coup légal", coupNoir != null, seconde?.Coup ?? "(pas de réponse)");
                 }
                 finally
                 {
-                    MoteurDamesScan.Quitte();
+                    moteurTest.Quitte();
                 }
-                Verifie("Moteur : après Quitte, le moteur n'est plus démarré", !MoteurDamesScan.EstDemarre, "");
+                Verifie("Moteur : après Quitte, le moteur n'est plus démarré", !moteurTest.EstDemarre, "");
             }
         }
 
