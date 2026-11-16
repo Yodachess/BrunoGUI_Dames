@@ -1058,9 +1058,19 @@ public static class Scenario
 
         Verifie("Couleurs : la palette par défaut a les huit couleurs, toutes différentes",
                 Preferences.CouleursParDefaut.Count == 8 && Preferences.NomsCouleurs.All(Preferences.CouleursParDefaut.ContainsKey) && Preferences.CouleursParDefaut.Values.Distinct().Count() == 8, "");
-        Preferences personnalisee = Preferences.DepuisTexte("CouleurCaseDepart=#FF00FF\r\n");
+        Preferences ancienOrange = Preferences.DepuisTexte("CouleurCaseEtape=#FFA500\r\nCouleurCaseDepart=#00FF7F\r\n");
+        Preferences orangeChoisi = Preferences.DepuisTexte("CouleurCaseEtape=#FFA501\r\n");
+        Verifie("Couleurs : l'orange des versions 1.10 et 1.11 pour les étapes est lu comme « jamais personnalisé » (la lavande par défaut s'applique) ; une autre teinte, ou une autre couleur, reste un choix",
+                Preferences.CouleursParDefaut["CaseEtape"] == 0xB9A3E3 && !ancienOrange.Couleurs.ContainsKey("CaseEtape") && ancienOrange.Couleurs["CaseDepart"] == 0x00FF7F && orangeChoisi.Couleurs["CaseEtape"] == 0xFFA501,
+                string.Join(", ", ancienOrange.Couleurs.Keys));        Preferences personnalisee = Preferences.DepuisTexte("CouleurCaseDepart=#FF00FF\r\n");
         Verifie("Couleurs : une couleur choisie par le joueur est gardée (même magenta)", personnalisee.Couleurs.Count == 1 && personnalisee.Couleurs["CaseDepart"] == 0xFF00FF, string.Join(", ", personnalisee.Couleurs.Keys));
 
+        Preferences reperesParDefaut = new Preferences();
+        Preferences reperesEcrits = Preferences.DepuisTexte(new Preferences { ArriveesDebutTour = true, RepereDernierCoup = "cadre" }.VersTexte());
+        Preferences repereRefuse = Preferences.DepuisTexte("RepereDernierCoup=fleche\r\nArriveesDebutTour=peut-etre\r\n");
+        Verifie("Préférences : par défaut, pas d'arrivées au début du tour et un triangle pour le dernier coup ; les deux réglages sont écrits puis relus, une valeur refusée est signalée",
+                !reperesParDefaut.ArriveesDebutTour && reperesParDefaut.RepereDernierCoup == "coin" && reperesEcrits.ArriveesDebutTour && reperesEcrits.RepereDernierCoup == "cadre"
+                && Preferences.DepuisTexte("RepereDernierCoup=AUCUN").RepereDernierCoup == "aucun" && repereRefuse.RepereDernierCoup == "coin" && !repereRefuse.ArriveesDebutTour && repereRefuse.Avertissements.Count == 2, string.Join(" | ", repereRefuse.Avertissements));
         // ═══════════════ Vitesse de lecture d'une partie ═══════════════
         Verifie("Lecture : cinq vitesses, de plus en plus rapides (la pause entre deux coups diminue), 0,5 s par défaut, tout niveau est ramené entre 1 et 5",
                 Enumerable.Range(1, 5).Select(RythmeLecture.PauseMs).SequenceEqual(Enumerable.Range(1, 5).Select(RythmeLecture.PauseMs).OrderByDescending(p => p)) && RythmeLecture.PauseMs(RythmeLecture.ParDefaut) == 500

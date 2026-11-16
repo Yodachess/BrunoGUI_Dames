@@ -137,12 +137,12 @@ public static class ScenarioInterface
         }
         else
         {
-            Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);      // La prise obligatoire est signalée : cadre gris sur la case d'arrivée
-            bool prisesSignalees = ImagePresente(rafle.Arrivee) && pos()[rafle.Arrivee] == Piece.Vide && CouleurCase(rafle.Depart) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart;
-            Clique(rafle.Depart);
+            BrunoInterfaceGraphiqueDames.ArriveesDebutTour = false;
+            Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);      // Une seule prise possible : le coup est forcé, son départ ET son arrivée sont signalés (cadre gris sur la case d'arrivée)
+            bool prisesSignalees = ImagePresente(rafle.Arrivee) && pos()[rafle.Arrivee] == Piece.Vide && CouleurCase(rafle.Depart) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart;            Clique(rafle.Depart);
             Clique(rafle.Arrivee);
             bool jouee = Attendre(() => session().CoupsPdn.Count == 1, 5000);
-            verifie("Interface : la prise obligatoire est signalée avant le coup (départ coloré, cadre gris à l'arrivée) et, après la rafle, aucun cadre gris ne reste",
+            verifie("Interface : la prise obligatoire est signalée avant le coup (coup forcé : départ coloré et cadre gris à l'arrivée) et, après la rafle, aucun cadre gris ne reste",
                     prisesSignalees && jouee && ImagesCoherentes(), $"signalée : {prisesSignalees}, images cohérentes : {ImagesCoherentes()}");
             verifie("Interface : la rafle (async, animation à 0) est jouée : pièce prise retirée, pièce arrivée, coup « " + rafle.PdnComplet() + " » dans l'historique",
                     jouee && pos()[rafle.Arrivee] == Piece.PionBlanc && pos()[22] == Piece.Vide && pos()[rafle.Depart] == Piece.Vide && !ImagePresente(22) && ImagePresente(rafle.Arrivee) && session().CoupsPdn[0].Contains('x'),
@@ -289,6 +289,79 @@ public static class ScenarioInterface
         Appelle(fenetre, "AfficheDonneesBrutes", "ping", false);
         string protocole = Champ<Form>(fenetre, "donneesBrutesDames") is DonneesBrutesDames fenetreProtocole ? fenetreProtocole.DonneesBrutesVue.Text : "";
         verifie("Interface : dans la fenêtre du protocole, un espace sépare « [SCAN 3.1] » (comme « [BrunoGUI_Dames] ») des données", protocole.Contains("[SCAN 3.1]    pong") && protocole.Contains("[BrunoGUI_Dames]    ping"), protocole);
+
+        // ═══════════════ Repères du damier : dernier coup, croix sur les pièces à prendre, numéros des étapes ═══════════════
+        BrunoInterfaceGraphiqueDames.DureeEtape = 0;
+        Nouvelle();
+        Joue(32, 28);
+        bool traceApresCoup = Statique<int>("dernierDepartManoury") == 32 && Statique<int>("dernierArriveeManoury") == 28;
+        JoueLegal();                            // Les noirs répondent : le dernier coup est le leur
+        Coup? reponseNoire = null;
+        if (session().CoupsPdn.Count == 2) reponseNoire = ReglesDames.TrouverCoupPdn(session().Positions[1], session().CoupsPdn[1]);
+        bool traceReponse = reponseNoire != null && Statique<int>("dernierDepartManoury") == reponseNoire.Depart && Statique<int>("dernierArriveeManoury") == reponseNoire.Arrivee;
+        Appelle(fenetre, "BoutonPrecedent_Click", null, EventArgs.Empty);
+        bool traceParcours = Statique<int>("dernierDepartManoury") == 32 && Statique<int>("dernierArriveeManoury") == 28;       // Le parcours montre le coup de la position affichée
+        Appelle(fenetre, "BoutonDebut_Click", null, EventArgs.Empty);
+        bool traceDebut = Statique<int>("dernierDepartManoury") == 0 && Statique<int>("dernierArriveeManoury") == 0;
+        verifie("Interface : le dernier coup est repéré par un cadre sur ses deux cases (celui du coup joué, de la réponse, du coup affiché par le parcours ; aucun au début)",
+                traceApresCoup && traceReponse && traceParcours && traceDebut, $"après le coup {traceApresCoup}, réponse {traceReponse}, parcours {traceParcours}, début {traceDebut}");
+
+        // Le style du repère du dernier coup (préférence RepereDernierCoup) : ce qui est dessiné dans la case de départ du dernier coup (32)
+        Nouvelle();
+        Joue(32, 28);
+        PictureBox case32 = BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(32)];
+        bool BrunA(Bitmap b, int x, int y) { Color c = b.GetPixel(x, y); return Math.Abs(c.R - 0x4A) < 12 && Math.Abs(c.G - 0x2A) < 12 && Math.Abs(c.B - 0x12) < 12; }
+        (bool coin, bool milieuGauche) Reperes(string style)
+        {
+            BrunoInterfaceGraphiqueDames.RepereDernierCoup = style;
+            case32.Invalidate();
+            using Bitmap dessin = new Bitmap(case32.Width, case32.Height);
+            case32.DrawToBitmap(dessin, new Rectangle(0, 0, case32.Width, case32.Height));
+            return (BrunA(dessin, 6, case32.Height - 7), BrunA(dessin, 3, case32.Height / 2));      // Près du coin en bas à gauche ; au milieu du bord gauche
+        }
+        (bool coin, bool milieuGauche) styleCoin = Reperes("coin"), styleCadre = Reperes("cadre"), styleAucun = Reperes("aucun");
+        BrunoInterfaceGraphiqueDames.RepereDernierCoup = "coin";
+        verifie("Interface : le repère du dernier coup est un triangle dans un coin (par défaut), un cadre, ou rien selon la préférence RepereDernierCoup",
+                styleCoin == (true, false) && styleCadre == (false, true) && styleAucun == (false, false), $"coin {styleCoin}, cadre {styleCadre}, aucun {styleAucun}");
+        Nouvelle();
+        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:W32:B28,19\"]", true);       // Une rafle en deux étapes
+        Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
+        Coup? deuxEtapes = ReglesDames.CoupsLegaux(session().DernierePosition).FirstOrDefault();
+        bool forceMontre = deuxEtapes != null && ImagePresente(deuxEtapes.Arrivee) && Statique<Dictionary<int, string>>("numerosEtape").Count == 2;
+        verifie("Interface : une rafle forcée est montrée dès le début du tour avec sa destination et l'ordre de ses étapes", forceMontre, $"numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}");
+        Clique(32);
+        bool couleursEtapes = deuxEtapes != null && CouleurCase(deuxEtapes.Prises[0]) == BrunoInterfaceGraphiqueDames.CouleurCasePrise && CouleurCase(deuxEtapes.Chemin[0]) == BrunoInterfaceGraphiqueDames.CouleurCaseEtape
+                              && CouleurCase(deuxEtapes.Arrivee) == BrunoInterfaceGraphiqueDames.CouleurCaseArrivee;
+        verifie("Interface : à la sélection d'une prise forcée, la pièce à prendre, la case d'étape et l'arrivée ont chacune leur couleur (malgré le cadre gris posé au début du tour)", couleursEtapes,
+                deuxEtapes == null ? "pas de rafle" : $"prise {CouleurCase(deuxEtapes.Prises[0])}, étape {CouleurCase(deuxEtapes.Chemin[0])}, arrivée {CouleurCase(deuxEtapes.Arrivee)}");        Dictionary<int, string> etapes = Statique<Dictionary<int, string>>("numerosEtape");
+        verifie("Interface : à la sélection d'une rafle unique, ses cases d'arrivée sont numérotées 1, 2…",
+                deuxEtapes != null && deuxEtapes.Chemin.Count == 2 && etapes.Count == 2 && etapes[deuxEtapes.Chemin[0]] == "1" && etapes[deuxEtapes.Chemin[1]] == "2",
+                $"rafle {deuxEtapes?.PdnComplet()} ({deuxEtapes?.Chemin.Count} étape(s)), étapes {string.Join(",", etapes)}");
+        if (deuxEtapes != null)
+            Clique(deuxEtapes.Arrivee);
+        bool rafleJouee = Attendre(() => session().CoupsPdn.Count == 1, 5000);
+        verifie("Interface : après la rafle, les numéros disparaissent et le dernier coup est celui de la rafle",
+                rafleJouee && deuxEtapes != null && Statique<Dictionary<int, string>>("numerosEtape").Count == 0
+                && Statique<int>("dernierDepartManoury") == deuxEtapes.Depart && Statique<int>("dernierArriveeManoury") == deuxEtapes.Arrivee,
+                $"numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}, dernier coup {Statique<int>("dernierDepartManoury")}-{Statique<int>("dernierArriveeManoury")}");
+        Nouvelle();
+        BrunoInterfaceGraphiqueDames.MiseenplaceFen("[FEN \"W:WK44:B12,18,19,39\"]", true);     // Deux rafles possibles pour la même pièce
+        Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
+        List<Coup> prisesPossibles = ReglesDames.CoupsLegaux(session().DernierePosition).ToList();
+        bool departSeul = prisesPossibles.Count > 1 && CouleurCase(44) == BrunoInterfaceGraphiqueDames.CouleurCaseDepart && prisesPossibles.All(c => !ImagePresente(c.Arrivee) && BrunoInterfaceGraphiqueDames.CaseDamier[GestionDamier.ObtenirIndicePictureBox(c.Arrivee)].Enabled);
+        BrunoInterfaceGraphiqueDames.ArriveesDebutTour = true;
+        Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
+        bool arriveesAvecPreference = prisesPossibles.All(c => ImagePresente(c.Arrivee));
+        BrunoInterfaceGraphiqueDames.ArriveesDebutTour = false;
+        Appelle(fenetre, "AnalyseCoupObligatoire", Couleur.Blanc);
+        verifie("Interface : avec plusieurs prises possibles, seule la pièce est signalée au début du tour (arrivées cliquables mais discrètes) ; la préférence ArriveesDebutTour montre toutes les arrivées",
+                departSeul && arriveesAvecPreference, $"départ seul {departSeul}, arrivées avec la préférence {arriveesAvecPreference}");
+        Clique(44);
+        verifie("Interface : avec plusieurs rafles possibles, les étapes ne sont pas numérotées (leurs numéros se mélangeraient)",
+                Champ<bool>(fenetre, "pieceEnMain") && Statique<Dictionary<int, string>>("numerosEtape").Count == 0,
+                $"pièce en main {Champ<bool>(fenetre, "pieceEnMain")}, numéros {Statique<Dictionary<int, string>>("numerosEtape").Count}");        Clique(44);                             // Un clic sur sa propre case : la pièce revient (ce n'est pas une rafle en boucle)
+        Pompe(30);
+        Appelle(fenetre, "EffaceMouvements");
 
         // Retour arrière : les temps sont gardés, la pendule attend le prochain coup
         Nouvelle(5);

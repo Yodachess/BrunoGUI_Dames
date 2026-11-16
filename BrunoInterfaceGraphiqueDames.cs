@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -49,6 +49,8 @@ namespace BrunoGUI_Dames
         public static Couleur CouleurAuTrait = Couleur.Blanc;     // Le camp dont c'est le tour à l'écran ; pendant que le moteur réfléchit, c'est celui de l'humain (voir ChangerCouleurTrait)
         public static string NomJoueurBlanc = "Bruno" , NomJoueurNoir = "SCAN 3.1";
         public static FichierPartiePdn.PartieDamesPdn BalisesPartie = new FichierPartiePdn.PartieDamesPdn();
+        public static bool ArriveesDebutTour;                           // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (préférence ArriveesDebutTour)
+        public static string RepereDernierCoup = "coin";                // Le repère du dernier coup : coin, cadre ou aucun (préférence RepereDernierCoup)
         public static int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeEtape, TempsReflexion;     // DureeEtape : millisecondes d'une étape d'animation (un glissement, une étape de rafle)
         public static bool OrdinateurActif, PartieTerminee, EmetUnSon;
         private static bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;

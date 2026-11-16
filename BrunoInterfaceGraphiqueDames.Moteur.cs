@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -115,6 +115,8 @@ namespace BrunoGUI_Dames
             foreach (string avertissement in preferencesChargees.Avertissements)
                 Journal.Ecrit("Préférences : " + avertissement);
             DureeEtape = preferencesChargees.DureeEtape;
+            ArriveesDebutTour = preferencesChargees.ArriveesDebutTour;
+            RepereDernierCoup = preferencesChargees.RepereDernierCoup;
             Color Choisie(string nom) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : CouleurParDefaut(nom);
             CouleurCaseSombre = Choisie("CaseSombre");
             CouleurCaseClaire = Choisie("CaseClaire");
@@ -146,6 +148,8 @@ namespace BrunoGUI_Dames
             {
                 TempsReflexion = trackBarTempsReflexion.Value,
                 DureeEtape = DureeEtape,
+                ArriveesDebutTour = ArriveesDebutTour,
+                RepereDernierCoup = RepereDernierCoup,
                 VueCoteNoir = GestionDamier.Orientation.CoteNoir,
                 NomJoueurBlanc = nomBlancPrefere,
                 NomJoueurNoir = nomNoirPrefere,

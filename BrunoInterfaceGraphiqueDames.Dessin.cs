@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -43,6 +43,7 @@ namespace BrunoGUI_Dames
             CaseDamier[indexPictureBox].Image = null;
         }        public static void DessineMouvements(int caseSourceManoury, List<Coup> coups)
         {   // --- Dessine tous les mouvements légaux de la pièce en case source (coups : ses coups selon ReglesDames, déjà limités aux rafles les plus longues) ---
+            EffaceNumerosEtape();
             CaseDamier[GestionDamier.ObtenirIndicePictureBox(caseSourceManoury)].BackColor = CouleurCaseDepart; // Colorier la case source
             if (coups.Any(coup => coup.EstPrise))
             {   // Rafles : s'il en existe plusieurs de même longueur, elles sont toutes signalées, c'est au joueur de choisir
@@ -53,7 +54,7 @@ namespace BrunoGUI_Dames
                     {
                         int indexPrise = GestionDamier.ObtenirIndicePictureBox(prise);
                         int indexArrivee = GestionDamier.ObtenirIndicePictureBox(arrivee);
-                        if (CaseDamier[indexArrivee].Image == null)       // Ne pas effacer les pièces si la case est occupée
+                        if (CaseDamier[indexArrivee].Image == null || CaseDamier[indexArrivee].Image == CadreGrisSansPrise)       // Ne pas effacer les pièces si la case est occupée (un cadre gris, déjà posé au début du tour, compte comme une case vide)
                         {
                             CaseDamier[indexPrise].BackColor = CouleurCasePrise;
                             CaseDamier[indexArrivee].Image = CadreGrisSansPrise;
@@ -64,6 +65,10 @@ namespace BrunoGUI_Dames
                 // Étape 2 : colorier uniquement les cases d'arrivée finale en CouleurCaseArrivee
                 foreach (Coup rafle in coups)
                     CaseDamier[GestionDamier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
+                // Étape 3 : l'ordre des étapes quand il n'y a qu'une rafle (avec plusieurs, les numéros se mélangeraient : la fenêtre de choix les montre une à une)
+                List<Coup> rafles = coups.Where(coup => coup.EstPrise).ToList();
+                if (rafles.Count == 1)
+                    MarqueEtapes(rafles[0]);
             }
             else
             {   // Déplacements simples (uniquement si aucune rafle n'existe), affichés en CouleurTrajetSuivi avec un cadre gris
@@ -78,6 +83,7 @@ namespace BrunoGUI_Dames
         public static void EffaceMouvements()
         {   // --- Efface toutes les indications des mouvements possibles d'une pièce sélectionnée : les cadres gris et les couleurs des cases ---
             EffaceCasesDestination();
+            EffaceNumerosEtape();
             CouleurToutesCasesManoury(CouleurCaseSombre);       // Au clic de destination, seules les indications de la sélection sont affichées (tout a été remis à zéro à la sélection)
         }
         public static void EffaceCasesDestination()
@@ -228,6 +234,8 @@ namespace BrunoGUI_Dames
             CaseDamier[GestionDamier.ObtenirIndicePictureBox(rafle.Arrivee)].BackColor = CouleurCaseArrivee;
             foreach (int prise in rafle.Prises)
                 CaseDamier[GestionDamier.ObtenirIndicePictureBox(prise)].BackColor = Color.Red;
+            EffaceNumerosEtape();
+            MarqueEtapes(rafle);
         }
         private Coup? ChoisitRafle(List<Coup> options)
         {   // --- Fenêtre de choix entre plusieurs rafles de même départ et même arrivée (les pièces prises de chaque option sont mises en évidence) ; null si le joueur annule ---
@@ -238,6 +246,7 @@ namespace BrunoGUI_Dames
             dialogue.Location = new Point(x, Top + 120);
             dialogue.ShowDialog(this);
             CouleurToutesCasesManoury(CouleurCaseSombre);       // Efface la mise en évidence
+            EffaceNumerosEtape();
             return dialogue.Choisie;
         }
         private bool EstCaseValide(int caseDestinationManoury)
@@ -276,6 +285,7 @@ namespace BrunoGUI_Dames
                 e.Graphics.FillRectangle(fond, 0, 0, pict.Width, pict.Height);      // Effacer le fond
             if (pict.Image != null)
                 e.Graphics.DrawImage(pict.Image, 0, 0, pict.Width, pict.Height);    // Redessiner l'image si elle existe
+            DessineMarques(e.Graphics, numeroManoury, pict.Width, pict.Height);    // Dernier coup, pièces à prendre, numéros d'étapes (Marques.cs)
             // Le numéro est blanc cerné de noir : il se voit sur toutes les cases et sur les pièces blanches comme sur les noires
             using (System.Drawing.Drawing2D.GraphicsPath contour = new System.Drawing.Drawing2D.GraphicsPath())
             {

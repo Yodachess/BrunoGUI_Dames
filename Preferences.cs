@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -31,6 +31,9 @@ namespace BrunoGUI_Dames
         public int DureeEtape { get; set; } = 250;                     // Millisecondes d'une étape d'animation : un glissement de pièce, une étape de rafle (0 à 10000 ; 0 : sans animation). Les versions 1.10 et 1.11 avaient 900
         public int VitesseLecture { get; set; } = RythmeLecture.ParDefaut;      // La vitesse de la lecture d'une partie, de 1 (lente) à 5 (rapide)
         public bool VueCoteNoir { get; set; }                           // Le damier est vu du côté des noirs
+        public bool ArriveesDebutTour { get; set; }                     // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (faux : seulement les pièces qui doivent prendre, les arrivées de la pièce choisie apparaissant à la sélection ; vrai : le comportement des versions 1.10 à 1.11)
+        public static readonly string[] ReperesDernierCoup = { "coin", "cadre", "aucun" };
+        public string RepereDernierCoup { get; set; } = "coin";         // Le repère des deux cases du dernier coup : « coin » (un triangle brun foncé dans un coin), « cadre » (un cadre brun foncé) ou « aucun »
         public string? CadenceId { get; set; }                          // La cadence de la pendule (Id d'une Cadence) ; null : pas de pendule
         public static readonly string[] NomsCouleurs = { "CaseSombre", "CaseClaire", "CaseDepart", "TrajetSuivi", "CasePivot", "CasePrise", "CaseArrivee", "CaseEtape" };
         // --- Les couleurs par défaut du damier (0xRRGGBB) : cases sombres et claires (bois), puis les surbrillances (celles des versions 1.10 et 1.11, gardées : une palette
@@ -38,8 +41,11 @@ namespace BrunoGUI_Dames
         public static readonly IReadOnlyDictionary<string, int> CouleursParDefaut = new Dictionary<string, int>
         {
             ["CaseSombre"] = 0xCD853F, ["CaseClaire"] = 0xDEB887, ["CaseDepart"] = 0x00FF7F, ["TrajetSuivi"] = 0x9ACD32,
-            ["CasePivot"] = 0xBDB76B, ["CasePrise"] = 0x556B2F, ["CaseArrivee"] = 0x6B8E23, ["CaseEtape"] = 0xFFA500
+            ["CasePivot"] = 0xBDB76B, ["CasePrise"] = 0x556B2F, ["CaseArrivee"] = 0x6B8E23, ["CaseEtape"] = 0xB9A3E3
         };
+        // --- Les valeurs par défaut des versions précédentes qui ont changé : les versions 1.10 et 1.11 écrivaient les huit couleurs dans le fichier, donc une couleur qui a encore cette valeur
+        // n'est pas un choix du joueur et prend la nouvelle valeur par défaut (l'orange des étapes de rafle, remplacé par une lavande le 2026-11-16 : trop proche du bois) ---
+        public static readonly IReadOnlyDictionary<string, int> AnciennesCouleursParDefaut = new Dictionary<string, int> { ["CaseEtape"] = 0xFFA500 };
         public Dictionary<string, int> Couleurs { get; } = new Dictionary<string, int>();   // Couleurs du damier changées ou à enregistrer : nom (de NomsCouleurs) -> 0xRRGGBB ; absent = couleur par défaut
         public List<string> Avertissements { get; } = new List<string>();   // Ce que la lecture n'a pas compris (lignes ignorées, valeurs refusées)
 
@@ -117,6 +123,16 @@ namespace BrunoGUI_Dames
                         if (LitBooleen(valeur, out bool vueNoire)) preferences.VueCoteNoir = vueNoire;
                         else preferences.Avertissements.Add($"VueCoteNoir refusée (0 ou 1 attendu) : {valeur}");
                         break;
+                    case "arriveesdebuttour":
+                        if (LitBooleen(valeur, out bool arrivees)) preferences.ArriveesDebutTour = arrivees;
+                        else preferences.Avertissements.Add($"ArriveesDebutTour refusée (0 ou 1 attendu) : {valeur}");
+                        break;
+                    case "reperederniercoup":
+                        if (Array.Exists(ReperesDernierCoup, r => string.Equals(r, valeur, StringComparison.OrdinalIgnoreCase)))
+                            preferences.RepereDernierCoup = valeur.ToLowerInvariant();
+                        else
+                            preferences.Avertissements.Add($"RepereDernierCoup refusé (un des mots : {string.Join(", ", ReperesDernierCoup)}) : {valeur}");
+                        break;
                     case "cadence":
                         if (valeur.Length == 0 || string.Equals(valeur, "sans", StringComparison.OrdinalIgnoreCase))
                             preferences.CadenceId = null;
@@ -132,7 +148,8 @@ namespace BrunoGUI_Dames
                             preferences.Avertissements.Add($"Clé inconnue ignorée : {cle}");
                         else if (LitCouleur(valeur, out int rgb))
                         {
-                            preferences.Couleurs[nomCouleur] = rgb;
+                            if (!(AnciennesCouleursParDefaut.TryGetValue(nomCouleur, out int ancienne) && ancienne == rgb))
+                                preferences.Couleurs[nomCouleur] = rgb;
                         }
                         else
                             preferences.Avertissements.Add($"{cle} refusée (une couleur « #RRGGBB » est attendue) : {valeur}");
@@ -176,6 +193,8 @@ namespace BrunoGUI_Dames
             texte.Append("VitesseLecture=").Append(VitesseLecture.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             texte.Append("VueCoteNoir=").Append(VueCoteNoir ? "1" : "0").Append(Environment.NewLine);
             texte.Append("Cadence=").Append(CadenceId ?? "sans").Append(Environment.NewLine);
+            texte.Append("ArriveesDebutTour=").Append(ArriveesDebutTour ? "1" : "0").Append(Environment.NewLine);
+            texte.Append("RepereDernierCoup=").Append(RepereDernierCoup).Append(Environment.NewLine);
             foreach (string nom in NomsCouleurs)
                 if (Couleurs.TryGetValue(nom, out int rgb))
                     texte.Append("Couleur").Append(nom).Append("=#").Append((rgb & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture)).Append(Environment.NewLine);

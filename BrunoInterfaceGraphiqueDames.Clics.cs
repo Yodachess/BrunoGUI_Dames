@@ -285,12 +285,16 @@ namespace BrunoGUI_Dames
                 return;                 // Sortir de la méthode, rien à faire de plus
             }
             CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
+            EffaceNumerosEtape();
+            bool coupForce = prises.Count == 1;                 // Une seule prise possible : le coup est forcé, on montre aussi sa destination (et l'ordre de ses étapes)
             var casesActivables = new HashSet<int>();           // Ensemble des cases à activer (départ et arrivée finale)
             foreach (Coup rafle in prises)
             {
                 casesActivables.Add(rafle.Depart);
                 casesActivables.Add(rafle.Arrivee);
                 CaseDamier[GestionDamier.ObtenirIndicePictureBox(rafle.Depart)].BackColor = CouleurCaseDepart;
+                if (!ArriveesDebutTour && !coupForce)
+                    continue;           // Seules les pièces qui doivent prendre sont montrées ; les arrivées de la pièce choisie apparaissent à la sélection (DessineMouvements). Sauf si le coup est forcé
                 foreach (int arrivee in rafle.Chemin)
                 {   // Colorier chaque case d'arrivée avec le cadre gris
                     PictureBox caseArrivee = CaseDamier[GestionDamier.ObtenirIndicePictureBox(arrivee)];
@@ -301,6 +305,8 @@ namespace BrunoGUI_Dames
                     }
                 }
             }
+            if (coupForce)
+                MarqueEtapes(prises[0]);                        // L'ordre des étapes de la rafle forcée
             foreach (int caseActivable in casesActivables)      // Parcourir toutes les cases activables
             {
                 ActiverCaseManoury(caseActivable, true);        // Activer directement chaque case activable
@@ -335,6 +341,11 @@ namespace BrunoGUI_Dames
                         DessinePiece(GestionDamier.ObtenirIndicePictureBox(numeroCase), piece);
                 }
                 AfficheListesPieces();
+                EffaceNumerosEtape();
+                if (commenceLaPartie)
+                    MarqueDernierCoup(0, 0);                            // Une nouvelle partie : pas de dernier coup
+                else
+                    MarqueDernierCoupAffiche();                         // Le parcours : le dernier coup de la position affichée
             }
             else
             {
@@ -413,7 +424,9 @@ namespace BrunoGUI_Dames
             Position avant = GestionDamier.PositionCourante.Copie();
             avant.Trait = Position.CouleurDe(avant[coup.Depart]);     // Le camp de la pièce qui joue (CouleurAuTrait est celui de l'humain pendant que le moteur réfléchit)
             string notationPdn = ReglesDames.NotationPdn(ReglesDames.CoupsLegaux(avant), coup);
-            return coup.EstPrise ? await AnimerEtExecuterRafle(coup, notationPdn, glisse) : await ExecuteDeplacement(coup, notationPdn, glisse);
+            string notation = coup.EstPrise ? await AnimerEtExecuterRafle(coup, notationPdn, glisse) : await ExecuteDeplacement(coup, notationPdn, glisse);
+            MarqueDernierCoup(coup.Depart, coup.Arrivee);       // Le repère brun sur les deux cases du coup, jusqu'au coup suivant
+            return notation;
         }
         // --- Un déplacement simple (coup sans prise) ; la promotion éventuelle vient de la position obtenue par ReglesDames.Jouer ---
         private async Task<string> ExecuteDeplacement(Coup coup, string notationPdn, bool glisse)
@@ -490,6 +503,7 @@ namespace BrunoGUI_Dames
             await Task.Delay(DureeEtape);                                     // Une dernière pause avant que les pièces prises disparaissent
             foreach (int index in boxesAEffacerFinRafle)
                 EffacePiece(index);                                           // Toutes ensemble
+            EffaceNumerosEtape();
             CaseDamier[indexArriveeFinale].BackColor = CouleurCaseArrivee;
             if (!jeuMoteurEnCours)                      // On l'affiche si ce n'est pas le moteur qui joue
                 LabelCoupJoue.Text = "Coup joué : " + notationPdn;
