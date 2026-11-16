@@ -188,8 +188,9 @@ namespace BrunoGUI_Dames
             ReglagesDeTest.Message(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private void BoutonAide_Click(object sender, EventArgs e)
-        {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur ---
-            string page = Path.Combine(Application.StartupPath, "Aide", "fr", "index.html");
+        {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur : en anglais si Windows est en anglais, sinon en français (chaque page a un lien vers l'autre) ---
+            string PageAide(string langue) => Path.Combine(Application.StartupPath, "Aide", langue, "index.html");
+            string page = PageAide(LangueAide.Choisit(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, langue => File.Exists(PageAide(langue))));
             if (!File.Exists(page))
             {
                 Journal.Ecrit("Aide introuvable : " + page);

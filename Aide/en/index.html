@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrunoGUI Dames help</title>
+<link rel="stylesheet" href="../aide.css">
+</head>
+<body>
+<div class="page">
+<nav>
+    <div class="titre">BrunoGUI Dames</div>
+    <div class="version">User help &middot; <a href="../fr/index.html">Fran&ccedil;ais</a></div>
+    <ol>
+        <li><a href="#demarrage">Quick start</a></li>
+        <li><a href="#fenetre">The main window</a></li>
+        <li><a href="#jouer">Playing a game</a></li>
+        <li><a href="#ordinateur">Playing the computer</a></li>
+        <li><a href="#nulles">End of game and draws</a></li>
+        <li><a href="#parcours">Browsing a game</a></li>
+        <li><a href="#pdn">PDN files (games)</a></li>
+        <li><a href="#fen">FEN files (positions)</a></li>
+        <li><a href="#damier">Turning the board</a></li>
+        <li><a href="#preferences">Preferences</a></li>
+        <li><a href="#programme">The program files</a></li>
+    </ol>
+</nav>
+<main>
+
+<h1>BrunoGUI Dames help</h1>
+<p class="intro">BrunoGUI Dames is a front end for playing and analysing games of <b>international draughts</b> (10&times;10 board, squares numbered 1 to 50 in Manoury notation). You play against the <b>Scan 3.1</b> engine by Fabien Letouzey or against a friend, and you load and save PDN games and FEN positions.</p>
+<div class="note">The program's screen is in French. In this help, buttons are named exactly as they appear on screen, followed by their English meaning the first time (see the table in section 2).</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="demarrage">1. Quick start</h2>
+<ol>
+    <li>When the program starts, the board is ready: White is at the bottom and moves first. To start over at any time, click <span class="bouton">Nouvelle Partie</span> (new game).</li>
+    <li>Click the piece you want to move: it is &laquo;&nbsp;picked up&nbsp;&raquo; and the squares it can go to are marked. Click the destination square to play the move.</li>
+    <li>With the <b>Ordinateur</b> (computer) box ticked (the default), the engine answers by itself after each of your moves. Untick it to play two humans on the same board.</li>
+    <li>To save the game: <span class="bouton">Sauve Partie</span> (save game, PDN format). To replay a game that has already been played: <span class="bouton">Charge Parties</span> (load games).</li>
+</ol>
+<div class="note">The rules are those of international draughts: men capture forwards and backwards, kings are &laquo;&nbsp;flying&nbsp;&raquo;, capturing is compulsory, and you must capture the greatest number of pieces (majority capture). The program enforces this: only the allowed pieces and squares can be played.</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="fenetre">2. The main window</h2>
+<ul>
+    <li><b>The board</b> (left): the playable squares carry the numbers 1 to 50 of Manoury notation (from 1, at the top on Black's side, to 50, at the bottom on White's side).</li>
+    <li><b>The top banner</b>: the names of the White and Black players (editable), and in the centre the status: &laquo;&nbsp;Trait aux Blancs&nbsp;&raquo; (White to move), &laquo;&nbsp;Trait aux Noirs&nbsp;&raquo; (Black to move), or the end of the game.</li>
+    <li><b>Under the banner</b>: the <b>score</b> estimated by the engine and its <b>line</b> (the sequence of moves it expects), during or after its thinking.</li>
+    <li><b>Between that line and the board</b>: the last move played (&laquo;&nbsp;Mouvement&nbsp;&raquo;), the <b>possible captures</b> (&laquo;&nbsp;Prises possibles&nbsp;&raquo;: the captures you must play, with the square of the captured piece and the landing square), the count of men and kings of each colour, the <b>Résultat</b> (result) group, the <b>Ordinateur</b> and <b>Son</b> (sound) boxes, and the <b>thinking time</b> setting.</li>
+    <li><b>The column of buttons</b> (right, under the two clock times when the clock is active): see the following sections. While the engine is thinking, the buttons that would change the game are disabled.</li>
+</ul>
+<table>
+    <tr><th>Button</th><th>What it does</th></tr>
+    <tr><td><span class="bouton">Nouvelle Partie</span> (new game)</td><td>Starts a new game from the starting position.</td></tr>
+    <tr><td><span class="bouton">Ordinateur joue</span> (computer plays)</td><td>The engine plays a move for the side to move.</td></tr>
+    <tr><td><span class="bouton">Retour Arri&egrave;re</span> (take back)</td><td>Goes back one half-move (one move by one of the two sides).</td></tr>
+    <tr><td><span class="bouton">Tourner damier</span> (turn board)</td><td>Rotates the board by 180&deg; (see section 9).</td></tr>
+    <tr><td><span class="bouton">Analyse position</span> (analyse position)</td><td>The engine studies the position and gives its score and line, without playing anything.</td></tr>
+    <tr><td><span class="bouton">Liste des coups</span> (move list)</td><td>Shows the moves of the game in PDN, FEN and Hub2, and lets you save them.</td></tr>
+    <tr><td><span class="bouton">Parcours partie</span> (game browsing: Début, Préc., Suiv., Fin = start, previous, next, end)</td><td>Browses the game move by move (section 6).</td></tr>
+    <tr><td><span class="bouton">Charge Parties</span> (load games)</td><td>Reads a PDN file and shows the list of its games.</td></tr>
+    <tr><td><span class="bouton">Masque parties</span> (hide games)</td><td>Hides or shows the list of games.</td></tr>
+    <tr><td><span class="bouton">Sauve Partie</span> (save game)</td><td>Saves the game as PDN, optionally at the end of an existing file.</td></tr>
+    <tr><td><span class="bouton">Charge position</span> / <span class="bouton">Sauve position</span> (load / save position)</td><td>Reads or writes a position in FEN format.</td></tr>
+    <tr><td><span class="bouton">Protocole</span> (protocol)</td><td>Shows the raw exchanges between the program and the engine (Hub2 protocol).</td></tr>
+    <tr><td><span class="bouton">Aide (F1)</span> (help)</td><td>Opens this help.</td></tr>
+    <tr><td><span class="bouton">A propos de BIG</span> (about)</td><td>Version number of the program and of the engine.</td></tr>
+    <tr><td><span class="bouton">Quitter</span> (quit)</td><td>Closes the program and stops the engine.</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="jouer">3. Playing a game</h2>
+<h3>Playing a move</h3>
+<p>A first click on one of your pieces selects it: its image becomes the mouse cursor, its square is coloured and the squares it can go to are marked. A second click on a destination square plays the move. The engine's move is animated: its piece glides from one square to the other; a multiple capture is animated step by step, and the captured pieces disappear together at the end. If you click a square the piece cannot go to, it returns to its place and nothing is played.</p>
+<h3>Compulsory capture</h3>
+<p>When a capture is possible, only the pieces that can capture may be played, and only the captures that take <b>the most pieces</b> are allowed. The departure and arrival squares of these captures are coloured as soon as it is your turn, and the captures are written in the &laquo;&nbsp;Prises possibles&nbsp;&raquo; area (in the form &laquo;&nbsp;28 -&gt; 19, 17 -&gt; 10&nbsp;&raquo;: the square of the captured piece, then the square where the piece lands).</p>
+<h3>Several captures possible for the same click</h3>
+<p>Two different captures can start from the same square and end on the same square while taking different pieces. A small &laquo;&nbsp;Choix de la rafle&nbsp;&raquo; (choice of capture) window then opens: the <span class="bouton">&lt; Pr&eacute;c&eacute;dente</span> (previous) and <span class="bouton">Suivante &gt;</span> (next) buttons show on the board the path of each capture and, in red, the pieces it takes; <span class="bouton">Jouer cette rafle</span> (play this capture) plays it, <span class="bouton">Annuler</span> (cancel) puts the piece back. In the PDN file, such a capture is written in full (&laquo;&nbsp;44x22x13x24&nbsp;&raquo;) so that it can be replayed without ambiguity.</p>
+<h3>A capture that returns to its own square</h3>
+<p>A piece can sometimes make a complete loop and come back to its starting square. To play such a capture, select the piece and then click its own square again. If no such capture exists, clicking its own square is not a move and the piece simply returns.</p>
+<h3>Promotion</h3>
+<p>A man becomes a king when it <b>ends</b> its move on the last row. If it only passes through it in the middle of a multiple capture, it stays a man and carries on.</p>
+<h3>Taking back a move</h3>
+<p><span class="bouton">Retour Arri&egrave;re</span> takes back the last half-move. After taking back, the engine no longer answers your next move automatically: click <span class="bouton">Ordinateur joue</span> to let it play again.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="ordinateur">4. Playing the computer</h2>
+<ul>
+    <li><b>Ordinateur</b> (tick box): ticked, the engine plays its answer after each of your moves; unticked, you play two humans. Without an engine on the disk, this box is disabled and human-versus-human play is still possible.</li>
+    <li><b>Thinking time</b>: from 1 to 25 seconds per move (5 by default). The longer it is, the stronger the engine plays.</li>
+    <li><span class="bouton">Ordinateur joue</span>: the engine plays a move for the side to move, whichever it is. Handy to make it play White, or to be shown a move.</li>
+    <li><span class="bouton">Analyse position</span>: the engine thinks about the displayed position and gives its score (in centipawns) and best continuation, <b>without playing anything</b>. It can be used on any position, including while browsing a game.</li>
+    <li><b>Son</b> (sound): ticked, a sound is played when the engine has moved.</li>
+</ul>
+<h3>The clock</h3>
+<p>The <b>Pendule et temps de r&eacute;flexion</b> (clock and thinking time) frame contains, on the left, the list that chooses the clock's <b>time control</b>. By default it is <b>Sans pendule</b> (no clock): the game has no time limit and the two frames at the top right of the window show &laquo;&nbsp;--:--&nbsp;&raquo;. With a time control they show the remaining time of <b>B</b> (White) and <b>N</b> (Black); the side to move is shown in green and turns red under 20 seconds. The time controls come from the FMJD annexes:</p>
+<ul>
+    <li><b>1 h 20 + 30 s</b>: the default of FMJD competitions, 1 h 20 per player plus 30 seconds gained at each move;</li>
+    <li><b>90 min/45 coups</b>: 90 minutes for each player's first 45 moves, then 30 more minutes, and 30 seconds gained at each move from the 46<sup>th</sup>;</li>
+    <li><b>2 h/50 coups</b>: the old standard, 2 hours for 50 moves, then 1 more hour for each series of 25 moves (unused time is kept);</li>
+    <li><b>15 min + 5 s</b> (rapid) and <b>5 min + 3 s</b> (blitz): the FMJD defines rapid as 15 to 30 minutes and blitz as 5 to 15 minutes per player; the 5 and 3 seconds gained per move are those of the world championships.</li>
+</ul>
+<p>The clock starts at the game's <b>first move</b>, which is not counted: time then runs for the side to move, and only for it. When the <b>flag falls</b>, that player loses the game on time, and the result is written as for a win by captures. Against the engine, its thinking time counts on its clock: it never thinks longer than the thinking-time setting, and less when it has little time left. Changing the time control, <span class="bouton">Nouvelle Partie</span>, loading a position or a game reset the clocks; <span class="bouton">Retour Arri&egrave;re</span> keeps the times (a player whose flag had fallen resumes with 30 seconds). Ticking a result yourself stops the clock. Hovering over the times and the list shows a tooltip.</p>
+<div class="note">The engine is Scan 3.1, by Fabien Letouzey. The <span class="bouton">Protocole</span> button opens a window showing what the program and the engine send each other: useful to understand, or to report a problem.</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="nulles">5. End of game and draws</h2>
+<p>The program ends the game by itself in these cases, announcing the result and writing it in the <b>Résultat</b> group:</p>
+<ul>
+    <li><b>Win</b>: a player has no pieces left, or still has pieces but cannot play any move (is blocked): that player loses.</li>
+    <li><b>Time</b>: with a clock, the player whose flag falls loses the game.</li>
+    <li><b>Repetition</b>: the same position occurs for the <b>third time</b>, with the same player to move. Draw.</li>
+    <li><b>King moves</b>: during <b>25 moves by each player</b> (50 half-moves in a row), only kings have moved, with no man moved and no capture. Draw.</li>
+    <li><b>Endings with few pieces</b>: when a player has only a single king against, depending on the case,
+        <ul>
+            <li>three kings, or two kings and a man, or a king and two men: draw after <b>16 moves</b> by each player;</li>
+            <li>two kings, or a king and a man, or a king: draw after <b>5 moves</b> by each player.</li>
+        </ul>
+        The count starts when the ending appears (FMJD rules 6.3 and 6.4).</li>
+</ul>
+<p>In these cases, the message &laquo;&nbsp;Nulle possible, la partie est terminée&nbsp;&raquo; (draw possible, the game is over) gives the reason, and the result 1/2-1/2 is written.</p>
+<p>A draw <b>by agreement</b> is not detected: if you agree with your opponent, tick <b>1/2-1/2</b> yourself in the Résultat group (likewise <b>1-0</b> or <b>0-1</b> for a resignation). The chosen result is added at the end of the move list.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="parcours">6. Browsing a game</h2>
+<p>The <b>Parcours partie</b> group is used to review the current game or a loaded game, without changing it:</p>
+<ul>
+    <li><span class="bouton">Pr&eacute;c.</span> and <span class="bouton">Suiv.</span>: one move back, one move forward; &laquo;&nbsp;Mouvement&nbsp;&raquo; shows the number and the displayed move;</li>
+    <li><span class="bouton">D&eacute;but</span>: the starting position; <span class="bouton">Fin</span>: the last position;</li>
+    <li><span class="bouton">Lecture</span> (play): plays the moves from the displayed position, with their animations. During playback the button becomes <span class="bouton">Pause</span>: playback stops after the current move, and a new click on <span class="bouton">Lecture</span> resumes where it stopped. During playback the other buttons are disabled and clicks on the board are ignored. At the end, a click on <span class="bouton">Lecture</span> starts again from the beginning;</li>
+    <li>the <b>slider under Lecture</b> sets the speed: five levels, from 1.5 seconds to 0.08 seconds of pause between two moves (hover over it to see the level). It is remembered from one session to the next.</li>
+</ul>
+<p><span class="bouton">Analyse position</span> works on the displayed position. To <b>play</b>, by clicking on the board or with <span class="bouton">Ordinateur joue</span>, you must be on the game's <b>last</b> position: otherwise the program refuses and asks you to use <span class="bouton">Fin</span>, because a move played elsewhere would not be the continuation of the game.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="pdn">7. PDN files (games)</h2>
+<h3>Loading games</h3>
+<p><span class="bouton">Charge Parties</span> reads a <code>.pdn</code> file and shows the list of its games (players, result, date, event&hellip;). <b>Double-click</b> a game: it is loaded at once and the board shows its starting position; <span class="bouton">Lecture</span> plays it (see &laquo;&nbsp;Browsing a game&nbsp;&raquo;), <span class="bouton">Suiv.</span> advances move by move. <span class="bouton">Masque parties</span> hides or shows the list.</p>
+<p>Reading is tolerant: tags on one or several lines, <code>{&hellip;}</code> comments, variations, move numbers stuck to the moves, various result markers. If a game contains an illegal move, it is loaded up to the last legal move, with a message. A file that is not PDN, or that contains a simple FEN position, is refused with an explanation.</p>
+<h3>Saving the game</h3>
+<p><span class="bouton">Sauve Partie</span> opens the save window: the game is written as PDN with its tags (players, result, number of moves, and the starting position if it is not the initial position). It can be appended to the end of an existing file.</p>
+<h3>The move list</h3>
+<p><span class="bouton">Liste des coups</span> shows the moves of the game in three notations: <b>PDN</b> (&laquo;&nbsp;32-28&nbsp;&raquo;, &laquo;&nbsp;28x19&nbsp;&raquo;), <b>FEN</b> (the position after each move) and <b>Hub2</b> (the engine's format). It lets you save the PDN.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="fen">8. FEN files (positions)</h2>
+<p><span class="bouton">Sauve position</span> writes the displayed position, and <span class="bouton">Charge position</span> reads one and puts it on the board (the game restarts from that position). The format is the draughts one: <code>W:W31-50:B1-20</code> means &laquo;&nbsp;White to move, white men on squares 31 to 50, black men on squares 1 to 20&nbsp;&raquo;; a king is written with a <code>K</code> (for example <code>W:WK47:BK4</code>).</p>
+<p>An invalid FEN file is refused, and your current game is not touched.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="damier">9. Turning the board</h2>
+<p><span class="bouton">Tourner damier</span> rotates the board by 180&deg;: by default you see the game from White's side; after the turn, from Black's side. The square numbers do not change, they turn with the pieces. The chosen orientation is remembered for next time.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="preferences">10. Preferences</h2>
+<p>When closing, the program remembers the thinking time, the players' names, the Ordinateur and Son boxes, the clock's time control and the board orientation. It restores them at the next start. They are written in the file <code>BrunoGUI_Dames.preferences.ini</code>, next to the program.</p>
+<p>This file (text, one <code>Key=Value</code> line per setting) also lets you change, by hand, the <b>duration of an animation step</b> (<code>DureeEtape</code>, in milliseconds, 250 by default; 0 to play without animation) and the <b>eight board colours</b> (dark squares, light squares, departure, path, pivot, capture, arrival, step), written <code>#RRGGBB</code>. A missing or invalid value is ignored and replaced by the default. Close the program before editing the file.</p>
+<p>The players' names of a loaded PDN game do not become preferences.</p>
+<p>The default highlights are greens and olives on the wooden squares. The square numbers are white with a black outline, so that they can be read on the squares as well as on the white and black pieces. Only the colours you have changed are written to the file.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<h2 id="programme">11. The program files</h2>
+<table>
+    <tr><th>File or folder</th><th>Contents</th></tr>
+    <tr><td><span class="fichier">BrunoGUI_Dames.exe</span></td><td>The program.</td></tr>
+    <tr><td><span class="fichier">Dames_Scan31_FabienLetouzey\</span></td><td>The Scan 3.1 engine (<code>scan.exe</code>, its <code>scan.ini</code> settings and its opening and evaluation data) and its licence.</td></tr>
+    <tr><td><span class="fichier">Aide\</span></td><td>This help (French and English).</td></tr>
+    <tr><td><span class="fichier">BrunoGUI_Dames.preferences.ini</span></td><td>Your preferences (created the first time you close the program).</td></tr>
+    <tr><td><span class="fichier">Journal.log</span></td><td>The log of anomalies: one dated line for each problem met (unreadable file, engine stopped, unexpected error&hellip;). If something goes wrong, this file helps to understand it; attach it to your report.</td></tr>
+</table>
+<p>The program keeps everything in its own folder: it can be copied to a USB stick or moved without installing anything.</p>
+<p>The program is free software (GPL 3 licence). Any remark or bug report is welcome: <a href="https://github.com/Yodachess/BrunoGUI_Dames">github.com/Yodachess/BrunoGUI_Dames</a>.</p>
+
+</main>
+</div>
+</body>
+</html>

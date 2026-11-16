@@ -33,9 +33,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Update="Resources\CadreGrisSansPriseTransparent.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <Content Include="Resources\DameBlanche.png" />
     <Content Include="Resources\DameNoire.png" />
   </ItemGroup>

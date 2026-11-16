@@ -1075,6 +1075,28 @@ public static class Scenario
                 Preferences.DepuisTexte("DureeAnimation=900\r\n").DureeEtape == 250 && Preferences.DepuisTexte("DureeAnimation=900\r\n").Avertissements.Count == 0, "");
 
         // ═══════════════ Lecture des lignes du moteur (LigneMoteur) ═══════════════
+        // ═══════════════ L'aide, en français et en anglais ═══════════════
+        Console.WriteLine("── Aide ──");
+
+        Verifie("Aide : l'anglais si Windows est en anglais et que la page existe, sinon le français",
+                LangueAide.Choisit("en", _ => true) == "en" && LangueAide.Choisit("EN", _ => true) == "en" && LangueAide.Choisit("en", langue => langue == "fr") == "fr"
+                && LangueAide.Choisit("fr", _ => true) == "fr" && LangueAide.Choisit("de", _ => true) == "fr" && LangueAide.Choisit("", _ => true) == "fr" && LangueAide.Choisit(null!, _ => true) == "fr", "");
+        string? dossierAide = null;
+        for (string? dossier = AppContext.BaseDirectory; dossier != null && dossierAide == null; dossier = Path.GetDirectoryName(dossier))
+            if (File.Exists(Path.Combine(dossier, "Aide", "fr", "index.html"))) dossierAide = Path.Combine(dossier, "Aide");
+        if (dossierAide == null || !File.Exists(Path.Combine(dossierAide, "en", "index.html")))
+            Verifie("Aide : les pages française et anglaise sont dans le dépôt", false, "Aide\\fr\\index.html ou Aide\\en\\index.html introuvable au-dessus de " + AppContext.BaseDirectory);
+        else
+        {
+            string aideFr = File.ReadAllText(Path.Combine(dossierAide, "fr", "index.html")), aideEn = File.ReadAllText(Path.Combine(dossierAide, "en", "index.html"));
+            List<string> Ids(string html) => Regex.Matches(html, "id=\"(\\w+)\"").Select(m => m.Groups[1].Value).ToList();
+            int Compte(string html, string balise) => Regex.Matches(html, "<" + balise + "[ >]").Count;
+            Verifie("Aide : les deux pages ont les mêmes sections (mêmes ancres), le même nombre de sous-titres, de listes, de lignes de tableau et de notes (une de plus en anglais : l'écran est en français)",
+                    Ids(aideFr).SequenceEqual(Ids(aideEn)) && Ids(aideFr).Count == 11 && new[] { "h2", "h3", "li", "tr" }.All(b => Compte(aideFr, b) == Compte(aideEn, b)) && Regex.Matches(aideFr, "class=\"note\"").Count + 1 == Regex.Matches(aideEn, "class=\"note\"").Count,       // La page anglaise a une note de plus : l'écran du programme est en français
+                    $"ancres fr {string.Join(",", Ids(aideFr))} / en {string.Join(",", Ids(aideEn))} ; li {Compte(aideFr, "li")}/{Compte(aideEn, "li")}, tr {Compte(aideFr, "tr")}/{Compte(aideEn, "tr")}");
+            Verifie("Aide : chaque page renvoie à l'autre et déclare sa langue", aideFr.Contains("lang=\"fr\"") && aideEn.Contains("lang=\"en\"") && aideFr.Contains("../en/index.html") && aideEn.Contains("../fr/index.html"), "");
+        }
+
         Console.WriteLine("── Lignes du moteur ──");
 
         LigneMoteurLue identite = LigneMoteur.Lire("id name=Scan version=3.1 author=\"Fabien Letouzey\" country=France");

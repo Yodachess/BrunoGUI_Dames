@@ -15,7 +15,7 @@ Téléchargez l'archive `BrunoGUI_Dames-vX.YY.zip` de la dernière version sur l
 Avant de la décompresser : clic droit sur le zip > Propriétés > « Débloquer ». Décompressez, puis lancez `BrunoGUI_Dames.exe`.
 Rien d'autre à installer : .NET et le moteur Scan 3.1 sont inclus. Windows peut afficher un avertissement SmartScreen
 (le programme n'est pas signé) : « Informations complémentaires » puis « Exécuter quand même ».
-L'aide s'ouvre par le bouton « Aide (F1) » ou la touche F1.
+L'aide s'ouvre par le bouton « Aide (F1) » ou la touche F1 ; elle existe en français et en anglais (l'anglais si Windows est en anglais, avec un lien vers l'autre langue en haut de la page).
 
 ## Fonctions
 
@@ -89,7 +89,7 @@ Download `BrunoGUI_Dames-vX.YY.zip` of the latest version from the Releases page
 Before extracting: right-click the zip > Properties > “Unblock”. Extract it, then run `BrunoGUI_Dames.exe`.
 Nothing else to install: .NET and the Scan 3.1 engine are included. Windows may show a SmartScreen warning
 (the program is not signed): “More info”, then “Run anyway”.
-The help (in French) opens with the "Aide (F1)" button or the F1 key.
+The help opens with the "Aide (F1)" button or the F1 key. It is available in English and French (English when Windows is set to English, with a link to the other language at the top of the page). The program's screen itself is in French.
 
 ## Features
 
