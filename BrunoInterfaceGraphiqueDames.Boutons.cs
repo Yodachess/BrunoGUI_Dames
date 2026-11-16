@@ -193,7 +193,8 @@ namespace BrunoGUI_Dames
             string message = $"Version Interface graphique = {VersionAffichee} / Auteur : Bruno Courtois\n" +
                                 $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}\n\n" +
                                 "Historique :\n" +
-                                "1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n" +
+                                "1.12 : thème bois, repères du dernier coup, lecture animée d'une partie, parcours au clavier, aide en anglais, animations plus vives, état du formulaire par instance.\n" +
+                "1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n" +
                                 "1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n" +
                                 "1.04 : première version publiée.";
             ReglagesDeTest.Message(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -5,7 +5,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <!-- Numéro de version de l'application (« À propos », propriétés de l'exe) : à changer à chaque version publiée ; le tag Git vX.YY doit lui correspondre -->
-    <Version>1.11</Version>
+    <Version>1.12</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>

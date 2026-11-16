@@ -4,6 +4,8 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+## 1.12 (2026-11-16)
+
 - **Couleurs** : les numéros de case sont blancs cernés de noir (lisibles sur toutes les cases, sur les pièces blanches comme sur les noires ; l'ancien cyan disparaissait sur le vert de départ) ; le fond de la fenêtre est une couleur fixe (celle que Windows 10 et 11 donnent par défaut) au lieu d'une couleur système. Les couleurs des surbrillances restent celles des versions précédentes ; seules les couleurs changées par le joueur sont écrites.
 - **Aide en anglais** : `Aide\en\index.html`, mêmes sections que l'aide française ; le bouton « Aide (F1) » ouvre l'anglais quand Windows est en anglais, le français sinon, et chaque page a un lien vers l'autre langue. L'écran du programme reste en français : l'aide anglaise nomme les boutons comme à l'écran, avec leur sens.
 - **Ressources** : quinze images `Cadre*` inutilisées (dont quatre embarquées dans le programme) sont supprimées, ainsi que huit autres du dossier `Resources` que rien n'utilisait (dames « Mono » et « _old », pions « _150 », deux fonds de damier).
