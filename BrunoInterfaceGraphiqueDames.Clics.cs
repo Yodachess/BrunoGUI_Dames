@@ -65,13 +65,15 @@ namespace BrunoGUI_Dames
                     int indexCase100 = CaseDamier.IndexOf(CaseClick);       // La place de la case à l'écran (CaseDamier suit les places, quel que soit le sens du damier)
                     if (indexCase100 < 0)
                     {
-                        Journal.Ecrit("ERREUR : CaseMouseDown appelé par une PictureBox qui n'est pas dans CaseDamier : " + CaseClick.Name);
+                        Journal.Erreur("Incohérence : CaseMouseDown appelé par une PictureBox qui n'est pas dans CaseDamier : " + CaseClick.Name);
                         return;
                     }
                     if (clickCaseSource)     // Permet de savoir si c'est la sélection de la pièce ou le déplacement
                     {   // --- Sélection d'une pièce ---
                         if (RefuseSiPartieParcourue())
                             return;
+                        if (Damier.Orientation.CaseManoury(indexCase100) == 0)
+                            return;         // Une case claire (jouable seulement en apparence : ActiveDamier les active toutes) : rien à sélectionner, et surtout pas une erreur dans le journal
                         CouleurToutesCasesManoury(CouleurCaseSombre);       // On réinitialise les couleurs des cases
                         IndexPictureBoxSource100 = indexCase100;
                         CaseSourceManoury = Damier.ObtenirCaseManoury(IndexPictureBoxSource100);     // Quelle case Manoury est cliquée ?
@@ -161,7 +163,7 @@ namespace BrunoGUI_Dames
                         }
                         catch (ArgumentOutOfRangeException ex)
                         {   // Une case hors du damier a été trouvée dans un calcul (anomalie : un clic sur une case claire est déjà traité plus haut), on redessine la pièce sur sa case d'origine
-                            Journal.Ecrit($"ERREUR au clic de destination : {ex}");
+                            Journal.Erreur("Clic sur la case de destination", ex);
                             DessinePiece(IndexPictureBoxSource100, pieceSelectionnee);
                             CaseDamier[IndexPictureBoxSource100].BackColor = CouleurCaseSombre;
                         }
@@ -176,12 +178,12 @@ namespace BrunoGUI_Dames
                 }
                 else
                 {
-                    Journal.Ecrit("ERREUR : CaseMouseDown appelé par un objet qui n'est pas une PictureBox");
+                    Journal.Erreur("Incohérence : CaseMouseDown appelé par un objet qui n'est pas une PictureBox");
                 }
             }
             catch (Exception ex)
             {
-                Journal.Ecrit($"ERREUR au clic sur une case : {ex}");
+                Journal.Erreur("Clic sur une case", ex);
             }
         }
 
@@ -261,7 +263,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {
-                Journal.Ecrit($"ERREUR analyse des coups obligatoires : {ex.Message}");
+                Journal.Erreur("Analyse des coups obligatoires", ex);
             }
             if (aucunCoup && nombrePieces > 0 && !PartieTerminee)
             {   // Le camp au trait a encore des pièces mais plus aucun coup : il a perdu (les cases restent désactivées)
@@ -350,7 +352,7 @@ namespace BrunoGUI_Dames
             }
             else
             {
-                Journal.Ecrit($"ERREUR MiseenplaceFen : aucun texte entre guillemets dans « {fenAutiliser} », le damier reste vide");
+                Journal.Erreur($"Position non mise en place : aucun texte entre guillemets dans « {fenAutiliser} », le damier reste vide");
             }
         }
         public string RecupereFEN()
@@ -375,7 +377,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex)
             {
                 coupsLegauxPieceSelectionnee = null;
-                Journal.Ecrit($"ERREUR calcul des coups légaux : {ex.Message}");
+                Journal.Erreur("Calcul des coups légaux", ex);
             }
         }
         private Coup? TrouveCoupDuMoteur(string positionHub2, string coupScan)
@@ -384,12 +386,12 @@ namespace BrunoGUI_Dames
             try
             {
                 Coup? coup = ReglesDames.TrouverCoup(Position.DepuisHub2(positionHub2), coupScan);
-                if (coup == null) Journal.Ecrit($"MOTEUR coup {coupScan} non retrouvé (illégal ou ambigu) dans {positionHub2} : rien n'est joué");
+                if (coup == null) Journal.Attention($"Moteur : coup {coupScan} non retrouvé (illégal ou ambigu) dans {positionHub2} : rien n'est joué");
                 return coup;
             }
             catch (Exception ex)
             {
-                Journal.Ecrit($"ERREUR MOTEUR {coupScan} dans {positionHub2} : {ex.Message}");
+                Journal.Erreur($"Coup du moteur {coupScan} dans {positionHub2}", ex);
                 return null;
             }
         }

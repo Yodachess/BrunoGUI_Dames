@@ -4,6 +4,9 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- **Journal des problèmes** : le journal s'appelle désormais `BrunoGUI_Dames.log` (comme celui de BrunoGUI GenII) et note, avec leur niveau (`[ERREUR]`, `[ATTENTION]`, `[INFO]`), les erreurs, les plantages (avec la pile d'appels, y compris dans une tâche d'arrière-plan) et les problèmes ; une ligne `[INFO]` marque chaque démarrage (version, système) ; au-delà de 1 Mo l'ancien journal devient `.log.old`. Toujours pas de coups ni d'échanges avec le moteur.
+- **Correction** : un clic sur une case claire du damier avant de choisir une pièce écrivait une erreur dans le journal ; il est maintenant ignoré.
+
 ## 1.12 (2026-11-16)
 
 - **Couleurs** : les numéros de case sont blancs cernés de noir (lisibles sur toutes les cases, sur les pièces blanches comme sur les noires ; l'ancien cyan disparaissait sur le vert de départ) ; le fond de la fenêtre est une couleur fixe (celle que Windows 10 et 11 donnent par défaut) au lieu d'une couleur système. Les couleurs des surbrillances restent celles des versions précédentes ; seules les couleurs changées par le joueur sont écrites.

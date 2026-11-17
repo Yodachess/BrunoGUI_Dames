@@ -213,7 +213,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                Journal.Ecrit("Préférences non enregistrées : " + ex.Message);
+                Journal.Attention("Préférences non enregistrées : " + ex.Message);
                 return false;
             }
         }

@@ -156,7 +156,7 @@ namespace BrunoGUI_Dames
                 try { moteur.Envoie("stop"); }
                 catch (Exception ex) when (ex is IOException || ex is InvalidOperationException)
                 {
-                    Journal.Ecrit("Moteur : « stop » non envoyé à la chute du drapeau : " + ex.Message);
+                    Journal.Attention("Moteur : « stop » non envoyé à la chute du drapeau : " + ex.Message);
                 }
             }
             if (pieceEnMain)

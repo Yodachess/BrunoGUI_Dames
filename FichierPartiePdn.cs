@@ -102,7 +102,7 @@ namespace BrunoGUI_Dames
                 else
                 {
                     MessageBox.Show("La partie sélectionée ne contient pas de coups", "Pas de coups dans la partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    Journal.Ecrit("Partie PDN sans coups choisie dans la liste des parties");
+                    Journal.Attention("Partie PDN sans coups choisie dans la liste des parties");
                 }
             }
         }

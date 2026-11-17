@@ -129,7 +129,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex)
             {
                 MessageBox.Show($"Une erreur s'est produite : {ex.Message}", "Erreur méthode Enregistrer PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                Journal.Ecrit($"ERREUR enregistrement du PDN : {ex}");
+                Journal.Erreur("Enregistrement du PDN", ex);
             }
         }
         [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(ZoneAffichage), nameof(MasqueAffichePdn), nameof(AffichePdnFr), nameof(AfficheFen),

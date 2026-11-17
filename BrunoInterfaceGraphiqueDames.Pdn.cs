@@ -38,7 +38,7 @@ namespace BrunoGUI_Dames
                     string? raison = FichierPartiePdn.RaisonFichierNonUtilisable(partiesLues);
                     if (raison != null)
                     {   // Pas de partie avec des coups (image, position FEN…) : on le dit et on ne touche à rien
-                        Journal.Ecrit($"Fichier inutilisable comme liste de parties PDN ({cheminFichier}) : {raison.Replace("\n", " ")}");
+                        Journal.Attention($"Fichier inutilisable comme liste de parties PDN ({cheminFichier}) : {raison.Replace("\n", " ")}");
                         ReglagesDeTest.Message($"{Path.GetFileName(cheminFichier)}\n\n{raison}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
@@ -61,7 +61,7 @@ namespace BrunoGUI_Dames
                 }
                 catch (Exception ex)
                 {
-                    Journal.Ecrit($"ERREUR chargement des parties PDN ({cheminFichier}) : {ex}");
+                    Journal.Erreur($"Chargement des parties PDN ({cheminFichier})", ex);
                     ReglagesDeTest.Message($"Le fichier PDN n'a pas pu être lu :\n{ex.Message}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -81,14 +81,14 @@ namespace BrunoGUI_Dames
             RejeuPdn rejeu = partiePdn.Rejouer(premierSiAmbigu: true);
             if (rejeu.Positions.Count == 0)
             {   // La position de départ (FEN) est invalide : rien n'est chargé et le damier n'est pas touché
-                Journal.Ecrit($"Partie PDN non chargée ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
+                Journal.Attention($"Partie PDN non chargée ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
                 ReglagesDeTest.Message($"La partie ne peut pas être chargée :\n{rejeu.Erreur}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             foreach (string ambiguite in rejeu.Ambiguites ?? Array.Empty<string>())
-                Journal.Ecrit($"AMBIGU PDN ({partie.White} - {partie.Black}) : {ambiguite}");
+                Journal.Attention($"AMBIGU PDN ({partie.White} - {partie.Black}) : {ambiguite}");
             foreach (string avertissement in partiePdn.Avertissements)
-                Journal.Ecrit($"Partie PDN ({partie.White} - {partie.Black}) : ignoré à la lecture : {avertissement}");
+                Journal.Attention($"Partie PDN ({partie.White} - {partie.Black}) : ignoré à la lecture : {avertissement}");
             NettoyageRapide();
             nomsDepuisPartie = true;       // Ces noms sont ceux de la partie chargée : ils ne deviennent pas des préférences
             BoxNomJoueurNoir.Text = NomJoueurNoir = partie.Black;
@@ -119,7 +119,7 @@ namespace BrunoGUI_Dames
             AnalyseCoupObligatoire(CouleurAuTrait);     // Les cases jouables et la prise obligatoire éventuelle de la position de départ
             if (rejeu.Erreur != null)
             {   // La partie est chargée jusqu'au dernier coup légal
-                Journal.Ecrit($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
+                Journal.Attention($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
                 ReglagesDeTest.Message($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }    }

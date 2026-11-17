@@ -44,7 +44,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {   // Une ligne du moteur que l'on ne sait pas lire ne doit jamais faire tomber l'application
-                Journal.Ecrit($"Affichage d'une ligne du moteur impossible ({ex.Message}) : {ligne}");
+                Journal.Attention($"Affichage d'une ligne du moteur impossible ({ex.Message}) : {ligne}");
             }
         }
         private void AnalyseLigneMoteur(string ligne)
@@ -113,7 +113,7 @@ namespace BrunoGUI_Dames
         {   // --- Lit BrunoGUI_Dames.preferences.ini (les avertissements vont au journal) et applique les couleurs du damier et la durée d'une étape d'animation ---
             preferencesChargees = Preferences.Lire(FichierPreferences);
             foreach (string avertissement in preferencesChargees.Avertissements)
-                Journal.Ecrit("Préférences : " + avertissement);
+                Journal.Attention("Préférences : " + avertissement);
             DureeEtape = preferencesChargees.DureeEtape;
             ArriveesDebutTour = preferencesChargees.ArriveesDebutTour;
             RepereDernierCoup = preferencesChargees.RepereDernierCoup;
@@ -182,7 +182,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex) when (ex is IOException || ex is InvalidOperationException || ex is UnauthorizedAccessException)
             {
-                Journal.Ecrit("Son impossible : " + ex.Message);
+                Journal.Attention("Son impossible : " + ex.Message);
             }
         }
         protected override void OnFormClosing(FormClosingEventArgs e)

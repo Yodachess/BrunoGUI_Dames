@@ -94,7 +94,7 @@ namespace BrunoGUI_Dames
                     Coup? coup = ReglesDames.TrouverCoupPdn(session.Positions[i], session.CoupsPdn[i]);
                     if (coup == null)
                     {   // L'historique n'est fait que de coups légaux : ne devrait pas arriver
-                        Journal.Ecrit($"ERREUR lecture : le coup {i + 1} « {session.CoupsPdn[i]} » n'est pas légal dans {session.Positions[i].VersFen()}");
+                        Journal.Erreur($"Lecture : le coup {i + 1} « {session.CoupsPdn[i]} » n'est pas légal dans {session.Positions[i].VersFen()}");
                         break;
                     }
                     CouleurToutesCasesManoury(CouleurCaseSombre);

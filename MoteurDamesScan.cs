@@ -86,14 +86,14 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex) when (ex is IOException || ex is InvalidOperationException)
             {
-                Journal.Ecrit("Moteur : commande non envoyée : " + ex.Message);
+                Journal.Attention("Moteur : commande non envoyée : " + ex.Message);
                 lock (verrou) { if (demande == cetteDemande) demande = null; }
                 return null;
             }
             Task premiere = await Task.WhenAny(cetteDemande.Task, Task.Delay(TimeSpan.FromSeconds(secondes + 15)));
             if (premiere != cetteDemande.Task)
             {   // Le moteur ne répond plus : on arrête la recherche et on rend la main
-                Journal.Ecrit($"Moteur : pas de réponse après {secondes + 15} s, recherche interrompue");
+                Journal.Attention($"Moteur : pas de réponse après {secondes + 15} s, recherche interrompue");
                 lock (verrou) { if (demande == cetteDemande) demande = null; }
                 try { Envoie("stop"); } catch (Exception ex) when (ex is IOException || ex is InvalidOperationException) { }
                 return null;
@@ -137,9 +137,9 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {
-                Journal.Ecrit("Moteur : erreur à l'arrêt : " + ex.Message);
+                Journal.Attention("Moteur : erreur à l'arrêt : " + ex.Message);
                 try { processus.Kill(true); }
-                catch (Exception exArret) { Journal.Ecrit("Moteur : arrêt forcé impossible : " + exArret.Message); }
+                catch (Exception exArret) { Journal.Attention("Moteur : arrêt forcé impossible : " + exArret.Message); }
             }
             finally
             {
@@ -174,7 +174,7 @@ namespace BrunoGUI_Dames
                     attendante?.TrySetResult(new ReponseMoteur(coup, suggestion));
                     break;
                 case "error":
-                    Journal.Ecrit("Moteur : " + ligne);
+                    Journal.Attention("Moteur : " + ligne);
                     break;
             }
         }
@@ -193,7 +193,7 @@ namespace BrunoGUI_Dames
             attendante?.TrySetResult(null);
             if (!voulu)
             {
-                Journal.Ecrit("Moteur : le processus scan.exe s'est arrêté de lui-même");
+                Journal.Erreur("Moteur : le processus scan.exe s'est arrêté de lui-même");
                 Declenche(() => MoteurArrete?.Invoke("Le moteur Scan s'est arrêté."));
             }
         }
@@ -204,7 +204,7 @@ namespace BrunoGUI_Dames
             try { notification(); }
             catch (Exception ex) when (ex is ObjectDisposedException || ex is InvalidOperationException)
             {
-                Journal.Ecrit("Moteur : notification de l'interface impossible : " + ex.Message);
+                Journal.Attention("Moteur : notification de l'interface impossible : " + ex.Message);
             }
         }
     }

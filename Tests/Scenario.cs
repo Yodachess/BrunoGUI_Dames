@@ -27,6 +27,7 @@ public static class Scenario
 {
     public static List<Verification> Executer(bool complet)
     {
+        Journal.Chemin = Path.Combine(Path.GetTempPath(), "dames_tests_" + Guid.NewGuid().ToString("N") + ".log");      // Les essais n'écrivent pas dans le vrai journal
         List<Verification> verifications = [];
 
         void Verifie(string nom, bool ok, string detail)
@@ -243,6 +244,39 @@ public static class Scenario
                 !ligneDeJournal.Any(c => c == (char)0 || c == (char)1 || c == (char)0xFFFD || c == (char)0x89) && ligneDeJournal.StartsWith("PNG ?") && ligneDeJournal.Contains("    ligne 2\tavec tabulation") && ligneDeJournal.Contains("    ligne 3"),
                 ligneDeJournal.Replace(Environment.NewLine, "⏎"));
         Verifie("Journal : un texte de plusieurs milliers de caractères est coupé", Journal.LigneSure(new string('a', 10000)).Length < 3200, "");
+        // Le journal des problèmes : niveaux, pile d'appels, rotation, jamais d'exception
+        string cheminJournalAvant = Journal.Chemin;
+        string dossierJournal = Path.Combine(Path.GetTempPath(), "dames_journal_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dossierJournal);
+        try
+        {
+            Journal.Chemin = Path.Combine(dossierJournal, "essai.log");
+            Journal.Info("démarrage d'essai");
+            Journal.Attention("fichier illisible d'essai");
+            try { throw new InvalidOperationException("cause d'essai"); }
+            catch (InvalidOperationException ex) { Journal.Erreur("Contexte d'essai", ex); }
+            Journal.Erreur("incohérence d'essai");
+            string[] lignesJournal = File.ReadAllLines(Journal.Chemin);
+            Verifie("Journal : chaque fait est une ligne datée avec son niveau (INFO, ATTENTION, ERREUR)",
+                    lignesJournal.Length >= 4 && lignesJournal[0].Contains("[INFO] démarrage d'essai") && lignesJournal[1].Contains("[ATTENTION] fichier illisible d'essai")
+                    && lignesJournal[2].Contains("[ERREUR] Contexte d'essai") && System.Text.RegularExpressions.Regex.IsMatch(lignesJournal[0], @"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \["), string.Join(" ⏎ ", lignesJournal));
+            string texteJournal = File.ReadAllText(Journal.Chemin);
+            Verifie("Journal : une exception est écrite avec son type, son message et sa pile d'appels", texteJournal.Contains("InvalidOperationException : cause d'essai") && texteJournal.Contains("    at ") || texteJournal.Contains("   at "), "");
+            File.WriteAllText(Journal.Chemin, new string('x', (int)Journal.TailleMaximale + 10));
+            Journal.Attention("après la rotation");
+            Verifie("Journal : au-delà de 1 Mo, l'ancien journal devient .old et un nouveau commence",
+                    File.Exists(Journal.Chemin + ".old") && new FileInfo(Journal.Chemin + ".old").Length > Journal.TailleMaximale && File.ReadAllLines(Journal.Chemin).Length == 1 && File.ReadAllText(Journal.Chemin).Contains("après la rotation"), "");
+            Journal.Chemin = Path.Combine(dossierJournal, "dossier_absent", "essai.log");
+            bool sansException = true;
+            try { Journal.Erreur("dans un dossier absent"); Journal.Attention("idem"); }
+            catch (Exception) { sansException = false; }
+            Verifie("Journal : un journal qui ne peut pas être écrit ne lève jamais d'exception", sansException, "");
+        }
+        finally
+        {
+            Journal.Chemin = cheminJournalAvant;
+            try { Directory.Delete(dossierJournal, true); } catch (IOException) { }
+        }
 
         // ═══════════════ Parties nulles ═══════════════
         Console.WriteLine("── Parties nulles ──");

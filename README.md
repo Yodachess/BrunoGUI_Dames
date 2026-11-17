@@ -55,7 +55,7 @@ position), par 25 coups de dames de chaque joueur, et par les finales à peu de 
 La nulle par accord, l'abandon, etc. se saisissent en cochant le résultat (1-0, 0-1, 1/2-1/2) : il est ajouté à la liste des coups PDN.
 
 Les préférences (temps de réflexion, noms, son, ordinateur, cadence de la pendule, sens du damier, durée d'animation, couleurs du damier) sont retenues
-dans `BrunoGUI_Dames.preferences.ini` à côté du programme. Les anomalies sont notées dans `Journal.log`.
+dans `BrunoGUI_Dames.preferences.ini` à côté du programme. Les erreurs et problèmes sont notés dans `BrunoGUI_Dames.log` (un ancien journal est gardé en `.log.old` au-delà de 1 Mo).
 
 ## Compiler les sources
 
@@ -69,7 +69,7 @@ Les parties PDN et positions FEN d'exemple sont dans `Dames_PartiesPdn_FEN`. Le 
 
 Le protocole Hub2 et les notes du moteur sont dans `Docs`. L'historique des versions est dans `CHANGELOG.md`.
 
-Toute remarque ou signalement d'anomalie est bienvenu (joindre `Journal.log` s'il existe).
+Toute remarque ou signalement d'anomalie est bienvenu (joindre `BrunoGUI_Dames.log` s'il existe).
 
 ---
 
@@ -129,7 +129,7 @@ by 25 king moves per player, and by few-piece endings (16 and 5 moves, FMJD rule
 are entered by ticking the result (1-0, 0-1, 1/2-1/2): it is added to the PDN move list.
 
 Preferences (thinking time, names, sound, computer, clock time control, board orientation, animation speed, board colours) are kept in
-`BrunoGUI_Dames.preferences.ini` next to the program. Anomalies are logged in `Journal.log`.
+`BrunoGUI_Dames.preferences.ini` next to the program. Errors and problems are logged in `BrunoGUI_Dames.log` (an older log is kept as `.log.old` beyond 1 MB).
 
 ## Building from source
 
@@ -143,4 +143,4 @@ Sample PDN games and FEN positions are in `Dames_PartiesPdn_FEN`. The Scan engin
 
 The Hub2 protocol and the engine notes are in `Docs`. The version history is in `CHANGELOG.md` (in French).
 
-Any remark or bug report is welcome (please attach `Journal.log` if it exists).
+Any remark or bug report is welcome (please attach `BrunoGUI_Dames.log` if it exists).

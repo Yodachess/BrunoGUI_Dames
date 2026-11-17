@@ -130,7 +130,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex) when (ex is IOException || ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {   // Sans moteur on peut jouer entre humains : on désactive ce qui en dépend
-                Journal.Ecrit("Moteur : démarrage impossible : " + ex.Message);
+                Journal.Attention("Moteur : démarrage impossible : " + ex.Message);
                 DesactiveMoteur("Le moteur Scan n'a pas pu démarrer : " + ex.Message);
             }
             AnalyseCoupObligatoire(CouleurAuTrait);

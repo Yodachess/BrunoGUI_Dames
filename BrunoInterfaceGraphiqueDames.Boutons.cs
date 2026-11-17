@@ -205,7 +205,7 @@ namespace BrunoGUI_Dames
             string page = PageAide(LangueAide.Choisit(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, langue => File.Exists(PageAide(langue))));
             if (!File.Exists(page))
             {
-                Journal.Ecrit("Aide introuvable : " + page);
+                Journal.Attention("Aide introuvable : " + page);
                 ReglagesDeTest.Message("Le fichier d'aide est introuvable :\n" + page, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -215,7 +215,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {
-                Journal.Ecrit("Aide : ouverture impossible (" + ex.Message + ")");
+                Journal.Attention("Aide : ouverture impossible (" + ex.Message + ")");
                 ReglagesDeTest.Message("L'aide n'a pas pu être ouverte :\n" + ex.Message, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
@@ -268,7 +268,7 @@ namespace BrunoGUI_Dames
             {
                 // Le message d'une FEN invalide recopie le contenu du fichier : le journal n'en garde que le début
                 string resume = ex is FormatException ? "contenu qui n'est pas une position FEN (" + new FileInfo(ChargerFichierFen.FileName).Length + " octets)" : ex.Message;
-                Journal.Ecrit($"ERREUR position FEN non chargée ({ChargerFichierFen.FileName}) : {resume}");
+                Journal.Erreur($"Position FEN non chargée ({ChargerFichierFen.FileName}) : {resume}");
                 string pourLeJoueur = ex is FormatException ? "Ce fichier ne contient pas de position FEN valide." : ex.Message;
                 ReglagesDeTest.Message($"La position n'a pas pu être chargée :\n{Path.GetFileName(ChargerFichierFen.FileName)}\n\n{pourLeJoueur}", "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -294,7 +294,7 @@ namespace BrunoGUI_Dames
                 }
                 catch (Exception ex)
                 {
-                    Journal.Ecrit($"ERREUR sauvegarde de la position FEN ({SauverFichierFen.FileName}) : {ex.Message}");
+                    Journal.Erreur($"Sauvegarde de la position FEN ({SauverFichierFen.FileName})", ex);
                     ReglagesDeTest.Message("Erreur lors de la sauvegarde : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
