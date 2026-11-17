@@ -1,6 +1,6 @@
 # Traductions anglaises de l'affichage : « texte français TAB anglais » ; \n = retour à la ligne. Les clés sont les textes français des sources (Texte.T). Un test vérifie qu'aucune n'est oubliée.
 Quitter	Quit
-Tourner damier	Turn board
+Tourner damier	Flip board
 Mouvement : 	Move: 
 Prises possibles	Possible captures
 Retour Arrière	Take back
@@ -151,7 +151,7 @@ Nulle possible, la partie est terminée :\n{0}	A draw is possible, the game is o
 {0} Dames noires	{0} black kings
 Enregistrer l'image du damier…	Save the board image…
 Copier l'image du damier	Copy the board image
-Tourner le damier	Turn the board
+Tourner le damier	Flip the board
 L'image n'a pas pu être enregistrée :\n{0}	The image could not be saved:\n{0}
 Enregistrer l'image du damier	Save the board image
 Image PNG (*.png)|*.png	PNG image (*.png)|*.png

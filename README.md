@@ -104,8 +104,8 @@ Available buttons:
 * "Nouvelle Partie" (New game): starts a new game
 * "Ordinateur joue" (Computer plays): starts the engine's calculation and plays its move on the board
 * "Retour Arrière" (Undo): reverts the game by half a move
-* "Tourner damier" (Rotate board): rotates the board by 180° (default: White's perspective)
-* Right-click on the board: save or copy the board image, rotate the board. Shortcuts: Ctrl+N (new game), Ctrl+Z (take back), Ctrl+E (image), Ctrl+F (rotate)
+* "Tourner damier" (Flip board): flips the board by 180° (default: White's perspective)
+* Right-click on the board: save or copy the board image, flip the board. Shortcuts: Ctrl+N (new game), Ctrl+Z (take back), Ctrl+E (image), Ctrl+F (flip)
 * "Analyse position" (Analyse position): runs the engine's calculation but does NOT play the move on the board; the best move is drawn as a brick-red arrow. Early in the game the engine answers from its opening book (shown as "(livre)" on the move line)
 * "Liste des coups" (Move list): displays the moves played in PDN, FEN and Hub2 formats
 * "Parcours partie" (Début, Préc., Suiv., Fin): steps through the game move by move (on the keyboard: ← → arrows, Home and End keys); "Lecture" (Play) plays it back with animations ("Pause" while playing, speed slider)

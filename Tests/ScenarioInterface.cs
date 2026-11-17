@@ -774,7 +774,7 @@ public static class ScenarioInterface
             string message = messages.Count > 0 ? messages[0] : "";
             ComboBox niveaux = (ComboBox)Trouve("ComboNiveau"), cadences = (ComboBox)Trouve("ComboCadence");
             verifie("Interface en anglais : les textes du Designer (boutons, cadres, titre de la fenêtre) sont traduits",
-                    Trouve("NouvellePartie").Text == "New game" && Trouve("BoutonTournerDamier").Text == "Turn board" && Trouve("AnalysePosition").Text == "Analyze position" && Trouve("GroupResultat").Text == "Result"
+                    Trouve("NouvellePartie").Text == "New game" && Trouve("BoutonTournerDamier").Text == "Flip board" && Trouve("AnalysePosition").Text == "Analyze position" && Trouve("GroupResultat").Text == "Result"
                     && anglaise.Text == " Bruno Graphical Interface", $"{Trouve("NouvellePartie").Text} / {Trouve("BoutonTournerDamier").Text} / {anglaise.Text}");
             verifie("Interface en anglais : les textes du code sont traduits avec leurs valeurs (trait, pièces, bouton de lecture, message de début de partie)",
                     apres == "Black to move" && Trouve("LabelPionsBlancs").Text == "20 white men" && Trouve("BoutonLecture").Text == "Play" && message == "Start of game | You are at the start of the game.",
