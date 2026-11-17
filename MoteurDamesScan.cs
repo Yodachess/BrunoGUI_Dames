@@ -45,7 +45,7 @@ namespace BrunoGUI_Dames
         public void Demarre(string fichierMoteurDames)
         {
             if (!File.Exists(fichierMoteurDames))
-                throw new FileNotFoundException("Le moteur Scan est introuvable : " + fichierMoteurDames, fichierMoteurDames);
+                throw new FileNotFoundException(Texte.T("Le moteur Scan est introuvable : {0}", fichierMoteurDames), fichierMoteurDames);
             Process processus = new Process();
             processus.StartInfo.FileName = fichierMoteurDames;
             processus.StartInfo.Arguments = "hub";
@@ -207,7 +207,7 @@ namespace BrunoGUI_Dames
             if (!voulu)
             {
                 Journal.Erreur("Moteur : le processus scan.exe s'est arrêté de lui-même");
-                Declenche(() => MoteurArrete?.Invoke("Le moteur Scan s'est arrêté."));
+                Declenche(() => MoteurArrete?.Invoke(Texte.T("Le moteur Scan s'est arrêté.")));
             }
         }
 

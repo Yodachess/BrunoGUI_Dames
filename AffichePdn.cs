@@ -31,6 +31,8 @@ namespace BrunoGUI_Dames
         {
             fenetrePrincipale = fenetre;
             InitializeComponent();
+            TexteInterface.Traduit(this);
+            TexteInterface.Traduit(EnregistrerFichierPdn);
             ThemeInterface.Applique(this);
             afficheZone = this;
         }
@@ -98,12 +100,11 @@ namespace BrunoGUI_Dames
                         string cheminPdn = EnregistrerFichierPdn.FileName;
                         if (File.Exists(cheminPdn))                         // Si le fichier existe déjà
                         {   // On demande à l'utilisateur s'il veut écraser le fichier ou ajouter la partie
-                            DialogResult resultat = MessageBox.Show("ATTENTION, le fichier " + Path.GetFileName(cheminPdn) + " existe déjà. \nCliquer Oui pour ajouter la partie à la fin." +
-                               "\nCliquer Non pour écraser le fichier existant.\nCancel pour afficher le fichier PGN.", "Fichier existant", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                            DialogResult resultat = MessageBox.Show(Texte.T("ATTENTION, le fichier {0} existe déjà. \nCliquer Oui pour ajouter la partie à la fin.\nCliquer Non pour écraser le fichier existant.\nCancel pour afficher le fichier PGN.", Path.GetFileName(cheminPdn)), Texte.T("Fichier existant"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
                             if (resultat == DialogResult.No)
                             {   // Écrase le fichier existant avec la nouvelle partie
                                 File.WriteAllText(cheminPdn, contenuPdn);
-                                MessageBox.Show($"La partie est écrite dans \nle ficher {Path.GetFileName(cheminPdn)}", "Ecriture fichier PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                MessageBox.Show(Texte.T("La partie est écrite dans \nle ficher {0}", Path.GetFileName(cheminPdn)), Texte.T("Ecriture fichier PDN"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 // LabelInformationJoueur.Text = "La partie est écrite dans le fichier " + Path.GetFileName(cheminPdn);
                             }
                             else if (resultat == DialogResult.Yes)
@@ -111,12 +112,12 @@ namespace BrunoGUI_Dames
                                 string contenuExistant = File.ReadAllText(cheminPdn);
                                 contenuExistant += "\n\n" + contenuPdn;
                                 File.WriteAllText(cheminPdn, contenuExistant);
-                                MessageBox.Show($"La partie est ajoutée dans \nle ficher {Path.GetFileName(cheminPdn)}", "Ajout fichier PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                MessageBox.Show(Texte.T("La partie est ajoutée dans \nle ficher {0}", Path.GetFileName(cheminPdn)), Texte.T("Ajout fichier PDN"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 // LabelInformationJoueur.Text = "La partie est ajoutée dans le fichier " + Path.GetFileName(cheminPdn);
                             }
                             else if (resultat == DialogResult.Cancel)
                             {   // Affiche la nouvelle partie
-                                MessageBox.Show($"Fichier PDN :\n {contenuPdn}", "Affichage fichier PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                MessageBox.Show(Texte.T("Fichier PDN :\n {0}", contenuPdn), Texte.T("Affichage fichier PDN"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
                         }
                         else
@@ -128,7 +129,7 @@ namespace BrunoGUI_Dames
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Une erreur s'est produite : {ex.Message}", "Erreur méthode Enregistrer PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(Texte.T("Une erreur s'est produite : {0}", ex.Message), Texte.T("Erreur méthode Enregistrer PDN"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Journal.Erreur("Enregistrement du PDN", ex);
             }
         }

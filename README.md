@@ -40,13 +40,13 @@ Boutons disponibles :
 * "Charge position" : lecture d'un fichier FEN et mise en place de la position
 * "Sauve position" : sauvegarde de la position au format FEN
 * "Protocole" : affiche les échanges du protocole Hub2 entre l'interface et le moteur
-* "A propos de BIG" : version du logiciel et du moteur
+* "A propos de BIG" : version du logiciel et du moteur, historique, et choix de la langue de l'affichage (français ou anglais, appliqué au prochain démarrage)
 * "Aide (F1)" : ouvre l'aide
 * "Quitter"
 
 On peut jouer entre humains en décochant "Ordinateur". Si "Son" est coché, un son est émis lorsque le moteur a joué.
 Le temps de réflexion du moteur se règle de 1 à 25 secondes (5 par défaut). Sa force se règle par la liste « Niveau » (de « Niveau 1 », très faible, à « Maximum », le défaut) : elle limite la profondeur de recherche de Scan ; l'analyse de position reste à pleine force.
-Une pendule est proposée avec les cadences de la FMJD (1 h 20 + 30 s, 90 min/45 coups, 2 h/50 coups, rapide 15 min + 5 s, blitz 5 min + 3 s) :
+Une pendule est proposée avec les cadences de la FMJD (FMJD 80 min + 30 s, FMJD 90+30 min +30 s, FMJD 120 + 60 min, Rapide 15 min + 5 s, Blitz 5 min + 3 s, écrites comme aux échecs) :
 désactivée par défaut, elle démarre au premier coup (non décompté) et le joueur dont le drapeau tombe perd la partie, le moteur y compris.
 Un bandeau en haut de la fenêtre indique le statut (trait aux blancs ou aux noirs, résultat éventuel) ;
 sous le bandeau, le score estimé (en centipions) et la ligne du moteur. Les noms des joueurs sont modifiables et repris dans le PDN.
@@ -115,7 +115,7 @@ Available buttons:
 * "Charge position" (Load position): reads a FEN file and sets up the position
 * "Sauve position" (Save position): saves the current position in FEN format
 * "Protocole" (Protocol): displays the Hub2 protocol exchanges between the GUI and the engine
-* "A propos de BIG" (About): software and engine versions
+* "A propos de BIG" (About): software and engine versions, history, and choice of the display language (French or English, applied at the next start)
 * "Aide (F1)" (Help): opens the help
 * "Quitter" (Quit)
 

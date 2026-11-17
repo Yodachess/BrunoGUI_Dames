@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -120,7 +120,7 @@ namespace BrunoGUI_Dames
         {
             Position position;
             try { position = PositionDepart(); }
-            catch (FormatException e) { return new RejeuPdn(Array.Empty<Position>(), Array.Empty<Coup>(), $"Position de départ invalide : {e.Message}"); }
+            catch (FormatException e) { return new RejeuPdn(Array.Empty<Position>(), Array.Empty<Coup>(), Texte.T("Position de départ invalide : {0}", e.Message)); }
 
             List<Position> positions = new List<Position> { position };
             List<Coup> coups = new List<Coup>();
@@ -138,7 +138,7 @@ namespace BrunoGUI_Dames
                     }
                 }
                 if (coup == null)
-                    return new RejeuPdn(positions, coups, $"Coup {i + 1} « {Coups[i]} » illégal ou ambigu dans la position {position.VersFen()}", ambiguites);
+                    return new RejeuPdn(positions, coups, Texte.T("Coup {0} « {1} » illégal ou ambigu dans la position {2}", i + 1, Coups[i], position.VersFen()), ambiguites);
                 position = ReglesDames.Jouer(position, coup);
                 positions.Add(position);
                 coups.Add(coup);

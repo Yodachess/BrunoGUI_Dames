@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -127,6 +128,9 @@ namespace BrunoGUI_Dames
                 }
             }
         }
+        // --- Le nom d'un camp et « Trait aux … » dans la langue de l'affichage ---
+        private static string NomCamp(Couleur couleur) => T(couleur == Couleur.Blanc ? "Blancs" : "Noirs");
+        private static string TraitAux(Couleur couleur) => T("Trait aux {0}", NomCamp(couleur));
         public void ChangerCouleurTrait()
         {   // Inverse la valeur de CouleurAuTrait
             CouleurAuTrait = Position.Adversaire(CouleurAuTrait);
@@ -134,7 +138,7 @@ namespace BrunoGUI_Dames
             ActiveCouleurDamier(CouleurAuTrait, true);
             // Désactive les cases de l'autre couleur
             ActiveCouleurDamier(Position.Adversaire(CouleurAuTrait), false);
-            LabelInformationJoueur.Text = "Aux " + CouleurAuTrait + "s de jouer";
+            LabelInformationJoueur.Text = T("Aux {0} de jouer", NomCamp(CouleurAuTrait));
         }
         public Couleur CouleurPasAuTrait()
         {   // Retourne l'opposé de CouleurAuTrait
@@ -195,9 +199,9 @@ namespace BrunoGUI_Dames
             if (lecture != null)
                 return;
             if (Damier.NombreDePieces(Couleur.Blanc) == 0)
-                TermineLaPartie(Couleur.Noir, "Les Noirs gagnent, les blancs n'ont plus de pièces", "Les Noirs gagnent !\n Les blancs n'ont plus de pièces");
+                TermineLaPartie(Couleur.Noir, T("Les Noirs gagnent, les blancs n'ont plus de pièces"), T("Les Noirs gagnent !\n Les blancs n'ont plus de pièces"));
             if (Damier.NombreDePieces(Couleur.Noir) == 0)
-                TermineLaPartie(Couleur.Blanc, "Les Blancs gagnent, les noirs n'ont plus de pièces", "Les Blancs gagnent !\n Les noirs n'ont plus de pièces");
+                TermineLaPartie(Couleur.Blanc, T("Les Blancs gagnent, les noirs n'ont plus de pièces"), T("Les Blancs gagnent !\n Les noirs n'ont plus de pièces"));
             // Le joueur qui ne peut plus bouger perd : c'est FinPartieParBlocage, appelée par AnalyseCoupObligatoire et avant d'interroger le moteur
             // Les parties nulles (répétition, coups de dames, finales) : NulleActuelle et FinPartieParNulle
         }
@@ -205,9 +209,10 @@ namespace BrunoGUI_Dames
         {   // --- Le camp de couleurBloquee, au trait, ne peut plus jouer : il perd la partie ---
             if (PartieTerminee)
                 return;
-            string gagnants = couleurBloquee == Couleur.Blanc ? "Noirs" : "Blancs";
-            string perdants = couleurBloquee == Couleur.Blanc ? "blancs" : "noirs";
-            TermineLaPartie(Position.Adversaire(couleurBloquee), $"Les {gagnants} gagnent, les {perdants} n'ont plus de coup possible", $"Les {gagnants} gagnent !\n Les {perdants} n'ont plus de coup possible");
+            if (couleurBloquee == Couleur.Blanc)
+                TermineLaPartie(Couleur.Noir, T("Les Noirs gagnent, les blancs n'ont plus de coup possible"), T("Les Noirs gagnent !\n Les blancs n'ont plus de coup possible"));
+            else
+                TermineLaPartie(Couleur.Blanc, T("Les Blancs gagnent, les noirs n'ont plus de coup possible"), T("Les Blancs gagnent !\n Les noirs n'ont plus de coup possible"));
         }        private RaisonNulle NulleActuelle()
         {   // --- Les règles de nulle (NullesDames) appliquées à l'historique de la partie : la position de départ puis celle après chaque demi-coup ---
             return NullesDames.Detecte(Session.Positions);
@@ -218,12 +223,12 @@ namespace BrunoGUI_Dames
                 return;
             string motif = raison switch
             {
-                RaisonNulle.Repetition => "la même position s'est présentée trois fois",
-                RaisonNulle.FinaleSeizeCoups => $"finale à peu de pièces : {NullesDames.CoupsFinale3Pieces} coups de chaque joueur sans gagner",
-                RaisonNulle.FinaleCinqCoups => $"finale à peu de pièces : {NullesDames.CoupsFinaleSimple} coups de chaque joueur sans gagner",
-                _ => $"{NullesDames.CoupsDeDamesParJoueur} coups de dames de chaque joueur, sans déplacement de pion ni prise"
+                RaisonNulle.Repetition => T("la même position s'est présentée trois fois"),
+                RaisonNulle.FinaleSeizeCoups => T("finale à peu de pièces : {0} coups de chaque joueur sans gagner", NullesDames.CoupsFinale3Pieces),
+                RaisonNulle.FinaleCinqCoups => T("finale à peu de pièces : {0} coups de chaque joueur sans gagner", NullesDames.CoupsFinaleSimple),
+                _ => T("{0} coups de dames de chaque joueur, sans déplacement de pion ni prise", NullesDames.CoupsDeDamesParJoueur)
             };
-            TermineLaPartie(null, "Partie nulle : " + motif, "Nulle possible, la partie est terminée :\n" + motif, "Partie nulle");
+            TermineLaPartie(null, T("Partie nulle : {0}", motif), T("Nulle possible, la partie est terminée :\n{0}", motif), "Partie nulle");
         }
         private void MetEnEvidenceRafle(Coup rafle)
         {   // --- Met en évidence sur le damier une rafle proposée au choix : le chemin, la case d'arrivée et, en rouge, les pièces prises ---
@@ -264,10 +269,10 @@ namespace BrunoGUI_Dames
         public void AfficheListesPieces()
         {   // --- Affiche les nombres de pions blancs et noirs, de dames blanches et noires de la position ---
             Position position = Damier.PositionCourante;
-            LabelPionsBlancs.Text = position.Compte(Piece.PionBlanc) + " pions blancs";
-            LabelPionsNoirs.Text = position.Compte(Piece.PionNoir) + " pions noirs";
-            LabelDamesBlanches.Text = position.Compte(Piece.DameBlanche) + " Dames blanches";
-            LabelDamesNoires.Text = position.Compte(Piece.DameNoire) + " Dames noires";
+            LabelPionsBlancs.Text = T("{0} pions blancs", position.Compte(Piece.PionBlanc));
+            LabelPionsNoirs.Text = T("{0} pions noirs", position.Compte(Piece.PionNoir));
+            LabelDamesBlanches.Text = T("{0} Dames blanches", position.Compte(Piece.DameBlanche));
+            LabelDamesNoires.Text = T("{0} Dames noires", position.Compte(Piece.DameNoire));
         }
         private void PoseNumeroCase(PictureBox pict, int numeroManoury)
         {   // --- Une case sombre porte son numéro Manoury (dessiné en haut à droite par PictureBox_Paint) ---

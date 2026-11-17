@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -63,6 +64,7 @@ namespace BrunoGUI_Dames
         private static string FichierPreferences => ReglagesDeTest.FichierPreferences ?? Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini");
         private bool moteurDisponible = true;     // Faux si le moteur n'a pas pu démarrer ou s'est arrêté
         private string nomMoteur = "", auteurMoteur = "", versionMoteur = "";
+        private string? langueChoisie;                                   // La langue choisie dans « À propos » (null : celle des préférences ou de Windows) ; écrite dans les préférences, appliquée au prochain démarrage
         // -- les classes --
         private readonly DonneesBrutesDames donneesBrutesDames = new DonneesBrutesDames();
         private AffichePdn? affichePdn;   // affichePdn est à la fois déclarée et instanciée. Prêt à être utilisé dès le début
@@ -75,6 +77,10 @@ namespace BrunoGUI_Dames
         public BrunoInterfaceGraphiqueDames()
         {
             InitializeComponent();
+            TexteInterface.Traduit(this);                   // Les textes du Designer, dans la langue choisie
+            TexteInterface.Traduit(ChargerFichierFen);
+            TexteInterface.Traduit(SauverFichierFen);
+            TexteInterface.Traduit(ChargerPartiesPdn);
             affichePdn = new AffichePdn(this);
         }
         private void BrunoInterfaceGraphiqueDames_Load(object sender, EventArgs e)
@@ -119,12 +125,12 @@ namespace BrunoGUI_Dames
             if (CouleurAuTrait == Couleur.Blanc)
             {
                 ActiveCouleurDamier(Couleur.Noir, false);
-                LabelInformationJoueur.Text = "Trait aux Blancs";
+                LabelInformationJoueur.Text = TraitAux(Couleur.Blanc);
             }
             else
             {
                 ActiveCouleurDamier(Couleur.Blanc, false);
-                LabelInformationJoueur.Text = "Trait aux Noirs";
+                LabelInformationJoueur.Text = TraitAux(Couleur.Noir);
             }
             cheminMoteur = ReglagesDeTest.CheminMoteur ?? Path.Combine(Application.StartupPath, "Dames_Scan31_FabienLetouzey", "scan.exe");     // À côté de l'exe, jamais relatif au dossier courant
             try
@@ -134,7 +140,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex) when (ex is IOException || ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {   // Sans moteur on peut jouer entre humains : on désactive ce qui en dépend
                 Journal.Attention("Moteur : démarrage impossible : " + ex.Message);
-                DesactiveMoteur("Le moteur Scan n'a pas pu démarrer : " + ex.Message);
+                DesactiveMoteur(T("Le moteur Scan n'a pas pu démarrer : {0}", ex.Message));
             }
             AnalyseCoupObligatoire(CouleurAuTrait);
         }

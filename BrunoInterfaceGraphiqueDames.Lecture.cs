@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace BrunoGUI_Dames
             boutonLecture.Name = "BoutonLecture";
             boutonLecture.Location = new Point(5, 62);
             boutonLecture.Size = new Size(99, 24);
-            boutonLecture.Text = "Lecture";
+            boutonLecture.Text = T("Lecture");
             boutonLecture.Click += BoutonLecture_Click;
             trackBarVitesseLecture.Name = "TrackBarVitesseLecture";
             trackBarVitesseLecture.AutoSize = false;
@@ -44,7 +45,7 @@ namespace BrunoGUI_Dames
             trackBarVitesseLecture.ValueChanged += (sender, e) => MetAJourInfobulleLecture();
             groupParcoursPartie.Controls.Add(boutonLecture);
             groupParcoursPartie.Controls.Add(trackBarVitesseLecture);
-            infobulleLecture.SetToolTip(boutonLecture, "Joue les coups de la partie un à un à partir de la position affichée ; un second clic fait une pause");
+            infobulleLecture.SetToolTip(boutonLecture, T("Joue les coups de la partie un à un à partir de la position affichée ; un second clic fait une pause"));
             MetAJourInfobulleLecture();
         }
         private void MetAJourInfobulleLecture()
@@ -70,7 +71,7 @@ namespace BrunoGUI_Dames
                 return;
             if (session.Positions.Count <= 1)
             {
-                ReglagesDeTest.Message("La partie n'a aucun coup à lire.", "Lecture", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message(T("La partie n'a aucun coup à lire."), "Lecture", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             if (session.EstSurLaDernierePosition)
@@ -81,7 +82,7 @@ namespace BrunoGUI_Dames
             }
             lecture = new CancellationTokenSource();
             CancellationToken jeton = lecture.Token;
-            boutonLecture.Text = "Pause";
+            boutonLecture.Text = T("Pause");
             BloqueBoutons(true);                                    // Rien d'autre ne doit toucher à la partie pendant la lecture...
             groupParcoursPartie.Enabled = true;                     // ... sauf Pause et la vitesse, qui sont dans ce groupe
             ActiveBoutonsParcours(false);
@@ -101,7 +102,7 @@ namespace BrunoGUI_Dames
                     await JoueCoupSurLeDamier(coup, glisse: true);
                     session.Suivant();
                     CouleurAuTrait = session.PositionAffichee.Trait;
-                    LabelCoupJoue.Text = $"Coup {session.IndexAffiche} : {session.CoupAffiche}";
+                    LabelCoupJoue.Text = T("Coup {0} : {1}", session.IndexAffiche, session.CoupAffiche);
                     if (jeton.IsCancellationRequested || session.EstSurLaDernierePosition)
                         break;
                     try { await Task.Delay(RythmeLecture.PauseMs(trackBarVitesseLecture.Value), jeton); }
@@ -112,11 +113,11 @@ namespace BrunoGUI_Dames
             {
                 lecture.Dispose();
                 lecture = null;
-                boutonLecture.Text = "Lecture";
+                boutonLecture.Text = T("Lecture");
                 BloqueBoutons(false);
                 ActiveBoutonsParcours(true);
                 ActiveDamier(true);
-                LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+                LabelInformationJoueur.Text = TraitAux(CouleurAuTrait);
             }
         }
         private void ActiveBoutonsParcours(bool actifs)

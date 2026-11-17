@@ -31,7 +31,7 @@ namespace BrunoGUI_Dames
         public static string Libelle(int niveau)
         {
             int n = Limite(niveau);
-            return $"Vitesse de la lecture : {n} sur {Maximum} ({(PauseMs(n) / 1000.0).ToString("0.0#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"))} s entre deux coups)";
+            return Texte.T("Vitesse de la lecture : {0} sur {1} ({2} s entre deux coups)", n, Maximum, (PauseMs(n) / 1000.0).ToString("0.0#", Texte.Culture));
         }
     }
 }

@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -62,7 +63,7 @@ namespace BrunoGUI_Dames
         private void MontreDonneesScan_Click(object sender, EventArgs e)
         {   // --- Affiche ou masque les données de SCAN 3.1 à chaque clic ---
             montreDonneesDames = !montreDonneesDames;       
-            MontreDonneesScan.Text = montreDonneesDames ? "Masque protoc." : "Affiche protoc.";
+            MontreDonneesScan.Text = montreDonneesDames ? T("Masque protoc.") : T("Affiche protoc.");
             if (montreDonneesDames) donneesBrutesDames.Show();    // On affiche les données brutes SCAN
             else donneesBrutesDames.Hide();                       // On masque les données brutes SCAN
             donneesBrutesDames.DonneesBrutesVue.ScrollToCaret();      // Pour garder l'affichage dans toute la fenêtre
@@ -85,7 +86,7 @@ namespace BrunoGUI_Dames
         {
             if (PartieTerminee && Session.EstSurLaDernierePosition)
                 return;
-            LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+            LabelInformationJoueur.Text = TraitAux(CouleurAuTrait);
         }
         private void BoutonPrecedent_Click(object sender, EventArgs e)
         {   // --- Bouton pour reculer d'un coup (parcours de partie) ---
@@ -94,11 +95,11 @@ namespace BrunoGUI_Dames
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
                 AfficheTraitParcours();
-                LabelCoupJoue.Text = session.CoupAffiche != null ? $"Coup {session.IndexAffiche} : {session.CoupAffiche}" : "Position initiale";
+                LabelCoupJoue.Text = session.CoupAffiche != null ? T("Coup {0} : {1}", session.IndexAffiche, session.CoupAffiche) : T("Position initiale");
             }
             else
             {
-                ReglagesDeTest.Message("Vous êtes au début de la partie.", "Début de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message(T("Vous êtes au début de la partie."), "Début de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private void BoutonSuivant_Click(object sender, EventArgs e)
@@ -109,11 +110,11 @@ namespace BrunoGUI_Dames
             {
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
                 AfficheTraitParcours();
-                LabelCoupJoue.Text = $"Coup {session.IndexAffiche} : {session.CoupAffiche}";
+                LabelCoupJoue.Text = T("Coup {0} : {1}", session.IndexAffiche, session.CoupAffiche);
             }
             else
             {
-                ReglagesDeTest.Message("Vous êtes à la fin de la partie.", "Fin de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message(T("Vous êtes à la fin de la partie."), "Fin de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         private void BoutonDebut_Click(object sender, EventArgs e)
@@ -125,7 +126,7 @@ namespace BrunoGUI_Dames
                 session.Debut();                // La position de départ est à l'indice 0
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
                 AfficheTraitParcours();
-                LabelCoupJoue.Text = "Début de partie";
+                LabelCoupJoue.Text = T("Début de partie");
             }
         }
         private void BoutonFin_Click(object sender, EventArgs e)
@@ -136,7 +137,7 @@ namespace BrunoGUI_Dames
                 session.Fin();                  // Dernière position
                 MiseenplaceFen(session.Fen(session.IndexAffiche), false);
                 AfficheTraitParcours();
-                LabelCoupJoue.Text = $"Coup {session.IndexAffiche} : {session.CoupAffiche}";
+                LabelCoupJoue.Text = T("Coup {0} : {1}", session.IndexAffiche, session.CoupAffiche);
             }
         }
         private async void OrdinateurJoue_Click(object sender, EventArgs e)
@@ -150,12 +151,12 @@ namespace BrunoGUI_Dames
 
         private async void AnalysePosition_Click(object sender, EventArgs e)
         {
-            LabelInformationJoueur.Text = "Analyse de la position en cours ... (" + TempsReflexion + ")";
+            LabelInformationJoueur.Text = T("Analyse de la position en cours ... ({0})", TempsReflexion);
             MarqueFleche(null);         // Pas de flèche de l'analyse précédente
             BloqueBoutons(true);
             analyseEnCours = true;
             await LancementReflexionMoteur(Session.Hub2(Session.IndexAffiche), TempsReflexion);
-            LabelInformationJoueur.Text = "Analyse terminée !";
+            LabelInformationJoueur.Text = T("Analyse terminée !");
             BloqueBoutons(false);
             analyseEnCours = false;
         }
@@ -165,18 +166,18 @@ namespace BrunoGUI_Dames
             if (fichierPartiePdn == null || fichierPartiePdn.IsDisposed)
             {   // Vérifier si la fenêtre a été fermée
                 BoutonMasqueAffiche.Enabled = false;
-                BoutonMasqueAffiche.Text = "Affiche parties";
+                BoutonMasqueAffiche.Text = T("Affiche parties");
                 return;     // La fenêtre a été fermée, on s'assure que le bouton affiche "Affiche parties" et on sort
             }
             if (fichierPartiePdn.Visible)
             {   // Si la fenêtre est actuellement visible, on la masque
                 fichierPartiePdn.Hide();    // Masquer la fenêtre
-                BoutonMasqueAffiche.Text = "Affiche parties";  // Changer le texte du bouton
+                BoutonMasqueAffiche.Text = T("Affiche parties");  // Changer le texte du bouton
             }
             else
             {
                 fichierPartiePdn.Show();    // Afficher la fenêtre
-                BoutonMasqueAffiche.Text = "Masque parties";  // Changer le texte du bouton
+                BoutonMasqueAffiche.Text = T("Masque parties");  // Changer le texte du bouton
             }
         }
         // --- Le numéro de version de l'application : la balise <Version> du .csproj (1.11), avec le mineur sur deux chiffres ---
@@ -190,14 +191,20 @@ namespace BrunoGUI_Dames
         }
         private void Apropos_Click(object sender, EventArgs e)
         {   // --- Affiche une boîte de dialogue avec les informations sur l'application ---
-            string message = $"Version Interface graphique = {VersionAffichee} / Auteur : Bruno Courtois\n" +
-                                $"Moteur : {nomMoteur} / Version = {versionMoteur} / Auteur : {auteurMoteur}\n\n" +
-                                "Historique :\n" +
-                                "1.12 : thème bois, repères du dernier coup, lecture animée d'une partie, parcours au clavier, aide en anglais, animations plus vives, état du formulaire par instance.\n" +
-                "1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n" +
-                                "1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n" +
-                                "1.04 : première version publiée.";
-            ReglagesDeTest.Message(message, "À propos", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // Le texte est écrit par une fonction : la fenêtre le réécrit quand on change la langue dans sa liste
+            string Message() => T("Version Interface graphique = {0} / Auteur : Bruno Courtois\n", VersionAffichee) +
+                             T("Moteur : {0} / Version = {1} / Auteur : {2}\n\n", nomMoteur, versionMoteur, auteurMoteur) +
+                             T("Historique :\n") +
+                             T("1.12 : thème bois, repères du dernier coup, lecture animée d'une partie, parcours au clavier, aide en anglais, animations plus vives, état du formulaire par instance.\n") +
+                             T("1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n") +
+                             T("1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n") +
+                             T("1.04 : première version publiée.");
+            string choix = ReglagesDeTest.APropos(Message, langueChoisie ?? Texte.Langue);      // La fenêtre « À propos » propose aussi la langue
+            if (choix != (langueChoisie ?? Texte.Langue))
+            {   // Une autre langue : elle est retenue dans les préférences et s'applique au prochain démarrage
+                langueChoisie = choix;
+                Journal.Info("Langue choisie : " + choix);
+            }
         }
         private void BoutonAide_Click(object sender, EventArgs e)
         {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur : en anglais si Windows est en anglais, sinon en français (chaque page a un lien vers l'autre) ---
@@ -206,7 +213,7 @@ namespace BrunoGUI_Dames
             if (!File.Exists(page))
             {
                 Journal.Attention("Aide introuvable : " + page);
-                ReglagesDeTest.Message("Le fichier d'aide est introuvable :\n" + page, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("Le fichier d'aide est introuvable :\n{0}", page), "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             try
@@ -216,7 +223,7 @@ namespace BrunoGUI_Dames
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception || ex is InvalidOperationException)
             {
                 Journal.Attention("Aide : ouverture impossible (" + ex.Message + ")");
-                ReglagesDeTest.Message("L'aide n'a pas pu être ouverte :\n" + ex.Message, "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("L'aide n'a pas pu être ouverte :\n{0}", ex.Message), "Aide", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -274,8 +281,8 @@ namespace BrunoGUI_Dames
                 // Le message d'une FEN invalide recopie le contenu du fichier : le journal n'en garde que le début
                 string resume = ex is FormatException ? "contenu qui n'est pas une position FEN (" + new FileInfo(ChargerFichierFen.FileName).Length + " octets)" : ex.Message;
                 Journal.Erreur($"Position FEN non chargée ({ChargerFichierFen.FileName}) : {resume}");
-                string pourLeJoueur = ex is FormatException ? "Ce fichier ne contient pas de position FEN valide." : ex.Message;
-                ReglagesDeTest.Message($"La position n'a pas pu être chargée :\n{Path.GetFileName(ChargerFichierFen.FileName)}\n\n{pourLeJoueur}", "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                string pourLeJoueur = ex is FormatException ? T("Ce fichier ne contient pas de position FEN valide.") : ex.Message;
+                ReglagesDeTest.Message(T("La position n'a pas pu être chargée :\n{0}\n\n{1}", Path.GetFileName(ChargerFichierFen.FileName), pourLeJoueur), "Position FEN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (!contenuFichier.Contains('"'))
@@ -294,13 +301,13 @@ namespace BrunoGUI_Dames
                 {
                     string fen = RecupereFEN();
                     File.WriteAllText(SauverFichierFen.FileName, fen);
-                    ReglagesDeTest.Message($"Position FEN sauvegardée avec succès\ndans le fichier : {Path.GetFileName(SauverFichierFen.FileName)} !",
+                    ReglagesDeTest.Message(T("Position FEN sauvegardée avec succès\ndans le fichier : {0} !", Path.GetFileName(SauverFichierFen.FileName)),
                                     "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
                     Journal.Erreur($"Sauvegarde de la position FEN ({SauverFichierFen.FileName})", ex);
-                    ReglagesDeTest.Message("Erreur lors de la sauvegarde : " + ex.Message, "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ReglagesDeTest.Message(T("Erreur lors de la sauvegarde : {0}", ex.Message), "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -329,7 +336,7 @@ namespace BrunoGUI_Dames
         {   // --- Gestion du bouton radio gain blanc ---
             if (RadioGainBlanc.Checked)
             {   // 1-0 les blancs gagnent
-                LabelInformationJoueur.Text = "Gain Blanc sélectionné (Partie terminée)";
+                LabelInformationJoueur.Text = T("Gain Blanc sélectionné (Partie terminée)");
                 MiseaJourFinPartie(" 1-0");
             }
         }
@@ -337,7 +344,7 @@ namespace BrunoGUI_Dames
         {   // --- Gestion du bouton radio gain noir ---
             if (RadioGainNoir.Checked)
             {   // 0-1 les noirs gagnent
-                LabelInformationJoueur.Text = "Gain Noir sélectionné (Partie terminée)";
+                LabelInformationJoueur.Text = T("Gain Noir sélectionné (Partie terminée)");
                 MiseaJourFinPartie(" 0-1");
             }
         }
@@ -345,7 +352,7 @@ namespace BrunoGUI_Dames
         {   // --- Gestion du bouton radio partie nulle ---
             if (RadioNulle.Checked)
             {   // 1/2-1/2 partie nulle
-                LabelInformationJoueur.Text = "Nulle sélectionnée (Partie terminée)";
+                LabelInformationJoueur.Text = T("Nulle sélectionnée (Partie terminée)");
                 MiseaJourFinPartie(" 1/2-1/2");
             }
         }
@@ -368,7 +375,7 @@ namespace BrunoGUI_Dames
             string? coupEfface = session.RetireDernierCoup();
             if (coupEfface == null)
             {
-                ReglagesDeTest.Message("Impossible de revenir en arrière :\nAucun coup n'a été joué.",
+                ReglagesDeTest.Message(T("Impossible de revenir en arrière :\nAucun coup n'a été joué."),
                                 "Retour arrière", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
@@ -378,7 +385,7 @@ namespace BrunoGUI_Dames
             NettoyageRapide();
             AfficheTraitParcours();     // NettoyageRapide a vidé l'affichage du trait (une prise obligatoire le réécrit plus bas)
             ArmePendule();      // La pendule garde les temps et attend le prochain coup
-            LabelCoupJoue.Text = $"Mouvement effacé = {coupEfface}"; // Met à jour le label avec le mouvement.
+            LabelCoupJoue.Text = T("Mouvement effacé = {0}", coupEfface); // Met à jour le label avec le mouvement.
             AnalyseCoupObligatoire(CouleurAuTrait);
         }        private void BoutonTournerDamier_Click(object sender, EventArgs e)
         {   // --- Rotation du damier de 180° : l'orientation change, CaseDamier suit les places à l'écran (la case i va à la place 99 - i) ---

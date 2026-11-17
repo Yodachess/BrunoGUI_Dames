@@ -7,6 +7,7 @@
 // █ Scan is available at : github.com/rhalbersma/scan                      █
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -25,9 +26,9 @@ namespace BrunoGUI_Dames
         private void CreeMenuDamier()
         {
             menuDamier = new ContextMenuStrip { Name = "menuDamier" };
-            menuEnregistreImage = new ToolStripMenuItem("Enregistrer l'image du damier…") { Name = "menuEnregistreImage", ShortcutKeyDisplayString = "Ctrl+E" };
-            menuCopieImage = new ToolStripMenuItem("Copier l'image du damier") { Name = "menuCopieImage" };
-            menuTourne = new ToolStripMenuItem("Tourner le damier") { Name = "menuTourne", ShortcutKeyDisplayString = "F" };
+            menuEnregistreImage = new ToolStripMenuItem(T("Enregistrer l'image du damier…")) { Name = "menuEnregistreImage", ShortcutKeyDisplayString = "Ctrl+E" };
+            menuCopieImage = new ToolStripMenuItem(T("Copier l'image du damier")) { Name = "menuCopieImage" };
+            menuTourne = new ToolStripMenuItem(T("Tourner le damier")) { Name = "menuTourne", ShortcutKeyDisplayString = "Ctrl+F" };
             menuEnregistreImage.Click += (s, e) => EnregistreImageDamier();
             menuCopieImage.Click += (s, e) => CopieImageDamier();
             menuTourne.Click += (s, e) => ToucheRaccourci(Keys.Control | Keys.F);
@@ -59,13 +60,13 @@ namespace BrunoGUI_Dames
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ExternalException || ex is ArgumentException)
             {
                 Journal.Erreur($"Image du damier non enregistrée ({chemin})", ex);
-                ReglagesDeTest.Message("L'image n'a pas pu être enregistrée :\n" + ex.Message, "Image du damier", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("L'image n'a pas pu être enregistrée :\n{0}", ex.Message), "Image du damier", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
         }
         private void EnregistreImageDamier()
         {   // --- Demande où écrire l'image, puis l'écrit ---
-            using (SaveFileDialog dialogue = new SaveFileDialog { Title = "Enregistrer l'image du damier", Filter = "Image PNG (*.png)|*.png", FileName = "damier.png", DefaultExt = "png", OverwritePrompt = true })
+            using (SaveFileDialog dialogue = new SaveFileDialog { Title = T("Enregistrer l'image du damier"), Filter = T("Image PNG (*.png)|*.png"), FileName = "damier.png", DefaultExt = "png", OverwritePrompt = true })
                 if (dialogue.ShowDialog(this) == DialogResult.OK)
                     EnregistreImageDamier(dialogue.FileName);
         }
@@ -82,7 +83,7 @@ namespace BrunoGUI_Dames
             catch (ExternalException ex)
             {   // Le presse-papiers est tenu par un autre programme
                 Journal.Attention("Image du damier non copiée : " + ex.Message);
-                ReglagesDeTest.Message("L'image n'a pas pu être copiée :\n" + ex.Message, "Image du damier", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("L'image n'a pas pu être copiée :\n{0}", ex.Message), "Image du damier", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
         }

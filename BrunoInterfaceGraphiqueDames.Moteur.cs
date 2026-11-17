@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -52,22 +53,22 @@ namespace BrunoGUI_Dames
             LigneMoteurLue lue = LigneMoteur.Lire(ligne);
             if (lue.EstId)
             {
-                LabelAfficheScan.Text = "Moteur : " + lue.Nom + " / Version : " + lue.Version + " / Auteur : " + lue.Auteur + " / Pays : " + lue.Pays;
+                LabelAfficheScan.Text = T("Moteur : {0} / Version : {1} / Auteur : {2} / Pays : {3}", lue.Nom, lue.Version, lue.Auteur, lue.Pays);
                 nomMoteur = lue.Nom ?? "";
                 versionMoteur = lue.Version ?? "";
                 auteurMoteur = lue.Auteur ?? "";
             }
             if (lue.Score is decimal score)
-                LabelScore.Text = "Score = " + score.ToString("F2", CultureInfo.InvariantCulture);     // Affichage avec le format "XX.YY"
+                LabelScore.Text = T("Score = {0}", score.ToString("F2", CultureInfo.InvariantCulture));     // Affichage avec le format "XX.YY"
             if (lue.Variation is string variationMoteur)
             {
                 if (analyseEnCours)
                 {
-                    LabelPrisesPossibles.Text = "Ligne SCAN 3.1 complète : " + variationMoteur;
-                    LabelCoupJoue.Text = "Coup suggéré par l'analyse : " + variationMoteur.Split(' ')[0] + (lue.Score != null && lue.Profondeur == null ? " (livre)" : "");
+                    LabelPrisesPossibles.Text = T("Ligne SCAN 3.1 complète : {0}", variationMoteur);
+                    LabelCoupJoue.Text = T("Coup suggéré par l'analyse : {0}", variationMoteur.Split(' ')[0]) + (lue.Score != null && lue.Profondeur == null ? T(" (livre)") : "");
                     MarqueFleche(variationMoteur.Split(' ')[0]);       // Une flèche sur le damier ; elle suit la variation à chaque ligne du moteur
                 }
-                LabelAfficheScan.Text = "Ligne Scan3.1 = " + (variationMoteur.Length > 100 ? variationMoteur.Substring(0, 100) : variationMoteur);     // Limitée pour rester dans le label
+                LabelAfficheScan.Text = T("Ligne Scan3.1 = {0}", variationMoteur.Length > 100 ? variationMoteur.Substring(0, 100) : variationMoteur);     // Limitée pour rester dans le label
             }
         }        private void AfficheDonneesBrutes(string ligne, bool venantDuMoteur)
         {   // --- Ajoute une ligne échangée avec le moteur à la fenêtre du protocole (appelée sur le thread du moteur ou celui de l'interface) ---
@@ -118,7 +119,7 @@ namespace BrunoGUI_Dames
             comboNiveau.Location = new Point(142, 17);
             comboNiveau.Width = 78;
             for (int niveau = NiveauMoteur.Minimum; niveau <= NiveauMoteur.Maximum; niveau++)
-                comboNiveau.Items.Add(NiveauMoteur.Nom(niveau));
+                comboNiveau.Items.Add(T(NiveauMoteur.Nom(niveau)));
             comboNiveau.SelectedIndex = NiveauMoteur.ParDefaut - 1;
             comboNiveau.SelectedIndexChanged += (s, e) => infobulleNiveau.SetToolTip(comboNiveau, NiveauMoteur.Libelle(NiveauChoisi));
             infobulleNiveau.SetToolTip(comboNiveau, NiveauMoteur.Libelle(NiveauChoisi));
@@ -141,6 +142,7 @@ namespace BrunoGUI_Dames
             foreach (string avertissement in preferencesChargees.Avertissements)
                 Journal.Attention("Préférences : " + avertissement);
             DureeEtape = preferencesChargees.DureeEtape;
+            langueChoisie = preferencesChargees.Langue;
             ArriveesDebutTour = preferencesChargees.ArriveesDebutTour;
             RepereDernierCoup = preferencesChargees.RepereDernierCoup;
             Color Choisie(string nom) => preferencesChargees.Couleurs.TryGetValue(nom, out int rgb) ? DepuisRgb(rgb) : CouleurParDefaut(nom);
@@ -175,6 +177,7 @@ namespace BrunoGUI_Dames
             {
                 TempsReflexion = trackBarTempsReflexion.Value,
                 Niveau = NiveauChoisi,
+                Langue = langueChoisie,
                 DureeEtape = DureeEtape,
                 ArriveesDebutTour = ArriveesDebutTour,
                 RepereDernierCoup = RepereDernierCoup,

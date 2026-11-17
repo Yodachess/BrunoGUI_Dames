@@ -59,7 +59,7 @@ public static class ScenarioInterface
         string dossier = Path.Combine(Path.GetTempPath(), "dames_interface_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dossier);
         string fichierPreferences = Path.Combine(dossier, "preferences.ini");
-        ReglagesDeTest.Message = (texte, titre, boutons, icone) => { messages.Add(titre + " | " + texte); return DialogResult.OK; };
+        ReglagesDeTest.Afficheur = (texte, titre, boutons, icone) => { messages.Add(titre + " | " + texte); return DialogResult.OK; };
         ReglagesDeTest.HorlogePendule = () => maintenant;
         ReglagesDeTest.FichierPreferences = fichierPreferences;
         ReglagesDeTest.CheminMoteur = scan ?? Path.Combine(dossier, "scan_absent.exe");
@@ -487,6 +487,7 @@ public static class ScenarioInterface
         LivreOuvertures();
 
         // ═══════════════ Deux fenêtres à la fois ═══════════════
+        FenetreAnglaise();
         DeuxFenetres();
 
         if (!avecMoteur)
@@ -739,6 +740,108 @@ public static class ScenarioInterface
     }
     // Deux fenêtres ouvertes en même temps ne partagent plus rien (position, historique, sens du damier, moteur) : un coup, un damier tourné ou la fermeture de l'une ne touche pas l'autre.
     // Les aides du test visent la variable « fenetre » : on la fait pointer tour à tour sur chacune.
+    // L'affichage en anglais : les textes du Designer, ceux du code (avec leurs valeurs), les listes et les messages ; aucune traduction manquante ; la fenêtre « À propos » retient la langue choisie
+    private static void FenetreAnglaise()
+    {
+        string? fichierAnglais = null;
+        for (string? dossier = AppContext.BaseDirectory; dossier != null && fichierAnglais == null; dossier = Path.GetDirectoryName(dossier))
+            if (File.Exists(Path.Combine(dossier, "Langues", "en.tsv")))
+                fichierAnglais = Path.Combine(dossier, "Langues", "en.tsv");
+        if (fichierAnglais == null)
+        {
+            verifie("Interface : le fichier de traductions anglaises est trouvé", false, "Langues\\en.tsv introuvable");
+            return;
+        }
+        BrunoInterfaceGraphiqueDames francaise = fenetre;
+        Func<Func<string>, string, string> aProposInitial = ReglagesDeTest.APropos;
+        BrunoInterfaceGraphiqueDames? anglaise = null;
+        try
+        {
+            Texte.Definit("en", fichierAnglais);
+            anglaise = new BrunoInterfaceGraphiqueDames();
+            anglaise.ShowInTaskbar = false;
+            anglaise.StartPosition = FormStartPosition.Manual;
+            anglaise.Location = new Point(-32000, -32000);
+            anglaise.Show();
+            Pompe(300);
+            anglaise.DureeEtape = 0;
+            fenetre = anglaise;
+            Nouvelle();
+            Joue(32, 28);
+            string apres = Trouve("LabelInformationJoueur").Text;
+            Appelle(anglaise, "BoutonDebut_Click", null, EventArgs.Empty);
+            Appelle(anglaise, "BoutonPrecedent_Click", null, EventArgs.Empty);
+            string message = messages.Count > 0 ? messages[0] : "";
+            ComboBox niveaux = (ComboBox)Trouve("ComboNiveau"), cadences = (ComboBox)Trouve("ComboCadence");
+            verifie("Interface en anglais : les textes du Designer (boutons, cadres, titre de la fenêtre) sont traduits",
+                    Trouve("NouvellePartie").Text == "New game" && Trouve("BoutonTournerDamier").Text == "Turn board" && Trouve("AnalysePosition").Text == "Analyze position" && Trouve("GroupResultat").Text == "Result"
+                    && anglaise.Text == " Bruno Graphical Interface", $"{Trouve("NouvellePartie").Text} / {Trouve("BoutonTournerDamier").Text} / {anglaise.Text}");
+            verifie("Interface en anglais : les textes du code sont traduits avec leurs valeurs (trait, pièces, bouton de lecture, message de début de partie)",
+                    apres == "Black to move" && Trouve("LabelPionsBlancs").Text == "20 white men" && Trouve("BoutonLecture").Text == "Play" && message == "Start of game | You are at the start of the game.",
+                    $"{apres} / {Trouve("LabelPionsBlancs").Text} / {Trouve("BoutonLecture").Text} / {message}");
+            verifie("Interface en anglais : les listes (niveaux, cadences) et les cadres de la pendule sont traduits",
+                    (string)niveaux.Items[0]! == "Level 1" && (string)niveaux.Items[5]! == "Maximum" && (string)cadences.Items[0]! == "No clock" && (string)cadences.Items[4]! == "Rapid 15 min + 5 s" && Trouve("LabelPenduleBlanc").Text == "W --:--",
+                    $"{niveaux.Items[0]} / {cadences.Items[0]} / {cadences.Items[4]} / {Trouve("LabelPenduleBlanc").Text}");
+            verifie("Interface en anglais : aucun texte n'est resté sans traduction", Texte.ClesManquantes.Count == 0, string.Join(" | ", Texte.ClesManquantes));
+            // « À propos » : la langue choisie est retenue dans les préférences (appliquée au prochain démarrage)
+            string? texteAPropos = null;
+            ReglagesDeTest.APropos = (texte, langue) => { texteAPropos = texte(); return "fr"; };
+            Appelle(anglaise, "Apropos_Click", null, EventArgs.Empty);
+            Appelle(anglaise, "EnregistrePreferences");
+            string langueEcrite = Preferences.Lire(ReglagesDeTest.FichierPreferences!).Langue ?? "(aucune)";
+            verifie("Interface : « À propos » affiche les versions et l'historique, et la langue choisie (français) est écrite dans les préférences",
+                    texteAPropos != null && texteAPropos.Contains("Graphical interface version") && texteAPropos.Contains("History:") && langueEcrite == "fr", $"{langueEcrite} / {texteAPropos?.Substring(0, Math.Min(40, texteAPropos.Length))}");
+        }
+        finally
+        {
+            fenetre = francaise;
+            ReglagesDeTest.APropos = aProposInitial;
+            Texte.Definit("fr", null);
+            if (anglaise != null)
+            {
+                try { anglaise.Close(); } catch (Exception ex) { Console.WriteLine("Fermeture de la fenêtre anglaise de test : " + ex.Message); }
+            }
+        }
+        Pompe(100);
+        Nouvelle();
+        FenetreAProposTraduite(fichierAnglais);
+        verifie("Interface : de retour en français, la fenêtre d'origine n'a pas changé de langue", Trouve("NouvellePartie").Text == "Nouvelle Partie" && Texte.Langue == Texte.Francais, Trouve("NouvellePartie").Text);
+    }
+
+    // La fenêtre « À propos » se traduit sous les yeux du joueur quand il change la langue dans sa liste, et remet la langue du programme à sa fermeture
+    private static void FenetreAProposTraduite(string fichierAnglais)
+    {
+        Texte.Definit("fr", fichierAnglais);
+        AProposForm apropos = new AProposForm(() => Texte.T("Historique :\n"), "fr");
+        try
+        {
+            apropos.StartPosition = FormStartPosition.Manual;
+            apropos.Location = new Point(-32000, -32000);
+            apropos.Show();
+            Pompe(100);
+            ComboBox liste = (ComboBox)apropos.Controls.Find("ListeLangue", true)[0];
+            Control texte = apropos.Controls.Find("TexteAPropos", true)[0], note = apropos.Controls.Find("NoteLangue", true)[0];
+            string avantFr = texte.Text + " | " + apropos.Text;
+            liste.SelectedIndex = 1;
+            string enAnglais = texte.Text + " | " + apropos.Text + " | " + note.Text;
+            string choisie = apropos.LangueChoisie;
+            liste.SelectedIndex = 0;
+            string retourFr = texte.Text + " | " + apropos.Text;
+            verifie("Interface : dans « À propos », choisir English traduit la fenêtre tout de suite (texte, titre, note), et revenir à Français la remet en français",
+                    avantFr == "Historique :\n | À propos" && enAnglais == "History:\n | About | The language change applies the next time the program starts." && choisie == "en" && retourFr == avantFr,
+                    $"{avantFr} / {enAnglais} / {retourFr}");
+            liste.SelectedIndex = 1;
+            apropos.Close();
+            Pompe(50);
+            verifie("Interface : à la fermeture de « À propos », la langue du programme est remise (le reste de l'affichage change au prochain démarrage seulement)", Texte.Langue == Texte.Francais, Texte.Langue);
+        }
+        finally
+        {
+            if (!apropos.IsDisposed) apropos.Dispose();
+            Texte.Definit("fr", null);
+        }
+    }
+
     private static void DeuxFenetres()
     {
         BrunoInterfaceGraphiqueDames a = fenetre;

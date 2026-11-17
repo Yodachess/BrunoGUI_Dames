@@ -733,6 +733,65 @@ public static class Scenario
         Verifie("Préférences : un dossier inexistant fait renvoyer faux, sans exception",
                 !new Preferences().Ecrire(Path.Combine(Path.GetTempPath(), "dossier_absent_" + Guid.NewGuid().ToString("N"), "p.ini")), "");
 
+        // ═══════════════ Langue de l'affichage ═══════════════
+        Console.WriteLine("── Langue ──");
+
+        string? dossierDepot = null;
+        for (string? dossier = AppContext.BaseDirectory; dossier != null && dossierDepot == null; dossier = Path.GetDirectoryName(dossier))
+            if (File.Exists(Path.Combine(dossier, "Langues", "en.tsv")) && File.Exists(Path.Combine(dossier, "Texte.cs")))
+                dossierDepot = dossier;
+        string? fichierAnglais = dossierDepot == null ? null : Path.Combine(dossierDepot, "Langues", "en.tsv");
+        Verifie("Langue : le français est la langue de départ et le texte français est rendu tel quel (avec ses valeurs)",
+                Texte.Langue == Texte.Francais && Texte.T("Quitter") == "Quitter" && Texte.T("Coup {0} : {1}", 3, "28x19") == "Coup 3 : 28x19", Texte.Langue);
+        if (fichierAnglais == null)
+        {
+            Verifie("Langue : Langues\\en.tsv est trouvé dans le dépôt", false, "introuvable au-dessus de " + AppContext.BaseDirectory);
+        }
+        else
+        {
+            Dictionary<string, string> anglais = Texte.Lire(fichierAnglais);
+            Verifie("Langue : le fichier anglais est lu en entier (plus de 150 textes, aucune traduction vide)", anglais.Count > 150 && anglais.Values.All(v => v.Length > 0), anglais.Count + " textes");
+            // Toutes les clés des sources (Texte.T("…")) sont traduites, avec les mêmes valeurs {0}, {1}… que le texte français
+            System.Text.RegularExpressions.Regex appelT = new System.Text.RegularExpressions.Regex("(?<![A-Za-z_])T\\(\"((?:[^\"\\\\]|\\\\.)*)\"");
+            System.Text.RegularExpressions.Regex valeurs = new System.Text.RegularExpressions.Regex("\\{(\\d+)\\}");
+            List<string> sansTraduction = new List<string>(), valeursDifferentes = new List<string>();
+            int nombreDeCles = 0;
+            foreach (string source in Directory.GetFiles(dossierDepot!, "*.cs").Where(s => Path.GetFileName(s) != "Texte.cs"))
+                foreach (System.Text.RegularExpressions.Match m in appelT.Matches(File.ReadAllText(source)))
+                {
+                    string cle = m.Groups[1].Value.Replace("\\n", "\n").Replace("\\\"", "\"").Replace("\\\\", "\\");
+                    nombreDeCles++;
+                    if (!anglais.TryGetValue(cle, out string? traduit))
+                        sansTraduction.Add(cle);
+                    else if (!valeurs.Matches(cle).Select(v => v.Value).OrderBy(v => v).SequenceEqual(valeurs.Matches(traduit).Select(v => v.Value).OrderBy(v => v)))
+                        valeursDifferentes.Add(cle);
+                }
+            Verifie($"Langue : les {nombreDeCles} textes des sources (Texte.T) ont tous leur traduction anglaise", nombreDeCles > 100 && sansTraduction.Count == 0, string.Join(" | ", sansTraduction.Take(5)));
+            Verifie("Langue : chaque traduction garde les mêmes valeurs {0}, {1}… que le texte français", valeursDifferentes.Count == 0, string.Join(" | ", valeursDifferentes.Take(5)));
+            try
+            {
+                Texte.Definit("en", fichierAnglais);
+                string coup = Texte.T("Coup {0} : {1}", 3, "28x19");
+                string sansCle = Texte.T("Un texte que personne n'a traduit");
+                Verifie("Langue : en anglais, un texte est traduit, avec ses valeurs ; un texte absent du fichier reste en français et est signalé",
+                        Texte.Langue == Texte.Anglais && Texte.T("Quitter") == "Quit" && coup == "Move 3: 28x19" && sansCle == "Un texte que personne n'a traduit" && Texte.ClesManquantes.Contains("Un texte que personne n'a traduit"), coup);
+                Verifie("Langue : l'anglais s'écrit avec ses nombres (« 0.5 ») et le français avec les siens (« 0,5 »)", RythmeLecture.Libelle(3).Contains("0.5 s between") && RythmeLecture.PauseMs(3) == 500, RythmeLecture.Libelle(3));
+                FinAuTemps finAnglaise = Pendule.FinDePartie(Couleur.Noir);
+                Verifie("Langue : les textes de la logique (fin au temps) sont traduits aussi", finAnglaise.Statut == "White wins on time" && finAnglaise.Message.Contains("The black flag has fallen."), finAnglaise.Statut + " | " + finAnglaise.Message);
+            }
+            finally
+            {
+                Texte.Definit("fr", null);
+            }
+            Verifie("Langue : de retour en français, tout redevient français", Texte.Langue == Texte.Francais && Texte.T("Quitter") == "Quitter" && RythmeLecture.Libelle(3).Contains("0,5 s entre"), RythmeLecture.Libelle(3));
+            Texte.Definit("en", Path.Combine(Path.GetTempPath(), "traductions_absentes_" + Guid.NewGuid().ToString("N") + ".tsv"));
+            Verifie("Langue : un fichier de traductions absent laisse l'affichage en français", Texte.Langue == Texte.Francais && Texte.T("Quitter") == "Quitter", Texte.Langue);
+        }
+        Preferences langueEn = Preferences.DepuisTexte(new Preferences { Langue = "en" }.VersTexte());
+        Preferences langueAuto = Preferences.DepuisTexte("Langue=auto\r\n");
+        Preferences langueRefusee = Preferences.DepuisTexte("Langue=klingon\r\n");
+        Verifie("Préférences : la langue se relit (« en »), « auto » ou l'absence de clé donnent null (celle de Windows), une autre langue est refusée avec un avertissement",
+                new Preferences().Langue == null && langueEn.Langue == "en" && langueAuto.Langue == null && langueRefusee.Langue == null && langueRefusee.Avertissements.Count == 1 && !new Preferences().VersTexte().Contains("Langue="), "");
         // ═══════════════ Moteur Scan ═══════════════
         Console.WriteLine("── Moteur Scan ──");
 

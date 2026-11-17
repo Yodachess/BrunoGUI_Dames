@@ -31,6 +31,10 @@
     <None Update="Aide\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- Traductions anglaises de l'affichage (Texte) : le français est dans les sources, l'anglais seulement dans ce fichier -->
+    <None Update="Langues\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\DameBlanche.png" />

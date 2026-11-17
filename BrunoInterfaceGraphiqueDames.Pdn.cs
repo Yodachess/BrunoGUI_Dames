@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -39,7 +40,7 @@ namespace BrunoGUI_Dames
                     if (raison != null)
                     {   // Pas de partie avec des coups (image, position FEN…) : on le dit et on ne touche à rien
                         Journal.Attention($"Fichier inutilisable comme liste de parties PDN ({cheminFichier}) : {raison.Replace("\n", " ")}");
-                        ReglagesDeTest.Message($"{Path.GetFileName(cheminFichier)}\n\n{raison}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        ReglagesDeTest.Message(Path.GetFileName(cheminFichier) + "\n\n" + raison, "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
                     ListePartiesPdn.Clear(); // On vide la liste des parties PDN
@@ -53,8 +54,7 @@ namespace BrunoGUI_Dames
                         };
                     }
                     ListePartiesPdn.AddRange(partiesLues);
-                    fichierPartiePdn.NombrePartiesFichier.Text = ListePartiesPdn.Count.ToString()
-                        + " partie(s) dans le fichier  " + cheminFichier.Substring(cheminFichier.LastIndexOf('\\') + 1); ;
+                    fichierPartiePdn.NombrePartiesFichier.Text = T("{0} partie(s) dans le fichier  {1}", ListePartiesPdn.Count, cheminFichier.Substring(cheminFichier.LastIndexOf('\\') + 1));
                     fichierPartiePdn.AfficherListeParties(ListePartiesPdn); 
                     fichierPartiePdn.Show();
                     BoutonMasqueAffiche.Enabled = true; // Active le bouton pour masquer/afficher la liste
@@ -62,7 +62,7 @@ namespace BrunoGUI_Dames
                 catch (Exception ex)
                 {
                     Journal.Erreur($"Chargement des parties PDN ({cheminFichier})", ex);
-                    ReglagesDeTest.Message($"Le fichier PDN n'a pas pu être lu :\n{ex.Message}", "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ReglagesDeTest.Message(T("Le fichier PDN n'a pas pu être lu :\n{0}", ex.Message), "Parties PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace BrunoGUI_Dames
             // « Lecture » la déroule avec ses animations, « Suiv. » avance coup à coup (le groupe « Parcours partie ») ---
             if (lecture != null || jeuMoteurEnCours || analyseEnCours)
             {
-                ReglagesDeTest.Message("Une lecture est en cours, ou le moteur réfléchit.\nAttends la fin avant de charger une partie.", "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReglagesDeTest.Message(T("Une lecture est en cours, ou le moteur réfléchit.\nAttends la fin avant de charger une partie."), "Chargement impossible", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             // La partie est d'abord rejouée par les règles, sans toucher à la fenêtre : un coup illégal n'empêche plus de charger ce qui est jouable et ne fait plus tomber l'application
@@ -82,7 +82,7 @@ namespace BrunoGUI_Dames
             if (rejeu.Positions.Count == 0)
             {   // La position de départ (FEN) est invalide : rien n'est chargé et le damier n'est pas touché
                 Journal.Attention($"Partie PDN non chargée ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
-                ReglagesDeTest.Message($"La partie ne peut pas être chargée :\n{rejeu.Erreur}", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("La partie ne peut pas être chargée :\n{0}", rejeu.Erreur), "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             foreach (string ambiguite in rejeu.Ambiguites ?? Array.Empty<string>())
@@ -102,8 +102,8 @@ namespace BrunoGUI_Dames
             BalisesPartie.Result = partie.Result;
             BalisesPartie.CoupsPartiePDN = partie.CoupsPartiePDN;
             BalisesPartie.FENDebut = partie.FENDebut;
-            LabelAfficheScan.Text = $"Partie de {partie.White} contre {partie.Black} ({partie.Result})";
-            LabelScore.Text = $"Résultat : {partie.Result}";
+            LabelAfficheScan.Text = T("Partie de {0} contre {1} ({2})", partie.White, partie.Black, partie.Result);
+            LabelScore.Text = T("Résultat : {0}", partie.Result);
             // La partie entre d'un coup dans l'historique (chaque coup avec la position qu'il donne), puis le damier montre la position de départ
             SessionPartie session = Session;
             session.Commencer(rejeu.Positions[0]);
@@ -112,15 +112,15 @@ namespace BrunoGUI_Dames
             session.Debut();
             MiseenplaceFen(session.Fen(0), false);
             AfficheListesPieces();
-            LabelCoupJoue.Text = "Position initiale";
-            LabelPrisesPossibles.Text = $"Partie chargée : {rejeu.Coups.Count} coup(s).\nLecture la déroule, Suiv. avance coup à coup.";
-            LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+            LabelCoupJoue.Text = T("Position initiale");
+            LabelPrisesPossibles.Text = T("Partie chargée : {0} coup(s).\nLecture la déroule, Suiv. avance coup à coup.", rejeu.Coups.Count);
+            LabelInformationJoueur.Text = TraitAux(CouleurAuTrait);
             ReinitialisePendule();      // Si l'on continue la partie chargée, la pendule part de son temps de base
             AnalyseCoupObligatoire(CouleurAuTrait);     // Les cases jouables et la prise obligatoire éventuelle de la position de départ
             if (rejeu.Erreur != null)
             {   // La partie est chargée jusqu'au dernier coup légal
                 Journal.Attention($"Partie PDN chargée en partie ({partie.White} - {partie.Black}) : {rejeu.Erreur}");
-                ReglagesDeTest.Message($"La partie n'a pas pu être rejouée entièrement :\n{rejeu.Erreur}\n\nElle est chargée jusqu'au coup {rejeu.Coups.Count}.", "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ReglagesDeTest.Message(T("La partie n'a pas pu être rejouée entièrement :\n{0}\n\nElle est chargée jusqu'au coup {1}.", rejeu.Erreur, rejeu.Coups.Count), "Partie PDN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }    }
 }

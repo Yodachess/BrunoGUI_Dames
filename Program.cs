@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -31,6 +31,8 @@ namespace BrunoGUI_Dames
             Application.ThreadException += (sender, e) => ErreurImprevue(e.Exception);
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => Journal.Erreur("Erreur fatale non attrapée (l'application s'arrête)", e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString()));
             TaskScheduler.UnobservedTaskException += (sender, e) => { Journal.Erreur("Erreur dans une tâche", e.Exception); e.SetObserved(); };
+            // La langue de l'affichage : celle des préférences, sinon celle de Windows (avant la création de la première fenêtre)
+            Texte.Definit(Preferences.Lire(System.IO.Path.Combine(Application.StartupPath, "BrunoGUI_Dames.preferences.ini")).Langue ?? Texte.LangueDuSysteme(), System.IO.Path.Combine(Application.StartupPath, "Langues", "en.tsv"));
             Journal.Info($"Démarrage de BrunoGUI Dames {Application.ProductVersion} (.NET {Environment.Version}, {Environment.OSVersion})");
             Application.Run(new BrunoInterfaceGraphiqueDames());
         }
@@ -39,8 +41,8 @@ namespace BrunoGUI_Dames
         private static void ErreurImprevue(Exception exception)
         {
             Journal.Erreur("Erreur imprévue dans l'interface", exception);
-            MessageBox.Show("Une erreur imprévue s'est produite :\n" + exception.Message + "\n\nElle est notée dans BrunoGUI_Dames.log, à côté du programme.\nSi l'application se comporte bizarrement, ferme-la et relance-la.",
-                            "Erreur imprévue", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(Texte.T("Une erreur imprévue s'est produite :\n{0}\n\nElle est notée dans BrunoGUI_Dames.log, à côté du programme.\nSi l'application se comporte bizarrement, ferme-la et relance-la.", exception.Message),
+                            Texte.T("Erreur imprévue"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 }

@@ -39,9 +39,11 @@ namespace BrunoGUI_Dames
         public static string Libelle(int niveau)
         {
             int n = Limite(niveau);
-            return n == Maximum
-                ? $"Force du moteur : maximum (niveau {n} sur {Maximum}), sans limite de profondeur ; seul le temps de réflexion borne la recherche"
-                : $"Force du moteur : niveau {n} sur {Maximum} (recherche limitée à {Profondeur(n)} demi-coup{(Profondeur(n) > 1 ? "s" : "")}). Au maximum, le moteur joue à pleine force";
+            if (n == Maximum)
+                return Texte.T("Force du moteur : maximum (niveau {0} sur {1}), sans limite de profondeur ; seul le temps de réflexion borne la recherche", n, Maximum);
+            return Profondeur(n) > 1
+                ? Texte.T("Force du moteur : niveau {0} sur {1} (recherche limitée à {2} demi-coups). Au maximum, le moteur joue à pleine force", n, Maximum, Profondeur(n))
+                : Texte.T("Force du moteur : niveau {0} sur {1} (recherche limitée à {2} demi-coup). Au maximum, le moteur joue à pleine force", n, Maximum, Profondeur(n));
         }
     }
 }

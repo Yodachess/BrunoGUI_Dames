@@ -37,7 +37,7 @@ namespace BrunoGUI_Dames
         {
             options = optionsPossibles;
             montre = montreSurLeDamier;
-            Text = "Choix de la rafle";
+            Text = Texte.T("Choix de la rafle");
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -50,19 +50,19 @@ namespace BrunoGUI_Dames
             detail.Location = new Point(12, 36);
             detail.Size = new Size(366, 54);
 
-            precedente.Text = "< Précédente";
+            precedente.Text = Texte.T("< Précédente");
             precedente.Location = new Point(12, 100);
             precedente.Size = new Size(90, 30);
             precedente.Click += (s, e) => Montre(indice - 1);
-            suivante.Text = "Suivante >";
+            suivante.Text = Texte.T("Suivante >");
             suivante.Location = new Point(108, 100);
             suivante.Size = new Size(90, 30);
             suivante.Click += (s, e) => Montre(indice + 1);
-            jouer.Text = "Jouer cette rafle";
+            jouer.Text = Texte.T("Jouer cette rafle");
             jouer.Location = new Point(204, 100);
             jouer.Size = new Size(112, 30);
             jouer.Click += (s, e) => { Choisie = options[indice]; DialogResult = DialogResult.OK; };
-            annuler.Text = "Annuler";
+            annuler.Text = Texte.T("Annuler");
             annuler.Location = new Point(322, 100);
             annuler.Size = new Size(58, 30);
             annuler.Click += (s, e) => { Choisie = null; DialogResult = DialogResult.Cancel; };
@@ -79,8 +79,8 @@ namespace BrunoGUI_Dames
         {
             indice = (i + options.Count) % options.Count;
             Coup rafle = options[indice];
-            titre.Text = $"Rafle {indice + 1} sur {options.Count} (de {rafle.Depart} à {rafle.Arrivee})";
-            detail.Text = $"Pièces prises (en rouge sur le damier) : {string.Join(", ", rafle.Prises)}\nChemin : {rafle.Depart} > {string.Join(" > ", rafle.Chemin)}";
+            titre.Text = Texte.T("Rafle {0} sur {1} (de {2} à {3})", indice + 1, options.Count, rafle.Depart, rafle.Arrivee);
+            detail.Text = Texte.T("Pièces prises (en rouge sur le damier) : {0}\nChemin : {1} > {2}", string.Join(", ", rafle.Prises), rafle.Depart, string.Join(" > ", rafle.Chemin));
             montre(rafle);
         }
     }

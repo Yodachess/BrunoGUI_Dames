@@ -35,6 +35,7 @@ namespace BrunoGUI_Dames
         public bool ArriveesDebutTour { get; set; }                     // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (faux : seulement les pièces qui doivent prendre, les arrivées de la pièce choisie apparaissant à la sélection ; vrai : le comportement des versions 1.10 à 1.11)
         public static readonly string[] ReperesDernierCoup = { "coin", "cadre", "aucun" };
         public string RepereDernierCoup { get; set; } = "coin";         // Le repère des deux cases du dernier coup : « coin » (un triangle brun foncé dans un coin), « cadre » (un cadre brun foncé) ou « aucun »
+        public string? Langue { get; set; }                              // La langue de l'affichage : « fr » ou « en » ; null : celle de Windows (Texte)
         public string? CadenceId { get; set; }                          // La cadence de la pendule (Id d'une Cadence) ; null : pas de pendule
         public static readonly string[] NomsCouleurs = { "CaseSombre", "CaseClaire", "CaseDepart", "TrajetSuivi", "CasePivot", "CasePrise", "CaseArrivee", "CaseEtape" };
         // --- Les couleurs par défaut du damier (0xRRGGBB) : cases sombres et claires (bois), puis les surbrillances (celles des versions 1.10 et 1.11, gardées : une palette
@@ -140,6 +141,14 @@ namespace BrunoGUI_Dames
                         else
                             preferences.Avertissements.Add($"RepereDernierCoup refusé (un des mots : {string.Join(", ", ReperesDernierCoup)}) : {valeur}");
                         break;
+                    case "langue":
+                        if (valeur.Length == 0 || string.Equals(valeur, "auto", StringComparison.OrdinalIgnoreCase))
+                            preferences.Langue = null;
+                        else if (string.Equals(valeur, Texte.Francais, StringComparison.OrdinalIgnoreCase) || string.Equals(valeur, Texte.Anglais, StringComparison.OrdinalIgnoreCase))
+                            preferences.Langue = valeur.ToLowerInvariant();
+                        else
+                            preferences.Avertissements.Add($"Langue refusée (« fr », « en » ou « auto ») : {valeur}");
+                        break;
                     case "cadence":
                         if (valeur.Length == 0 || string.Equals(valeur, "sans", StringComparison.OrdinalIgnoreCase))
                             preferences.CadenceId = null;
@@ -200,6 +209,7 @@ namespace BrunoGUI_Dames
             texte.Append("DureeEtape=").Append(DureeEtape.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             texte.Append("VitesseLecture=").Append(VitesseLecture.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             texte.Append("VueCoteNoir=").Append(VueCoteNoir ? "1" : "0").Append(Environment.NewLine);
+            if (Langue != null) texte.Append("Langue=").Append(Langue).Append(Environment.NewLine);
             texte.Append("Cadence=").Append(CadenceId ?? "sans").Append(Environment.NewLine);
             texte.Append("ArriveesDebutTour=").Append(ArriveesDebutTour ? "1" : "0").Append(Environment.NewLine);
             texte.Append("RepereDernierCoup=").Append(RepereDernierCoup).Append(Environment.NewLine);

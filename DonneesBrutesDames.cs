@@ -24,6 +24,7 @@ namespace BrunoGUI_Dames
         public DonneesBrutesDames()
         {
             InitializeComponent();
+            TexteInterface.Traduit(this);
             ThemeInterface.Applique(this);
             this.FormClosing += DonneesBrutesDames_FormClosing;      // Gestion du click sur la croix rouge en haut à droite ...
         }

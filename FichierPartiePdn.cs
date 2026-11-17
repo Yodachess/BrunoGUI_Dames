@@ -39,6 +39,7 @@ namespace BrunoGUI_Dames
         public FichierPartiePdn()
         {
             InitializeComponent();
+            TexteInterface.Traduit(this);
             ThemeInterface.Applique(this);
         }
         // Lit un fichier PDN avec LecturePdn (qui lit tout le texte d'un seul passage : balises précédées de tabulations ou groupées sur
@@ -49,12 +50,12 @@ namespace BrunoGUI_Dames
         public static string? RaisonFichierNonUtilisable(IReadOnlyList<PartieDamesPdn> parties)
         {
             if (parties.Count == 0)
-                return "Ce fichier ne contient aucune partie PDN.\nIl n'est probablement pas au format PDN.";
+                return Texte.T("Ce fichier ne contient aucune partie PDN.\nIl n'est probablement pas au format PDN.");
             if (parties.Any(partie => !string.IsNullOrEmpty(partie.CoupsPartiePDN)))
                 return null;
             return parties.Any(partie => !string.IsNullOrEmpty(partie.FENDebut))
-                ? "Ce fichier contient une position (FEN) mais aucune partie avec des coups.\nPour charger une position, utilise « Charger position FEN »."
-                : "Ce fichier ne contient aucune partie avec des coups.";
+                ? Texte.T("Ce fichier contient une position (FEN) mais aucune partie avec des coups.\nPour charger une position, utilise « Charger position FEN ».")
+                : Texte.T("Ce fichier ne contient aucune partie avec des coups.");
         }
 
         private static readonly System.Text.RegularExpressions.Regex NomDeBalise = new System.Text.RegularExpressions.Regex("^[A-Za-z][A-Za-z0-9_]*$");     // Nom de balise PDN usuel (Event, White, Result…)
@@ -101,7 +102,7 @@ namespace BrunoGUI_Dames
                 }
                 else
                 {
-                    MessageBox.Show("La partie sélectionée ne contient pas de coups", "Pas de coups dans la partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(Texte.T("La partie sélectionée ne contient pas de coups"), Texte.T("Pas de coups dans la partie"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     Journal.Attention("Partie PDN sans coups choisie dans la liste des parties");
                 }
             }

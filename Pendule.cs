@@ -198,9 +198,9 @@ namespace BrunoGUI_Dames
         public static FinAuTemps FinDePartie(Couleur perdante)
         {
             Couleur gagnante = Position.Adversaire(perdante);
-            string gagnants = gagnante == Couleur.Blanc ? "Blancs" : "Noirs";
-            string drapeau = perdante == Couleur.Blanc ? "des blancs" : "des noirs";
-            return new FinAuTemps(gagnante, $"Les {gagnants} gagnent au temps", $"Les {gagnants} gagnent !\nLe drapeau {drapeau} est tombé.");
+            string gagnants = Texte.T(gagnante == Couleur.Blanc ? "Blancs" : "Noirs");
+            string drapeau = Texte.T(perdante == Couleur.Blanc ? "des blancs" : "des noirs");
+            return new FinAuTemps(gagnante, Texte.T("Les {0} gagnent au temps", gagnants), Texte.T("Les {0} gagnent !\nLe drapeau {1} est tombé.", gagnants, drapeau));
         }
 
         // --- La partie est finie : le temps s'arrête ---

@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -31,17 +32,17 @@ namespace BrunoGUI_Dames
             labelPenduleBlanc.Name = "LabelPenduleBlanc";      // Les noms permettent aux tests de retrouver les contrôles créés ici
             labelPenduleNoir.Name = "LabelPenduleNoir";
             comboCadence.Name = "ComboCadence";
-            ConfigureLabelPendule(labelPenduleBlanc, 5, "Temps restant des blancs");      // Alignés sur les deux lignes du haut (noms des joueurs, score) et sur la colonne de boutons
-            ConfigureLabelPendule(labelPenduleNoir, 31, "Temps restant des noirs");
+            ConfigureLabelPendule(labelPenduleBlanc, 5, T("Temps restant des blancs"));      // Alignés sur les deux lignes du haut (noms des joueurs, score) et sur la colonne de boutons
+            ConfigureLabelPendule(labelPenduleNoir, 31, T("Temps restant des noirs"));
             labelPenduleBlanc.Font = labelPenduleNoir.Font = police;
             // Le cadre « Pendule et temps de réflexion » (groupBox1, dans le Designer) : la liste des cadences à gauche, puis le curseur du temps de réflexion et sa valeur
             comboCadence.DropDownStyle = ComboBoxStyle.DropDownList;
             comboCadence.Location = new Point(6, 17);
             comboCadence.Width = 158;
             comboCadence.DropDownWidth = 260;
-            comboCadence.Items.Add("Sans pendule");
+            comboCadence.Items.Add(T("Sans pendule"));
             foreach (Cadence cadence in Cadence.Officielles)
-                comboCadence.Items.Add(cadence.Court);
+                comboCadence.Items.Add(T(cadence.Court));
             comboCadence.SelectedIndex = 0;
             comboCadence.SelectedIndexChanged += ComboCadence_SelectedIndexChanged;
             groupBox1.Controls.Add(comboCadence);
@@ -65,9 +66,9 @@ namespace BrunoGUI_Dames
         private readonly ToolTip infobulleCadence = new ToolTip { AutoPopDelay = 20000 };
         private void MetAJourInfobulleCadence()
         {   // --- Explique la cadence choisie : « base + temps ajouté (+ gain par coup) », FMJD = cadence officielle ---
-            string explication = "Cadence de la pendule, écrite comme aux échecs : « 80 min + 30 s » = 80 minutes, plus 30 secondes gagnées à chaque coup ; « 90+30 min » = 90 minutes, plus 30 minutes au 45e coup. FMJD : cadence officielle de la Fédération Mondiale du Jeu de Dames. Le premier coup n'est pas décompté.";
+            string explication = T("Cadence de la pendule, écrite comme aux échecs : « 80 min + 30 s » = 80 minutes, plus 30 secondes gagnées à chaque coup ; « 90+30 min » = 90 minutes, plus 30 minutes au 45e coup. FMJD : cadence officielle de la Fédération Mondiale du Jeu de Dames. Le premier coup n'est pas décompté.");
             if (comboCadence.SelectedIndex > 0)
-                explication = Cadence.Officielles[comboCadence.SelectedIndex - 1].Nom + "\n\n" + explication;
+                explication = T(Cadence.Officielles[comboCadence.SelectedIndex - 1].Nom) + "\n\n" + explication;
             infobulleCadence.SetToolTip(comboCadence, explication);
         }
         private string? CadenceChoisieId => comboCadence.SelectedIndex > 0 ? Cadence.Officielles[comboCadence.SelectedIndex - 1].Id : null;
@@ -133,16 +134,16 @@ namespace BrunoGUI_Dames
         {   // --- Les deux temps ; le camp dont le temps s'écoule est en vert, moins de 20 secondes en rouge. Sans pendule, les cadres restent affichés avec « --:-- » ---
             if (pendule == null)
             {
-                labelPenduleBlanc.Text = "B --:--";
+                labelPenduleBlanc.Text = T("B --:--");
                 labelPenduleBlanc.BackColor = Color.White;
                 labelPenduleBlanc.ForeColor = Color.Black;
-                labelPenduleNoir.Text = "N --:--";
+                labelPenduleNoir.Text = T("N --:--");
                 labelPenduleNoir.BackColor = Color.Black;
                 labelPenduleNoir.ForeColor = Color.White;
                 return;
             }
-            AfficheTemps(labelPenduleBlanc, "B ", Couleur.Blanc, Color.White, Color.Black, Color.PaleGreen);
-            AfficheTemps(labelPenduleNoir, "N ", Couleur.Noir, Color.Black, Color.White, Color.DarkGreen);
+            AfficheTemps(labelPenduleBlanc, T("B "), Couleur.Blanc, Color.White, Color.Black, Color.PaleGreen);
+            AfficheTemps(labelPenduleNoir, T("N "), Couleur.Noir, Color.Black, Color.White, Color.DarkGreen);
         }
         private void AfficheTemps(Label label, string prefixe, Couleur couleur, Color fond, Color texte, Color fondEnMarche)
         {

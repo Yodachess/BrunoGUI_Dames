@@ -1,0 +1,212 @@
+# Traductions anglaises de l'affichage : « texte français TAB anglais » ; \n = retour à la ligne. Les clés sont les textes français des sources (Texte.T). Un test vérifie qu'aucune n'est oubliée.
+Quitter	Quit
+Tourner damier	Turn board
+Mouvement : 	Move: 
+Prises possibles	Possible captures
+Retour Arrière	Take back
+Protocole	Protocol
+Liste des coups	Move list
+Ordinateur joue	Computer plays
+Nouvelle Partie	New game
+Score	Score
+Joueur noir	Black player
+Joueur blanc	White player
+Ordinateur	Computer
+Son	Sound
+Résultat	Result
+Charge position	Load position
+Aide (F1)	Help (F1)
+A propos de BIG	About BIG
+Pendule et temps de réflexion SCAN 3.1	Clock and thinking time SCAN 3.1
+Sec.	Sec.
+Sauve position	Save position
+   Parcours partie   	   Game review   
+Fin	End
+Début	Start
+Suiv.	Next
+Préc.	Prev.
+Charge Parties	Load games
+Sauve Partie	Save game
+Analyse position	Analyze position
+ Bruno Interface Graphique	 Bruno Graphical Interface
+FEN Files (*.fen)|*.fen|Tous les fichiers (*.*)|*.*	FEN Files (*.fen)|*.fen|All files (*.*)|*.*
+Sélectionner un fichier FEN	Select a FEN file
+PDN Files (*.pdn)|*.pdn|Tous les fichiers (*.*)|*.*	PDN Files (*.pdn)|*.pdn|All files (*.*)|*.*
+Zone Affichage de la partie	Game display area
+Fermer	Close
+Coups Pdn	PDN moves
+Coups FEN	FEN moves
+Coups Hub2	Hub2 moves
+Enregistre Partie	Save game
+Fichiers PDN (*.pdn)|*.pdn|Tous les fichiers (*.*)|*.*	PDN files (*.pdn)|*.pdn|All files (*.*)|*.*
+  - Affichage liste coups de la partie - 	  - Game move list - 
+Nombre de parties dans le fichier	Number of games in the file
+Fichier de Partie(s) Pdn	PDN game file
+DonneesBrutesDames	Hub2 protocol
+Blancs	White
+Noirs	Black
+des blancs	white
+des noirs	black
+Niveau 1	Level 1
+Niveau 2	Level 2
+Niveau 3	Level 3
+Niveau 4	Level 4
+Niveau 5	Level 5
+Maximum	Maximum
+Sans pendule	No clock
+FMJD 80 min + 30 s	FMJD 80 min + 30 s
+FMJD 90+30 min +30 s	FMJD 90+30 min +30 s
+FMJD 120 + 60 min	FMJD 120 + 60 min
+Rapide 15 min + 5 s	Rapid 15 min + 5 s
+Blitz 5 min + 3 s	Blitz 5 min + 3 s
+Classique : 1 h 20 + 30 s par coup (défaut FMJD)	Classical: 1 h 20 + 30 s per move (FMJD default)
+Classique : 90 min pour 45 coups, puis 30 min en plus et 30 s par coup dès le 46e	Classical: 90 min for 45 moves, then 30 more minutes and 30 s per move from the 46th
+Ancien standard : 2 h pour 50 coups, puis 1 h pour chaque série de 25 coups	Old standard: 2 h for 50 moves, then 1 h for each series of 25 moves
+Rapide : 15 min + 5 s par coup	Rapid: 15 min + 5 s per move
+Blitz : 5 min + 3 s par coup	Blitz: 5 min + 3 s per move
+Partie terminée	Game over
+Partie nulle	Draw
+Aide	Help
+Chargement impossible	Cannot load
+Erreur	Error
+Fin de partie	End of game
+Image du damier	Board image
+Parties PDN	PDN games
+Partie parcourue	Game being reviewed
+Partie PDN	PDN game
+Position FEN	FEN position
+Retour arrière	Take back
+Succès	Success
+ATTENTION, le fichier {0} existe déjà. \nCliquer Oui pour ajouter la partie à la fin.\nCliquer Non pour écraser le fichier existant.\nCancel pour afficher le fichier PGN.	WARNING, the file {0} already exists.\nClick Yes to append the game at the end.\nClick No to overwrite the existing file.\nCancel to display the PGN file.
+Fichier existant	Existing file
+La partie est écrite dans \nle ficher {0}	The game is written in \nthe file {0}
+Ecriture fichier PDN	Writing PDN file
+La partie est ajoutée dans \nle ficher {0}	The game is appended to \nthe file {0}
+Ajout fichier PDN	Appending to PDN file
+Fichier PDN :\n {0}	PDN file:\n {0}
+Affichage fichier PDN	PDN file display
+Une erreur s'est produite : {0}	An error occurred: {0}
+Erreur méthode Enregistrer PDN	Save PDN error
+À propos	About
+Le changement de langue s'applique au prochain démarrage du programme.	The language change applies the next time the program starts.
+Masque protoc.	Hide protocol
+Affiche protoc.	Show protocol
+Coup {0} : {1}	Move {0}: {1}
+Position initiale	Initial position
+Vous êtes au début de la partie.	You are at the start of the game.
+Vous êtes à la fin de la partie.	You are at the end of the game.
+Début de partie	Start of game
+Analyse de la position en cours ... ({0})	Analyzing the position ... ({0})
+Analyse terminée !	Analysis finished!
+Affiche parties	Show games
+Masque parties	Hide games
+Version Interface graphique = {0} / Auteur : Bruno Courtois\n	Graphical interface version = {0} / Author: Bruno Courtois\n
+Moteur : {0} / Version = {1} / Auteur : {2}\n\n	Engine: {0} / Version = {1} / Author: {2}\n\n
+Historique :\n	History:\n
+1.12 : thème bois, repères du dernier coup, lecture animée d'une partie, parcours au clavier, aide en anglais, animations plus vives, état du formulaire par instance.\n	1.12: wood theme, last-move markers, animated game playback, keyboard game review, English help, livelier animations, per-window form state.\n
+1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n	1.11: clock (FMJD time controls), layout, safe game review, interface tests.\n
+1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n	1.10: rules rewritten (majority capture, choice of multiple captures), full PDN, draws, preferences, log, .NET 10.\n
+1.04 : première version publiée.	1.04: first published version.
+Le fichier d'aide est introuvable :\n{0}	The help file cannot be found:\n{0}
+L'aide n'a pas pu être ouverte :\n{0}	The help could not be opened:\n{0}
+Ce fichier ne contient pas de position FEN valide.	This file does not contain a valid FEN position.
+La position n'a pas pu être chargée :\n{0}\n\n{1}	The position could not be loaded:\n{0}\n\n{1}
+Position FEN sauvegardée avec succès\ndans le fichier : {0} !	FEN position saved successfully\nin the file: {0}!
+Erreur lors de la sauvegarde : {0}	Error while saving: {0}
+Gain Blanc sélectionné (Partie terminée)	White win selected (game over)
+Gain Noir sélectionné (Partie terminée)	Black win selected (game over)
+Nulle sélectionnée (Partie terminée)	Draw selected (game over)
+Impossible de revenir en arrière :\nAucun coup n'a été joué.	Cannot take back:\nNo move has been played.
+Mouvement effacé = {0}	Move taken back = {0}
+{0} Rafles possibles de {1} pièces\n{2}	{0} possible multiple captures of {1} pieces\n{2}
+Trait aux {0}, le moteur réfléchit ...	{0} to move, the engine is thinking ...
+Le moteur n'a pas répondu	The engine did not answer
+Le moteur n'a aucun coup à jouer	The engine has no move to play
+Coup joué : {0} --  Suggéré : {1}	Move played: {0} --  Suggested: {1}
+ (livre)	 (book)
+Coup du moteur non reconnu : {0}	Engine move not recognized: {0}
+Trait aux {0} (prise obligatoire !)	{0} to move (capture is mandatory!)
+{0} Rafle(s) possible(s) de {1} pièce(s) \n{2}	{0} possible multiple capture(s) of {1} piece(s) \n{2}
+Vous parcourez la partie (position {0} sur {1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».	You are reviewing the game (position {0} of {1}).\n\nTo play, go back to the last position with the "End" button.
+Coup joué : {0}	Move played: {0}
+Le moteur Scan n'a pas pu démarrer : {0}	The Scan engine could not start: {0}
+Trait aux {0}	{0} to move
+Aux {0} de jouer	{0} to play
+Les Noirs gagnent, les blancs n'ont plus de pièces	Black wins, White has no pieces left
+Les Noirs gagnent !\n Les blancs n'ont plus de pièces	Black wins!\n White has no pieces left
+Les Blancs gagnent, les noirs n'ont plus de pièces	White wins, Black has no pieces left
+Les Blancs gagnent !\n Les noirs n'ont plus de pièces	White wins!\n Black has no pieces left
+Les Noirs gagnent, les blancs n'ont plus de coup possible	Black wins, White has no legal move left
+Les Noirs gagnent !\n Les blancs n'ont plus de coup possible	Black wins!\n White has no legal move left
+Les Blancs gagnent, les noirs n'ont plus de coup possible	White wins, Black has no legal move left
+Les Blancs gagnent !\n Les noirs n'ont plus de coup possible	White wins!\n Black has no legal move left
+la même position s'est présentée trois fois	the same position occurred three times
+finale à peu de pièces : {0} coups de chaque joueur sans gagner	endgame with few pieces: {0} moves by each player without a win
+{0} coups de dames de chaque joueur, sans déplacement de pion ni prise	{0} king moves by each player, with no man move or capture
+Partie nulle : {0}	Draw: {0}
+Nulle possible, la partie est terminée :\n{0}	A draw is possible, the game is over:\n{0}
+{0} pions blancs	{0} white men
+{0} pions noirs	{0} black men
+{0} Dames blanches	{0} white kings
+{0} Dames noires	{0} black kings
+Enregistrer l'image du damier…	Save the board image…
+Copier l'image du damier	Copy the board image
+Tourner le damier	Turn the board
+L'image n'a pas pu être enregistrée :\n{0}	The image could not be saved:\n{0}
+Enregistrer l'image du damier	Save the board image
+Image PNG (*.png)|*.png	PNG image (*.png)|*.png
+L'image n'a pas pu être copiée :\n{0}	The image could not be copied:\n{0}
+Lecture	Play
+Joue les coups de la partie un à un à partir de la position affichée ; un second clic fait une pause	Plays the game moves one by one from the displayed position; a second click pauses
+La partie n'a aucun coup à lire.	The game has no move to play.
+Pause	Pause
+Moteur : {0} / Version : {1} / Auteur : {2} / Pays : {3}	Engine: {0} / Version: {1} / Author: {2} / Country: {3}
+Score = {0}	Score = {0}
+Ligne SCAN 3.1 complète : {0}	Full SCAN 3.1 line: {0}
+Coup suggéré par l'analyse : {0}	Move suggested by the analysis: {0}
+Ligne Scan3.1 = {0}	Scan3.1 line = {0}
+{0} partie(s) dans le fichier  {1}	{0} game(s) in the file  {1}
+Le fichier PDN n'a pas pu être lu :\n{0}	The PDN file could not be read:\n{0}
+Une lecture est en cours, ou le moteur réfléchit.\nAttends la fin avant de charger une partie.	A playback is running, or the engine is thinking.\nWait for it to finish before loading a game.
+La partie ne peut pas être chargée :\n{0}	The game cannot be loaded:\n{0}
+Partie de {0} contre {1} ({2})	Game of {0} against {1} ({2})
+Résultat : {0}	Result: {0}
+Partie chargée : {0} coup(s).\nLecture la déroule, Suiv. avance coup à coup.	Game loaded: {0} move(s).\nPlay runs it, Next goes move by move.
+La partie n'a pas pu être rejouée entièrement :\n{0}\n\nElle est chargée jusqu'au coup {1}.	The game could not be replayed entirely:\n{0}\n\nIt is loaded up to move {1}.
+Temps restant des blancs	White's remaining time
+Temps restant des noirs	Black's remaining time
+Cadence de la pendule, écrite comme aux échecs : « 80 min + 30 s » = 80 minutes, plus 30 secondes gagnées à chaque coup ; « 90+30 min » = 90 minutes, plus 30 minutes au 45e coup. FMJD : cadence officielle de la Fédération Mondiale du Jeu de Dames. Le premier coup n'est pas décompté.	Clock time control, written as in chess: "80 min + 30 s" = 80 minutes, plus 30 seconds gained at each move; "90+30 min" = 90 minutes, plus 30 minutes at move 45. FMJD: official time control of the World Draughts Federation. The first move is not counted.
+B --:--	W --:--
+N --:--	B --:--
+B 	W 
+N 	B 
+Choix de la rafle	Choice of capture
+< Précédente	< Previous
+Suivante >	Next >
+Jouer cette rafle	Play this capture
+Annuler	Cancel
+Rafle {0} sur {1} (de {2} à {3})	Capture {0} of {1} (from {2} to {3})
+Pièces prises (en rouge sur le damier) : {0}\nChemin : {1} > {2}	Pieces captured (in red on the board): {0}\nPath: {1} > {2}
+Ce fichier ne contient aucune partie PDN.\nIl n'est probablement pas au format PDN.	This file contains no PDN game.\nIt is probably not in PDN format.
+Ce fichier contient une position (FEN) mais aucune partie avec des coups.\nPour charger une position, utilise « Charger position FEN ».	This file contains a position (FEN) but no game with moves.\nTo load a position, use "Load position".
+Ce fichier ne contient aucune partie avec des coups.	This file contains no game with moves.
+La partie sélectionée ne contient pas de coups	The selected game contains no moves
+Pas de coups dans la partie	No moves in the game
+Le moteur Scan est introuvable : {0}	The Scan engine cannot be found: {0}
+Le moteur Scan s'est arrêté.	The Scan engine has stopped.
+Force du moteur : maximum (niveau {0} sur {1}), sans limite de profondeur ; seul le temps de réflexion borne la recherche	Engine strength: maximum (level {0} of {1}), no depth limit; only the thinking time bounds the search
+Force du moteur : niveau {0} sur {1} (recherche limitée à {2} demi-coups). Au maximum, le moteur joue à pleine force	Engine strength: level {0} of {1} (search limited to {2} half-moves). At maximum the engine plays at full strength
+Force du moteur : niveau {0} sur {1} (recherche limitée à {2} demi-coup). Au maximum, le moteur joue à pleine force	Engine strength: level {0} of {1} (search limited to {2} half-move). At maximum the engine plays at full strength
+Position de départ invalide : {0}	Invalid starting position: {0}
+Coup {0} « {1} » illégal ou ambigu dans la position {2}	Move {0} "{1}" is illegal or ambiguous in position {2}
+Les {0} gagnent au temps	{0} wins on time
+Les {0} gagnent !\nLe drapeau {1} est tombé.	{0} wins!\nThe {1} flag has fallen.
+Une erreur imprévue s'est produite :\n{0}\n\nElle est notée dans BrunoGUI_Dames.log, à côté du programme.\nSi l'application se comporte bizarrement, ferme-la et relance-la.	An unexpected error occurred:\n{0}\n\nIt is noted in BrunoGUI_Dames.log, next to the program.\nIf the application behaves strangely, close it and start it again.
+Erreur imprévue	Unexpected error
+Vitesse de la lecture : {0} sur {1} ({2} s entre deux coups)	Playback speed: {0} of {1} ({2} s between moves)
+Label Affiche Scan	Label Affiche Scan
+Label Information Joueur	Label Information Joueur
+Label Pions Blancs	Label Pions Blancs
+Label Pions Noirs	Label Pions Noirs
+Label Dames Blanches	Label Dames Blanches
+Label Dames Noires	Label Dames Noires

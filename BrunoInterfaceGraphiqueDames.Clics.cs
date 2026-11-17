@@ -8,6 +8,7 @@
 // └▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀┘
 
 using System;
+using static BrunoGUI_Dames.Texte;
 using System.Media;
 using System.Collections.Generic;
 using System.Drawing;
@@ -95,7 +96,7 @@ namespace BrunoGUI_Dames
                             // Détermine le nombre d'éléments raflés par rafle (toutes les rafles ont la même taille)
                             int elementsParRafle = raflesDeLaPiece.FirstOrDefault()?.Prises.Count ?? 0;
                             // Combine toutes les chaînes en une seule avec un saut de ligne entre chaque liste
-                            LabelPrisesPossibles.Text = raflesDeLaPiece.Count + " Rafles possibles de " + elementsParRafle + " pièces\n" + string.Join("\n", raflesText);
+                            LabelPrisesPossibles.Text = T("{0} Rafles possibles de {1} pièces\n{2}", raflesDeLaPiece.Count, elementsParRafle, string.Join("\n", raflesText));
                             clickCaseSource = false;
                             pieceEnMain = true;
                         }
@@ -144,7 +145,7 @@ namespace BrunoGUI_Dames
                                     string coupPdn = await JoueCoupSurLeDamier(coupJoue);
                                     EnregistrePositionApresCoupHumain(coupPdn);
                                 }
-                                LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+                                LabelInformationJoueur.Text = TraitAux(CouleurAuTrait);
                                 // Le joueur vient de déplacer sa pièce, on va donc passer la main au moteur 
                                 if (OrdinateurActif)
                                 {   // --- Lancement du moteur SCAN pour réfléchir à un coup sur la position "hub2" pendant "TempsReflexion" ---
@@ -208,23 +209,23 @@ namespace BrunoGUI_Dames
             jeuMoteurEnCours = true;
             ActiveCouleurDamier(CouleurAuTrait, false);
             string couleurEnJeu = positionHub2[0] == 'W' ? "Blancs" : "Noirs";      // On récupère la couleur en jeu
-            LabelInformationJoueur.Text = "Trait aux " + couleurEnJeu + ", le moteur réfléchit ...";
+            LabelInformationJoueur.Text = T("Trait aux {0}, le moteur réfléchit ...", T(couleurEnJeu));
             ReponseMoteur? reponse = await moteur.ReflechirAsync(positionHub2, tempsReflexion, analyseEnCours ? NiveauMoteur.ProfondeurMaximale : NiveauMoteur.Profondeur(NiveauChoisi));   // Au moteur de bosser .... :-)
             CouleurToutesCasesManoury(CouleurCaseSombre);
             if (reponse == null)
             {   // Le moteur n'a pas répondu (arrêté, trop long ou remplacé par une autre demande) : rien n'est joué, c'est noté dans le journal
-                LabelInformationJoueur.Text = "Le moteur n'a pas répondu";
+                LabelInformationJoueur.Text = T("Le moteur n'a pas répondu");
             }
             else if (reponse.Coup.Length == 0)
             {   // « done » sans coup : le moteur n'a aucun coup à jouer
                 if (!analyseEnCours)
                 {
-                    LabelInformationJoueur.Text = "Le moteur n'a aucun coup à jouer";
+                    LabelInformationJoueur.Text = T("Le moteur n'a aucun coup à jouer");
                 }
             }
             else if (!analyseEnCours && !PartieTerminee)    // On execute les coups si ce n'est pas une analyse (ni une partie finie pendant sa réflexion : drapeau tombé)
             {
-                LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion + (reponse.DuLivre ? " (livre)" : "");     // La mention en dernier : le cadre est étroit, c'est elle qui serait coupée
+                LabelCoupJoue.Text = T("Coup joué : {0} --  Suggéré : {1}", reponse.Coup, reponse.Suggestion) + (reponse.DuLivre ? T(" (livre)") : "");     // La mention en dernier : le cadre est étroit, c'est elle qui serait coupée
                 if (EmetUnSon)
                 {
                     JoueSonCoupJoue();       // Son pour dire que le coup est joué
@@ -232,7 +233,7 @@ namespace BrunoGUI_Dames
                 Coup? coupMoteur = TrouveCoupDuMoteur(positionHub2, reponse.Coup);
                 if (coupMoteur == null)
                 {   // Le coup de Scan n'a pas été retrouvé dans les coups légaux (c'est noté dans le journal) : rien n'est joué
-                    LabelInformationJoueur.Text = "Coup du moteur non reconnu : " + reponse.Coup;
+                    LabelInformationJoueur.Text = T("Coup du moteur non reconnu : {0}", reponse.Coup);
                 }
                 else if (PenduleCoupJoue(campDuMoteur))
                 {   // Le coup exact de Scan (départ, arrivée et pièces prises), retrouvé par ReglesDames sur la position envoyée au moteur ; la pendule l'a décompté (sinon son drapeau est tombé : il perd, rien n'est joué)
@@ -240,7 +241,7 @@ namespace BrunoGUI_Dames
                     string coupPdnMoteur = await JoueCoupSurLeDamier(coupMoteur, glisse: true);      // Les pièces du moteur glissent : sans cela, son coup passe inaperçu
                     Session.AjouteCoup(coupPdnMoteur, PositionDuDamier());      // Le coup et la position qu'il donne entrent dans l'historique
                     LabelPrisesPossibles.Text = "";
-                    LabelInformationJoueur.Text = "Trait aux " + CouleurAuTrait + "s";
+                    LabelInformationJoueur.Text = TraitAux(CouleurAuTrait);
                 }
             }
             jeuMoteurEnCours = false;
@@ -313,11 +314,11 @@ namespace BrunoGUI_Dames
             foreach (int caseActivable in casesActivables)      // Parcourir toutes les cases activables
             {
                 ActiverCaseManoury(caseActivable, true);        // Activer directement chaque case activable
-                LabelInformationJoueur.Text = "Trait aux " + couleur + "s (prise obligatoire !)";
+                LabelInformationJoueur.Text = T("Trait aux {0} (prise obligatoire !)", NomCamp(couleur));
             }
             // Une chaîne par rafle (toutes ont le même nombre de pièces prises), un saut de ligne entre chaque
             List<string> raflesText = prises.Select(rafle => string.Join(", ", rafle.Prises.Zip(rafle.Chemin, (prise, arrivee) => $"{prise} -> {arrivee}"))).ToList();
-            LabelPrisesPossibles.Text = raflesText.Count + " Rafle(s) possible(s) de " + prises[0].Prises.Count + " pièce(s) \n" + string.Join("\n", raflesText);
+            LabelPrisesPossibles.Text = T("{0} Rafle(s) possible(s) de {1} pièce(s) \n{2}", raflesText.Count, prises[0].Prises.Count, string.Join("\n", raflesText));
         }
         public void MiseenplaceFen(string fenAutiliser, bool commenceLaPartie)     // Préparation du logiciel avec la position FEN
         {   // --- La méthode met la position FEN sur le damier (PositionCourante et images) ; si commenceLaPartie, c'est la position de départ d'une nouvelle partie (Session) ---
@@ -405,7 +406,7 @@ namespace BrunoGUI_Dames
             SessionPartie session = Session;
             if (session.EstSurLaDernierePosition)
                 return false;
-            ReglagesDeTest.Message($"Vous parcourez la partie (position {session.IndexAffiche} sur {session.Positions.Count - 1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».",
+            ReglagesDeTest.Message(T("Vous parcourez la partie (position {0} sur {1}).\n\nPour jouer, revenez à la dernière position avec le bouton « Fin ».", session.IndexAffiche, session.Positions.Count - 1),
                             "Partie parcourue", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return true;
         }
@@ -450,7 +451,7 @@ namespace BrunoGUI_Dames
                 EffacePiece(indexSourceBox);
             DessinePiece(indexArriveeBox, apres[coup.Arrivee]);      // Le pion devenu dame est dessiné en dame
             if (!jeuMoteurEnCours)                      // On l'affiche si ce n'est pas le moteur qui joue
-                LabelCoupJoue.Text = "Coup joué : " + notationPdn;
+                LabelCoupJoue.Text = T("Coup joué : {0}", notationPdn);
             AppliqueCoupALaPosition(apres);
             ActiveDamier(true);         // Réactiver les interactions après le déplacement
             ActiveCouleurDamier(couleurPiece, false);
@@ -510,7 +511,7 @@ namespace BrunoGUI_Dames
             EffaceNumerosEtape();
             CaseDamier[indexArriveeFinale].BackColor = CouleurCaseArrivee;
             if (!jeuMoteurEnCours)                      // On l'affiche si ce n'est pas le moteur qui joue
-                LabelCoupJoue.Text = "Coup joué : " + notationPdn;
+                LabelCoupJoue.Text = T("Coup joué : {0}", notationPdn);
             AppliqueCoupALaPosition(apres);
             ActiveDamier(true); // Réactiver les interactions après l'animation
             ActiveCouleurDamier(couleurPiece, false);
