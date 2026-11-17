@@ -609,7 +609,7 @@ public static class Scenario
             ["BrunoOuverture.pdn"] = 1, ["BrunoVsScan31.pdn"] = 11, ["Championnat de France 2021.pdn"] = 58, ["ChapionnatSurinam2025.pdn"] = 98,
             ["Match Samb-Buggy2.pdn"] = 6, ["Mini.pdn"] = 6, ["Moby_vs_Programs.pdn"] = 9, ["Montpellier Open Serie A.pdn"] = 56,
             ["Montpellier Open Serie B.pdn"] = 49, ["Partie_avec_FEN1.pdn"] = 4, ["Sijbrands_vs_Andreiko.pdn"] = 20, ["test.pdn"] = 2,
-            ["TOURNOI DES CHAMPION REGIONAUX.pdn"] = 12, ["Van der Wal_vs_Wiersma.pdn"] = 20, ["World Title Match Women 2024.pdn"] = 2, ["Nulle_25_coups_49_demi_coups.pdn"] = 1
+            ["TOURNOI DES CHAMPION REGIONAUX.pdn"] = 12, ["Van der Wal_vs_Wiersma.pdn"] = 20, ["World Title Match Women 2024.pdn"] = 2, ["Nulle_25_coups_49_demi_coups.pdn"] = 1, ["PlantageFinDeLaPartie.pdn"] = 1
         };
         // Parties qui ne se rejouent pas, par fichier (numéros à partir de 1). La partie 11 de BrunoVsScan31.pdn est un export de
         // l'application : balises d'une autre partie (Championnat de France 2021, dont les coups sont tout autres dès le coup 2), et
