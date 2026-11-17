@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -30,6 +30,7 @@ namespace BrunoGUI_Dames
         {
             dernierDepartManoury = depart;
             dernierArriveeManoury = arrivee;
+            fleche = null;      // Une position change : la flèche de l'analyse ne vaut plus
             RafraichitDamier();
         }
         // --- Le dernier coup de la position affichée par le parcours de la partie (aucun au départ) : appelée après la mise en place d'une position ---
@@ -56,6 +57,64 @@ namespace BrunoGUI_Dames
                 return;
             numerosEtape.Clear();
             RafraichitDamier();
+        }
+        // --- La flèche du meilleur coup de « Analyse position » : une ligne brisée d'une case à l'autre (départ puis étapes de la rafle), terminée par une pointe. Elle est dessinée par chaque case avec les coordonnées du damier :
+        // chaque case ne montre que sa part (PictureBox_Paint pour les cases sombres, FlecheSurCaseClaire pour les claires, sinon la flèche serait coupée aux coins) ---
+        private static readonly Color CouleurFleche = Color.FromArgb(225, 0xA3, 0x2A, 0x1E);       // Rouge brique, assorti au noyer et à la crème du thème ; le bleu d'un premier essai jurait avec le bois
+        private static readonly Color CouleurBordFleche = Color.FromArgb(200, 0xFF, 0xF6, 0xE3);
+        private List<int>? fleche;                      // Les cases Manoury de la flèche (au moins deux), ou null
+
+        // --- Montre le coup (notation Hub2 : « 32-28 », « 28x19x23 ») de la position affichée ; null, ou un coup qui n'est pas légal : plus de flèche ---
+        private void MarqueFleche(string? coupHub2)
+        {
+            Coup? coup = coupHub2 == null ? null : ReglesDames.TrouverCoup(Session.Positions[Session.IndexAffiche], coupHub2);
+            if (coup == null)
+                fleche = null;
+            else
+            {
+                fleche = new List<int> { coup.Depart };
+                fleche.AddRange(coup.Chemin);
+            }
+            RafraichitDamier();
+        }
+        private void CreeFleche()
+        {   // --- Les cases claires dessinent leur part de la flèche (les sombres le font dans PictureBox_Paint) ---
+            foreach (PictureBox c in CaseDamier)
+                if (c.Tag is not int)
+                    c.Paint += (s, e) => { if (s is PictureBox p) DessineFleche(e.Graphics, p); };
+        }
+        private PointF CentreCase(int numeroManoury)
+        {
+            PictureBox c = CaseDamier[Damier.ObtenirIndicePictureBox(numeroManoury)];
+            return new PointF(c.Left + c.Width / 2f, c.Top + c.Height / 2f);
+        }
+        private void DessineFleche(Graphics g, PictureBox pict)
+        {   // --- La part de la flèche qui tombe sur cette case ---
+            if (fleche == null || fleche.Count < 2)
+                return;
+            PointF[] points = fleche.ConvertAll(CentreCase).ToArray();
+            PointF fin = points[^1], avant = points[^2];
+            float dx = fin.X - avant.X, dy = fin.Y - avant.Y, longueur = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (longueur < 1f)
+                return;
+            float ux = dx / longueur, uy = dy / longueur, pointe = Math.Min(18f, longueur);
+            PointF base1 = new PointF(fin.X - ux * pointe, fin.Y - uy * pointe);
+            points[^1] = base1;     // La ligne s'arrête au pied de la pointe
+            PointF[] triangle = { fin, new PointF(base1.X - uy * 9f, base1.Y + ux * 9f), new PointF(base1.X + uy * 9f, base1.Y - ux * 9f) };
+            GraphicsState etat = g.Save();
+            g.TranslateTransform(-pict.Left, -pict.Top);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using (Pen bord = new Pen(CouleurBordFleche, 9f) { LineJoin = LineJoin.Round, StartCap = LineCap.Round })
+            using (Pen trait = new Pen(CouleurFleche, 5f) { LineJoin = LineJoin.Round, StartCap = LineCap.Round })
+            using (SolidBrush remplissage = new SolidBrush(CouleurFleche))
+            using (Pen bordPointe = new Pen(CouleurBordFleche, 2f) { LineJoin = LineJoin.Round })
+            {
+                g.DrawLines(bord, points);
+                g.DrawLines(trait, points);
+                g.FillPolygon(remplissage, triangle);
+                g.DrawPolygon(bordPointe, triangle);
+            }
+            g.Restore(etat);
         }
         private void RafraichitDamier()
         {

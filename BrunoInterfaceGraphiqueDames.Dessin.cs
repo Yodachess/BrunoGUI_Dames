@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -284,6 +284,7 @@ namespace BrunoGUI_Dames
             if (pict.Image != null)
                 e.Graphics.DrawImage(pict.Image, 0, 0, pict.Width, pict.Height);    // Redessiner l'image si elle existe
             DessineMarques(e.Graphics, numeroManoury, pict.Width, pict.Height);    // Dernier coup, pièces à prendre, numéros d'étapes (Marques.cs)
+            DessineFleche(e.Graphics, pict);            // La flèche du meilleur coup de l'analyse
             // Le numéro est blanc cerné de noir : il se voit sur toutes les cases et sur les pièces blanches comme sur les noires
             using (System.Drawing.Drawing2D.GraphicsPath contour = new System.Drawing.Drawing2D.GraphicsPath())
             {

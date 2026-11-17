@@ -321,7 +321,6 @@
             this.OrdinateurBosse.TabIndex = 30;
             this.OrdinateurBosse.Text = "Ordinateur";
             this.OrdinateurBosse.UseVisualStyleBackColor = false;
-            this.OrdinateurBosse.CheckedChanged += new System.EventHandler(this.OrdinateurBosse_CheckedChanged);
             // 
             // SonEmis
             // 

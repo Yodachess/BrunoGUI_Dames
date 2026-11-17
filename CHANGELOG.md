@@ -4,11 +4,13 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- **Flèche du meilleur coup** : pendant « Analyse position », le premier coup de la variation du moteur est dessiné sur le damier par une flèche rouge brique (ligne brisée pour une rafle), qui suit la réflexion et reste jusqu'au prochain changement de position.
 - **Cadences de la pendule** nommées comme aux échecs (« FMJD 80 min + 30 s », « FMJD 90+30 min +30 s », « FMJD 120 + 60 min », « Rapide 15 min + 5 s », « Blitz 5 min + 3 s ») ; « FMJD » marque les cadences officielles ; l'infobulle explique la cadence choisie.
 - **Force du moteur réglable** : une liste « Niveau » (de Niveau 1 à Maximum, le défaut) dans le cadre « Pendule et temps de réflexion » limite la profondeur de recherche de Scan (1, 2, 4, 6, 9 demi-coups, ou aucune limite) ; aux niveaux faibles il répond vite et on peut le battre. L'analyse de position reste à pleine force. Le niveau est retenu dans les préférences (clé `Niveau`).
 - **Raccourcis clavier** : Ctrl+N (nouvelle partie), Ctrl+Z (retour arrière), Ctrl+F (tourner le damier), Ctrl+E (enregistrer l'image du damier) ; sans effet dans une zone de saisie, pendant la lecture ou quand le bouton est inactif.
 - **Image du damier** : un clic droit sur le damier propose d'enregistrer son image en PNG (640 × 640, pièces, couleurs et repères tels qu'à l'écran), de la copier dans le presse-papiers ou de tourner le damier. Le clic droit ne sélectionne plus de pièce.
 - **Journal des problèmes** : le journal s'appelle désormais `BrunoGUI_Dames.log` (comme celui de BrunoGUI GenII) et note, avec leur niveau (`[ERREUR]`, `[ATTENTION]`, `[INFO]`), les erreurs, les plantages (avec la pile d'appels, y compris dans une tâche d'arrière-plan) et les problèmes ; une ligne `[INFO]` marque chaque démarrage (version, système) ; au-delà de 1 Mo l'ancien journal devient `.log.old`. Toujours pas de coups ni d'échanges avec le moteur.
+- **Correction** : la case « Ordinateur » et le comportement du programme pouvaient diverger : après « Ordinateur joue », après un coup du moteur ou après « Retour arrière », l'ordinateur répondait (ou ne répondait plus) sans que la case ne le dise. La case est maintenant la seule source.
 - **Correction** : un clic sur une case claire du damier avant de choisir une pièce écrivait une erreur dans le journal ; il est maintenant ignoré.
 
 ## 1.12 (2026-11-16)

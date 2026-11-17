@@ -144,7 +144,6 @@ namespace BrunoGUI_Dames
             if (RefuseSiPartieParcourue())
                 return;
             await LancementReflexionMoteur(Session.Hub2Dernier(), TempsReflexion);
-            OrdinateurActif = true;
             ChangerCouleurTrait();      // Inverse le trait
             AnalyseCoupObligatoire(CouleurAuTrait);     // Vérifie si un coup obligatoire existe
         }
@@ -152,6 +151,7 @@ namespace BrunoGUI_Dames
         private async void AnalysePosition_Click(object sender, EventArgs e)
         {
             LabelInformationJoueur.Text = "Analyse de la position en cours ... (" + TempsReflexion + ")";
+            MarqueFleche(null);         // Pas de flèche de l'analyse précédente
             BloqueBoutons(true);
             analyseEnCours = true;
             await LancementReflexionMoteur(Session.Hub2(Session.IndexAffiche), TempsReflexion);
@@ -321,10 +321,6 @@ namespace BrunoGUI_Dames
             LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " s";
             TempsReflexion = trackBarTempsReflexion.Value;
         }
-        private void OrdinateurBosse_CheckedChanged(object sender, EventArgs e)
-        {   // L'ordinateur joue si la case est cochée (avant, la valeur était basculée, et pouvait se désynchroniser de la case)
-            OrdinateurActif = OrdinateurBosse.Checked;
-        }
         private void SonEmis_CheckedChanged(object sender, EventArgs e)
         {   // Le son est émis si la case est cochée
             EmetUnSon = SonEmis.Checked;
@@ -384,7 +380,6 @@ namespace BrunoGUI_Dames
             ArmePendule();      // La pendule garde les temps et attend le prochain coup
             LabelCoupJoue.Text = $"Mouvement effacé = {coupEfface}"; // Met à jour le label avec le mouvement.
             AnalyseCoupObligatoire(CouleurAuTrait);
-            OrdinateurActif = false;
         }        private void BoutonTournerDamier_Click(object sender, EventArgs e)
         {   // --- Rotation du damier de 180° : l'orientation change, CaseDamier suit les places à l'écran (la case i va à la place 99 - i) ---
             Damier.Orientation.Tourner();

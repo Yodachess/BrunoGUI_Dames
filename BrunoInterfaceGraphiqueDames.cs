@@ -52,7 +52,8 @@ namespace BrunoGUI_Dames
         public bool ArriveesDebutTour;                           // Prise obligatoire : montrer dès le début du tour les cases d'arrivée de toutes les prises (préférence ArriveesDebutTour)
         public string RepereDernierCoup = "coin";                // Le repère du dernier coup : coin, cadre ou aucun (préférence RepereDernierCoup)
         public int IndexPictureBoxSource100, CaseSourceManoury, CaseDestinationManoury, DureeEtape, TempsReflexion;     // DureeEtape : millisecondes d'une étape d'animation (un glissement, une étape de rafle)
-        public bool OrdinateurActif, PartieTerminee, EmetUnSon;
+        public bool PartieTerminee, EmetUnSon;
+        public bool OrdinateurActif => OrdinateurBosse.Checked;      // L'ordinateur répond aux coups du joueur : la case à cocher, seule source (des affectations séparées s'en écartaient : après « Ordinateur joue » ou « Retour arrière », la case et le comportement ne correspondaient plus)
         private bool clickCaseSource, montreDonneesDames, jeuMoteurEnCours, analyseEnCours;
         private Piece pieceSelectionnee = Piece.Vide;     // Pièce sélectionnée au premier clic (Piece.Vide = aucune)
         private string cheminMoteur = "";
@@ -90,7 +91,6 @@ namespace BrunoGUI_Dames
             // les variables
             CouleurAuTrait = Couleur.Blanc;
             Damier.Orientation = new OrientationDamier();       // On commence avec la vue côté Blanc
-            OrdinateurActif = true;
             analyseEnCours = false;
             BoutonMasqueAffiche.Enabled = false;
             clickCaseSource = true;
@@ -100,6 +100,7 @@ namespace BrunoGUI_Dames
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
 
             CreeDamier();                       // Crée les 100 PictureBox correspondant aux cases SANS afficher de pièce
+            CreeFleche();                       // La flèche du meilleur coup, dessinée aussi par les cases claires (BrunoInterfaceGraphiqueDames.Marques.cs)
             CreeMenuDamier();                   // Le menu du clic droit : image du damier, tourner (BrunoInterfaceGraphiqueDames.Image.cs)
             Damier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
             ActiveDamier(true);

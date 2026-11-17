@@ -65,6 +65,7 @@ namespace BrunoGUI_Dames
                 {
                     LabelPrisesPossibles.Text = "Ligne SCAN 3.1 complète : " + variationMoteur;
                     LabelCoupJoue.Text = "Coup suggéré par l'analyse : " + variationMoteur.Split(' ')[0];
+                    MarqueFleche(variationMoteur.Split(' ')[0]);       // Une flèche sur le damier ; elle suit la variation à chaque ligne du moteur
                 }
                 LabelAfficheScan.Text = "Ligne Scan3.1 = " + (variationMoteur.Length > 100 ? variationMoteur.Substring(0, 100) : variationMoteur);     // Limitée pour rester dans le label
             }
@@ -99,7 +100,6 @@ namespace BrunoGUI_Dames
         private void DesactiveMoteur(string message)
         {   // --- Sans moteur : on désactive ce qui en dépend (l'ordinateur ne joue plus, pas d'analyse), le jeu entre humains reste possible ---
             moteurDisponible = false;
-            OrdinateurActif = false;
             OrdinateurBosse.Checked = false;
             OrdinateurBosse.Enabled = false;
             OrdinateurJoue.Enabled = false;

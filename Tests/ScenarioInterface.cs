@@ -482,6 +482,8 @@ public static class ScenarioInterface
         RetourApresPartieDecidee();
         ParcoursAuClavier();
         RaccourcisEtImage();
+        FlecheAnalyse();
+        CaseOrdinateur();
 
         // ═══════════════ Deux fenêtres à la fois ═══════════════
         DeuxFenetres();
@@ -636,6 +638,68 @@ public static class ScenarioInterface
     private static List<int> CasesColorees() => Enumerable.Range(1, 50).Where(n => { Color c = CouleurCase(n); return c != fenetre.CouleurCaseSombre && c != fenetre.CouleurCaseClaire; }).ToList();
 
     // Après une partie décidée (ici par le drapeau), revenir en arrière par « Précédent » ou « Retour arrière » efface les cases colorées du dernier coup ; le repère brun suit la position affichée
+    // La flèche du meilleur coup de « Analyse position » : elle suit la première étape de la variation du moteur (seulement pendant une analyse), se voit sur le damier (cases sombres et claires), disparaît quand la position change
+    private static void FlecheAnalyse()
+    {
+        Nouvelle();
+        FieldInfo analyse = fenetre.GetType().GetField("analyseEnCours", Tous)!;
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=5 score=0.10 nodes=100 time=0.1 nps=1 pv=\"32-28 18-23\"");
+        bool sansAnalyse = Champ<List<int>?>(fenetre, "fleche") == null;
+        verifie("Interface : hors d'une analyse, la variation du moteur ne dessine pas de flèche", sansAnalyse, "");
+        Point c32 = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)].Location, c28 = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(28)].Location;
+        int mx = (c32.X + c28.X) / 2 + 30, my = (c32.Y + c28.Y) / 2 + 30;      // Le coin commun aux deux cases : il touche aussi deux cases claires
+        Color avant;
+        using (Bitmap image = AppelleRetour<Bitmap>(fenetre, "ImageDuDamier"))
+            avant = image.GetPixel(mx, my);
+        analyse.SetValue(fenetre, true);
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=5 score=0.10 nodes=100 time=0.1 nps=1 pv=\"32-28 18-23\"");
+        List<int>? cases = Champ<List<int>?>(fenetre, "fleche");
+        Color milieu; Color[] autour;
+        using (Bitmap image = AppelleRetour<Bitmap>(fenetre, "ImageDuDamier"))
+        {
+            milieu = image.GetPixel(mx, my);
+            autour = new[] { image.GetPixel(mx - 1, my - 1), image.GetPixel(mx + 1, my - 1), image.GetPixel(mx - 1, my + 1), image.GetPixel(mx + 1, my + 1) };      // Les quatre cases du coin : deux sont claires
+        }
+        bool Rouge(Color c) => c.R > 110 && c.G < 90;      // Le rouge brique de la flèche : le bois et les cases claires ont un vert bien plus élevé
+        verifie("Interface : pendant l'analyse, la première étape de la variation est une flèche du départ à l'arrivée (32 → 28)", cases != null && cases.SequenceEqual(new[] { 32, 28 }), cases == null ? "aucune" : string.Join(",", cases));
+        verifie("Interface : la flèche se voit sur le damier, y compris sur les cases claires qui touchent le coin entre les deux cases",
+                !Rouge(avant) && Rouge(milieu) && autour.All(Rouge), $"avant {avant.Name}, milieu {milieu.Name}, autour {string.Join(" ", autour.Select(c => c.Name))}");
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=6 score=0.20 nodes=100 time=0.1 nps=1 pv=\"31-27 18-23\"");
+        bool suit = Champ<List<int>?>(fenetre, "fleche") is List<int> suivante && suivante.SequenceEqual(new[] { 31, 27 });
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=7 score=0.20 nodes=100 time=0.1 nps=1 pv=\"11-12 18-23\"");
+        bool illegal = Champ<List<int>?>(fenetre, "fleche") == null;
+        verifie("Interface : la flèche suit la variation à chaque ligne du moteur ; un coup qui n'est pas légal l'efface", suit && illegal, $"suit {suit}, illégal effacé {illegal}");
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=8 score=0.20 nodes=100 time=0.1 nps=1 pv=\"32-28 18-23\"");
+        analyse.SetValue(fenetre, false);
+        Joue(32, 28);
+        verifie("Interface : un coup joué efface la flèche", Champ<List<int>?>(fenetre, "fleche") == null, "");
+    }
+
+    // La case « Ordinateur » est la seule source de « l'ordinateur répond » : ni « Ordinateur joue » ni « Retour arrière » ne la désynchronisent (avant, ils forçaient le réglage interne : la case et le comportement divergeaient)
+    private static void CaseOrdinateur()
+    {
+        CheckBox ordinateur = (CheckBox)Trouve("OrdinateurBosse");
+        ((TrackBar)Trouve("trackBarTempsReflexion")).Value = 1;
+        Nouvelle(0);
+        ordinateur.Checked = false;
+        bool decoche = !fenetre.OrdinateurActif;
+        Appelle(fenetre, "OrdinateurJoue_Click", null, EventArgs.Empty);
+        Pompe(100);
+        Attendre(() => !Champ<bool>(fenetre, "jeuMoteurEnCours"), 30000);       // Avec le moteur Scan (console complète) il joue vraiment : on attend sa réponse
+        verifie("Interface : case « Ordinateur » décochée, « Ordinateur joue » ne rend pas l'ordinateur actif", decoche && !ordinateur.Checked && !fenetre.OrdinateurActif, $"case {ordinateur.Checked}, actif {fenetre.OrdinateurActif}");
+        Nouvelle(0);
+        Joue(32, 28);
+        ordinateur.Checked = true;
+        Appelle(fenetre, "BoutonRetourArriere_Click", null, EventArgs.Empty);
+        bool coche = fenetre.OrdinateurActif;
+        ordinateur.Checked = false;
+        Joue(32, 28);
+        Appelle(fenetre, "BoutonRetourArriere_Click", null, EventArgs.Empty);
+        verifie("Interface : « Retour arrière » laisse l'ordinateur actif quand la case est cochée, inactif quand elle est décochée", coche && !fenetre.OrdinateurActif, $"cochée : {coche}, décochée : {!fenetre.OrdinateurActif}");
+        Nouvelle(0);
+        Joue(32, 28);        // L'état que les tests suivants attendent : un coup joué
+    }
+
     private static void RetourApresPartieDecidee()
     {
         Nouvelle(5);
