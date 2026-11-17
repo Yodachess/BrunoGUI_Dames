@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -22,7 +22,7 @@ namespace BrunoGUI_Dames
     {
         public string Id { get; }                       // Le nom écrit dans les préférences (« classique », « blitz »…)
         public string Nom { get; }                      // Le nom complet, pour le choix de la cadence
-        public string Court { get; }                    // Le nom court, pour la liste de la fenêtre
+        public string Court { get; }                    // Le nom court de la liste, écrit comme aux échecs : « FMJD 80 min + 30 s » (temps de base + gain par coup), « FMJD 90+30 min +30 s » (90 minutes, 30 de plus au 45e coup, 30 s par coup dès le 46e), « FMJD » : cadence officielle
         public TimeSpan Base { get; }                   // Le temps de chaque joueur au départ
         public TimeSpan Increment { get; }              // Le temps gagné à chaque coup (système Fischer)
         public int IncrementDepuisLeCoup { get; }       // L'incrément est gagné à partir de ce coup de chaque joueur (1 : dès le premier)
@@ -41,13 +41,13 @@ namespace BrunoGUI_Dames
         // Rapide (de 15 à 30 minutes) et blitz (de 5 à 15 minutes) : l'annexe 6 ne fixe que ces fourchettes ; l'incrément est celui des championnats du monde (15 min + 5 s, 5 min + 3 s) ---
         public static readonly IReadOnlyList<Cadence> Officielles = new List<Cadence>
         {
-            new Cadence("classique", "Classique : 1 h 20 + 30 s par coup (défaut FMJD)", "1 h 20 + 30 s", TimeSpan.FromMinutes(80), TimeSpan.FromSeconds(30)),
-            new Cadence("comite", "Classique : 90 min pour 45 coups, puis 30 min en plus et 30 s par coup dès le 46e", "90 min/45 coups", TimeSpan.FromMinutes(90), TimeSpan.FromSeconds(30),
+            new Cadence("classique", "Classique : 1 h 20 + 30 s par coup (défaut FMJD)", "FMJD 80 min + 30 s", TimeSpan.FromMinutes(80), TimeSpan.FromSeconds(30)),
+            new Cadence("comite", "Classique : 90 min pour 45 coups, puis 30 min en plus et 30 s par coup dès le 46e", "FMJD 90+30 min +30 s", TimeSpan.FromMinutes(90), TimeSpan.FromSeconds(30),
                         incrementDepuisLeCoup: 46, premierControle: 45, tempsAuControle: TimeSpan.FromMinutes(30)),
-            new Cadence("ancien", "Ancien standard : 2 h pour 50 coups, puis 1 h pour chaque série de 25 coups", "2 h/50 coups", TimeSpan.FromHours(2), TimeSpan.Zero,
+            new Cadence("ancien", "Ancien standard : 2 h pour 50 coups, puis 1 h pour chaque série de 25 coups", "FMJD 120 + 60 min", TimeSpan.FromHours(2), TimeSpan.Zero,
                         premierControle: 50, controleSuivant: 25, tempsAuControle: TimeSpan.FromHours(1)),
-            new Cadence("rapide", "Rapide : 15 min + 5 s par coup", "15 min + 5 s", TimeSpan.FromMinutes(15), TimeSpan.FromSeconds(5)),
-            new Cadence("blitz", "Blitz : 5 min + 3 s par coup", "5 min + 3 s", TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(3))
+            new Cadence("rapide", "Rapide : 15 min + 5 s par coup", "Rapide 15 min + 5 s", TimeSpan.FromMinutes(15), TimeSpan.FromSeconds(5)),
+            new Cadence("blitz", "Blitz : 5 min + 3 s par coup", "Blitz 5 min + 3 s", TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(3))
         };
 
         // --- La cadence de ce nom (sans tenir compte des majuscules), ou null si elle n'existe pas ---

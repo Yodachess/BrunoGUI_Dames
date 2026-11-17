@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -104,8 +104,34 @@ namespace BrunoGUI_Dames
             OrdinateurBosse.Enabled = false;
             OrdinateurJoue.Enabled = false;
             AnalysePosition.Enabled = false;
+            comboNiveau.Enabled = false;
             LabelAfficheScan.Text = message;
         }
+        // --- La force du moteur : une liste de six niveaux (NiveauMoteur) dans le cadre « Pendule et temps de réflexion », entre la cadence et le curseur du temps (qui sont resserrés) ---
+        private readonly ComboBox comboNiveau = new ComboBox();
+        private int NiveauChoisi => NiveauMoteur.Limite(comboNiveau.SelectedIndex + 1);
+        private void CreeNiveauMoteur()
+        {
+            comboNiveau.Name = "ComboNiveau";
+            comboNiveau.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboCadence.Width = 132;
+            comboNiveau.Location = new Point(142, 17);
+            comboNiveau.Width = 78;
+            for (int niveau = NiveauMoteur.Minimum; niveau <= NiveauMoteur.Maximum; niveau++)
+                comboNiveau.Items.Add(NiveauMoteur.Nom(niveau));
+            comboNiveau.SelectedIndex = NiveauMoteur.ParDefaut - 1;
+            comboNiveau.SelectedIndexChanged += (s, e) => infobulleNiveau.SetToolTip(comboNiveau, NiveauMoteur.Libelle(NiveauChoisi));
+            infobulleNiveau.SetToolTip(comboNiveau, NiveauMoteur.Libelle(NiveauChoisi));
+            groupBox1.Controls.Add(comboNiveau);
+            trackBarTempsReflexion.Location = new Point(223, 16);
+            trackBarTempsReflexion.Size = new Size(59, 21);
+            LabelTempsReflexion.Location = new Point(284, 18);
+            LabelTempsReflexion.Size = new Size(34, 21);
+            LabelTempsReflexion.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold);
+            LabelTempsReflexion.TextAlign = ContentAlignment.MiddleLeft;
+            LabelTempsReflexion.AutoSize = false;
+        }
+        private readonly ToolTip infobulleNiveau = new ToolTip();
         private static int VersRgb(Color couleur) => couleur.ToArgb() & 0xFFFFFF;
         private static Color CouleurParDefaut(string nom) => DepuisRgb(Preferences.CouleursParDefaut[nom]);
         private static Color DepuisRgb(int rgb) => Color.FromArgb(255, (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
@@ -141,12 +167,14 @@ namespace BrunoGUI_Dames
             OrdinateurBosse.Checked = preferences.OrdinateurJoue;
             SelectionneCadence(preferences.CadenceId);      // Sans pendule par défaut
             trackBarVitesseLecture.Value = RythmeLecture.Limite(preferences.VitesseLecture);
+            comboNiveau.SelectedIndex = NiveauMoteur.Limite(preferences.Niveau) - 1;
         }
         private void EnregistrePreferences()
         {   // --- Écrit les préférences personnelles dans BrunoGUI_Dames.preferences.ini, à côté de l'exe ---
             Preferences aEnregistrer = new Preferences
             {
                 TempsReflexion = trackBarTempsReflexion.Value,
+                Niveau = NiveauChoisi,
                 DureeEtape = DureeEtape,
                 ArriveesDebutTour = ArriveesDebutTour,
                 RepereDernierCoup = RepereDernierCoup,

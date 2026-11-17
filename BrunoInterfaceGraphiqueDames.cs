@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -96,7 +96,7 @@ namespace BrunoGUI_Dames
             clickCaseSource = true;
             DureeEtape = 250;
             ChargePreferences();                // Les couleurs et la durée d'animation avant la création du damier ; le reste des préférences plus bas (AppliquePreferences)
-            LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";            // Affichage 
+            LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " s";            // Affichage 
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
 
             CreeDamier();                       // Crée les 100 PictureBox correspondant aux cases SANS afficher de pièce
@@ -106,7 +106,8 @@ namespace BrunoGUI_Dames
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;
             BoxNomJoueurNoir.Text = NomJoueurNoir;
             CreePendule();                      // Les temps et le choix de la cadence (BrunoInterfaceGraphiqueDames.Pendule.cs), avant les préférences qui choisissent la cadence
-            CreeLecture();                      // Le bouton de lecture et sa vitesse, dans le groupe « Parcours partie » (BrunoInterfaceGraphiqueDames.Lecture.cs)
+            CreeNiveauMoteur();                 // La force du moteur, dans le même cadre que la cadence (BrunoInterfaceGraphiqueDames.Moteur.cs)
+            CreeLecture();                  // Le bouton de lecture et sa vitesse, dans le groupe « Parcours partie » (BrunoInterfaceGraphiqueDames.Lecture.cs)
             AppliqueTheme();                    // Les couleurs de l'interface, une fois tous les contrôles créés (BrunoInterfaceGraphiqueDames.Theme.cs)
             AppliquePreferences();
             MiseenplaceFen("[FEN \"W:W31-50:B1-20\"]", true);          // Position initiale

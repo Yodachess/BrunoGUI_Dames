@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -90,17 +90,18 @@
 <ul>
     <li><b>Ordinateur</b> (case à cocher) : coché, le moteur joue sa réponse après chacun de vos coups ; décoché, vous jouez à deux. Sans moteur sur le disque, cette case est inactive et le jeu entre humains reste possible.</li>
     <li><b>Temps de réflexion</b> : de 1 à 25 secondes par coup (5 par défaut). Plus c'est long, plus le moteur joue fort.</li>
+    <li><b>Niveau</b> (la liste à droite de la cadence, dans le cadre <b>Pendule et temps de réflexion</b>) : la force du moteur, de <b>Niveau 1</b> (très faible : il ne regarde qu'un demi-coup à l'avance) à <b>Maximum</b> (le défaut : pleine force). Aux niveaux faibles le moteur répond vite, sans employer tout son temps de réflexion, et on peut le battre ; il garde ses réponses d'ouverture, qui sont bonnes. L'<b>analyse de position</b> se fait toujours à pleine force. Le niveau est retenu dans les préférences.</li>
     <li><span class="bouton">Ordinateur joue</span> : le moteur joue un coup à la place du joueur au trait, quel qu'il soit. Pratique pour lui faire jouer les blancs, ou pour se faire montrer un coup.</li>
     <li><span class="bouton">Analyse position</span> : le moteur réfléchit sur la position affichée et en donne le score (en centipions) et la meilleure suite, <b>sans rien jouer</b>. On peut s'en servir sur n'importe quelle position, y compris en parcourant une partie.</li>
     <li><b>Son</b> : coché, un son est émis quand le moteur a joué.</li>
 </ul>
 <h3>La pendule</h3>
-<p>Le cadre <b>Pendule et temps de réflexion</b> contient, à gauche, la liste qui choisit la <b>cadence</b> de la pendule. Par défaut, <b>Sans pendule</b> : la partie n'a pas de limite de temps et les deux cadres en haut à droite de la fenêtre affichent « --:-- ». Avec une cadence, ils montrent le temps restant de <b>B</b> (blancs) et de <b>N</b> (noirs) ; celui du joueur au trait est en vert et passe en rouge sous 20 secondes. Les cadences viennent des annexes de la FMJD :</p>
+<p>Le cadre <b>Pendule et temps de réflexion</b> contient, à gauche, la liste qui choisit la <b>cadence</b> de la pendule. Par défaut, <b>Sans pendule</b> : la partie n'a pas de limite de temps et les deux cadres en haut à droite de la fenêtre affichent « --:-- ». Avec une cadence, ils montrent le temps restant de <b>B</b> (blancs) et de <b>N</b> (noirs) ; celui du joueur au trait est en vert et passe en rouge sous 20 secondes. Les cadences s'écrivent comme aux échecs : « 80 min + 30 s » veut dire 80 minutes plus 30 secondes gagnées à chaque coup, « 90+30 min » 90 minutes plus 30 minutes ajoutées au 45<sup>e</sup> coup. Celles qui commencent par <b>FMJD</b> sont les cadences officielles de la Fédération Mondiale du Jeu de Dames (ses annexes) :</p>
 <ul>
     <li><b>1 h 20 + 30 s</b> : le défaut des compétitions FMJD, 1 h 20 par joueur plus 30 secondes gagnées à chaque coup ;</li>
-    <li><b>90 min/45 coups</b> : 90 minutes pour les 45 premiers coups de chaque joueur, puis 30 minutes de plus, et 30 secondes gagnées à chaque coup à partir du 46<sup>e</sup> ;</li>
-    <li><b>2 h/50 coups</b> : l'ancien standard, 2 heures pour 50 coups, puis 1 heure de plus pour chaque série de 25 coups (le temps non utilisé est gardé) ;</li>
-    <li><b>15 min + 5 s</b> (rapide) et <b>5 min + 3 s</b> (blitz) : la FMJD définit le rapide de 15 à 30 minutes et le blitz de 5 à 15 minutes par joueur ; les 5 et 3 secondes gagnées par coup sont celles des championnats du monde.</li>
+    <li><b>FMJD 90+30 min +30 s</b> : 90 minutes pour les 45 premiers coups de chaque joueur, puis 30 minutes de plus, et 30 secondes gagnées à chaque coup à partir du 46<sup>e</sup> ;</li>
+    <li><b>FMJD 120 + 60 min</b> : l'ancien standard, 2 heures pour 50 coups, puis 1 heure de plus pour chaque série de 25 coups (le temps non utilisé est gardé) ;</li>
+    <li><b>Rapide 15 min + 5 s</b> et <b>Blitz 5 min + 3 s</b> : la FMJD définit le rapide de 15 à 30 minutes et le blitz de 5 à 15 minutes par joueur ; les 5 et 3 secondes gagnées par coup sont celles des championnats du monde.</li>
 </ul>
 <p>La pendule démarre au <b>premier coup</b> de la partie, qui n'est pas décompté : le temps s'écoule ensuite pour le camp au trait, et seulement pour lui. Quand le <b>drapeau tombe</b>, ce joueur perd la partie, au temps, et le résultat est écrit comme pour un gain par prises. Contre le moteur, son temps de réflexion compte sur sa pendule : il ne réfléchit jamais plus que le réglage du temps de réflexion, et moins quand il lui reste peu de temps. Changer de cadence, <span class="bouton">Nouvelle Partie</span>, charger une position ou une partie remettent les temps à zéro ; <span class="bouton">Retour Arrière</span> garde les temps (un joueur dont le drapeau était tombé reprend avec 30 secondes). Cocher soi-même un résultat arrête la pendule. Le survol des temps et de la liste affiche une bulle d'aide.</p>
 <div class="note">Le moteur est Scan 3.1, de Fabien Letouzey. Le bouton <span class="bouton">Protocole</span> ouvre une fenêtre qui montre ce que le programme et le moteur s'envoient : utile pour comprendre ou pour signaler un problème.</div>

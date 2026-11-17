@@ -24,6 +24,7 @@ namespace BrunoGUI_Dames
     public sealed class Preferences
     {
         public int TempsReflexion { get; set; } = 5;                    // Secondes de réflexion du moteur
+        public int Niveau { get; set; } = NiveauMoteur.ParDefaut;       // La force du moteur, de 1 (faible) à 6 (maximum) : NiveauMoteur
         public string? NomJoueurBlanc { get; set; }                     // Null : on garde le nom par défaut de l'application
         public string? NomJoueurNoir { get; set; }
         public bool SonEmis { get; set; }                               // Un son quand le moteur a joué
@@ -90,6 +91,12 @@ namespace BrunoGUI_Dames
                             preferences.TempsReflexion = secondes;
                         else
                             preferences.Avertissements.Add($"TempsReflexion refusé (un nombre de secondes de 1 à 3600 est attendu) : {valeur}");
+                        break;
+                    case "niveau":
+                        if (int.TryParse(valeur, NumberStyles.None, CultureInfo.InvariantCulture, out int niveau) && niveau >= NiveauMoteur.Minimum && niveau <= NiveauMoteur.Maximum)
+                            preferences.Niveau = niveau;
+                        else
+                            preferences.Avertissements.Add($"Niveau refusé (un nombre de {NiveauMoteur.Minimum} à {NiveauMoteur.Maximum} est attendu) : {valeur}");
                         break;
                     case "nomjoueurblanc":
                         preferences.NomJoueurBlanc = valeur.Length > 0 ? valeur : null;
@@ -185,6 +192,7 @@ namespace BrunoGUI_Dames
             StringBuilder texte = new StringBuilder();
             texte.Append("; Préférences personnelles de BrunoGUI_Dames (écrit à la fermeture, relu au démarrage ; les couleurs s'écrivent #RRGGBB)").Append(Environment.NewLine);
             texte.Append("TempsReflexion=").Append(TempsReflexion.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
+            texte.Append("Niveau=").Append(Niveau.ToString(CultureInfo.InvariantCulture)).Append(Environment.NewLine);
             if (!string.IsNullOrWhiteSpace(NomJoueurBlanc)) texte.Append("NomJoueurBlanc=").Append(UneLigne(NomJoueurBlanc)).Append(Environment.NewLine);
             if (!string.IsNullOrWhiteSpace(NomJoueurNoir)) texte.Append("NomJoueurNoir=").Append(UneLigne(NomJoueurNoir)).Append(Environment.NewLine);
             texte.Append("SonEmis=").Append(SonEmis ? "1" : "0").Append(Environment.NewLine);

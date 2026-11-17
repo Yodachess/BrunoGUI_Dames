@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -318,7 +318,7 @@ namespace BrunoGUI_Dames
         }
         private void trackBarTempsReflexion_ValueChanged(object sender, EventArgs e)
         {   // --- Gestion du trackBar pour le temps de réflexion de l'ordinateur ---
-            LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " sec.";
+            LabelTempsReflexion.Text = trackBarTempsReflexion.Value.ToString() + " s";
             TempsReflexion = trackBarTempsReflexion.Value;
         }
         private void OrdinateurBosse_CheckedChanged(object sender, EventArgs e)

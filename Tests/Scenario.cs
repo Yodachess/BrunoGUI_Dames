@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -717,6 +717,17 @@ public static class Scenario
         Verifie("Préférences : couleur invalide, clé de couleur inconnue, durée hors limites et booléen invalide signalés ; « # » facultatif, clé insensible à la casse",
                 couleursAbimees.Avertissements.Count == 5 && couleursAbimees.Couleurs.Count == 1 && couleursAbimees.Couleurs["CaseClaire"] == 0xABCDEF && couleursAbimees.DureeEtape == 250 && !couleursAbimees.VueCoteNoir,
                 string.Join(" | ", couleursAbimees.Avertissements));
+        Verifie("Niveau du moteur : six niveaux, profondeurs 1, 2, 4, 6, 9 puis 99 (pas de limite), jamais décroissantes ; hors limites ramené entre 1 et 6",
+                NiveauMoteur.Profondeur(1) == 1 && NiveauMoteur.Profondeur(2) == 2 && NiveauMoteur.Profondeur(3) == 4 && NiveauMoteur.Profondeur(4) == 6 && NiveauMoteur.Profondeur(5) == 9
+                && NiveauMoteur.Profondeur(6) == NiveauMoteur.ProfondeurMaximale && NiveauMoteur.Profondeur(0) == 1 && NiveauMoteur.Profondeur(99) == NiveauMoteur.ProfondeurMaximale && NiveauMoteur.ParDefaut == 6, "");
+        Verifie("Niveau du moteur : noms et infobulles (« Niveau 3 », « Maximum », pluriel de demi-coup)",
+                NiveauMoteur.Nom(3) == "Niveau 3" && NiveauMoteur.Nom(6) == "Maximum" && NiveauMoteur.Libelle(1).Contains("1 demi-coup)") && NiveauMoteur.Libelle(3).Contains("4 demi-coups") && NiveauMoteur.Libelle(6).Contains("maximum"),
+                NiveauMoteur.Libelle(1) + " | " + NiveauMoteur.Libelle(3));
+        Preferences niveauRelu = Preferences.DepuisTexte(new Preferences { Niveau = 3 }.VersTexte());
+        Preferences niveauAbime = Preferences.DepuisTexte("Niveau=9\r\n");
+        Preferences niveauAbime2 = Preferences.DepuisTexte("Niveau=x\r\n");
+        Verifie("Préférences : le niveau du moteur est 6 par défaut, se relit à l'identique, et une valeur hors de 1 à 6 est refusée avec un avertissement",
+                parDefaut.Niveau == 6 && niveauRelu.Niveau == 3 && niveauRelu.Avertissements.Count == 0 && niveauAbime.Niveau == 6 && niveauAbime.Avertissements.Count == 1 && niveauAbime2.Niveau == 6 && niveauAbime2.Avertissements.Count == 1, "");
         Preferences nomSurDeuxLignes =Preferences.DepuisTexte(new Preferences { NomJoueurBlanc = "Ligne 1\r\nLigne 2" }.VersTexte());
         Verifie("Préférences : un nom sur plusieurs lignes est écrit sur une seule", nomSurDeuxLignes.NomJoueurBlanc == "Ligne 1 Ligne 2", nomSurDeuxLignes.NomJoueurBlanc ?? "(null)");
         Verifie("Préférences : un dossier inexistant fait renvoyer faux, sans exception",
@@ -761,6 +772,24 @@ public static class Scenario
                     ReponseMoteur? seconde = moteurTest.ReflechirAsync(apres.VersHub2(), 1).GetAwaiter().GetResult();
                     Coup? coupNoir = seconde == null ? null : ReglesDames.TrouverCoup(apres, seconde.Coup);
                     Verifie("Moteur : une seconde demande (les noirs au trait) reçoit aussi un coup légal", coupNoir != null, seconde?.Coup ?? "(pas de réponse)");
+                    // La force : à la profondeur 1 Scan répond tout de suite malgré 8 s permises ; à la profondeur maximale il emploie son temps (la limite n'est pas gardée d'une demande à l'autre).
+                    // Hors du livre d'ouvertures (qui répond tout de suite, quelle que soit la limite) et sans prise forcée (réponse immédiate aussi) : une position d'au moins dix demi-coups
+                    Position horsLivre = Position.Initiale();
+                    for (int i = 0; i < 40 && (i < 10 || ReglesDames.CoupsLegaux(horsLivre).Count < 6 || ReglesDames.CoupsLegaux(horsLivre)[0].Prises.Count > 0); i++)
+                    {
+                        List<Coup> choix = ReglesDames.CoupsLegaux(horsLivre);
+                        horsLivre = ReglesDames.Jouer(horsLivre, choix[choix.Count / 2]);
+                    }
+                    System.Diagnostics.Stopwatch chrono = System.Diagnostics.Stopwatch.StartNew();
+                    ReponseMoteur? faible = moteurTest.ReflechirAsync(horsLivre.VersHub2(), 8, NiveauMoteur.Profondeur(NiveauMoteur.Minimum)).GetAwaiter().GetResult();
+                    long msFaible = chrono.ElapsedMilliseconds;
+                    Verifie("Moteur : au niveau 1 (profondeur 1) Scan répond par un coup légal en moins de 3 s malgré 8 s permises",
+                            faible != null && ReglesDames.TrouverCoup(horsLivre, faible.Coup) != null && msFaible < 3000, $"{faible?.Coup} en {msFaible} ms");
+                    chrono.Restart();
+                    ReponseMoteur? fort = moteurTest.ReflechirAsync(horsLivre.VersHub2(), 1, NiveauMoteur.Profondeur(NiveauMoteur.Maximum)).GetAwaiter().GetResult();
+                    long msFort = chrono.ElapsedMilliseconds;
+                    Verifie("Moteur : puis à pleine force (profondeur maximale) il réfléchit sa seconde : la limite du niveau 1 n'a pas été gardée",
+                            fort != null && ReglesDames.TrouverCoup(horsLivre, fort.Coup) != null && msFort >= 800, $"{fort?.Coup} en {msFort} ms");
                 }
                 finally
                 {

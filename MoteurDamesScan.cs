@@ -69,8 +69,9 @@ namespace BrunoGUI_Dames
             Envoie("ping");
         }
 
-        // --- Demande un coup pour la position Hub2 en réfléchissant secondes secondes ; null si le moteur ne répond pas (arrêté, délai dépassé, remplacé par une autre demande) ---
-        public async Task<ReponseMoteur?> ReflechirAsync(string positionHub2, int secondes)
+        // --- Demande un coup pour la position Hub2 en réfléchissant secondes secondes au plus, et pas plus de profondeur demi-coups (NiveauMoteur.ProfondeurMaximale : pas de limite) ;
+        // null si le moteur ne répond pas (arrêté, délai dépassé, remplacé par une autre demande) ---
+        public async Task<ReponseMoteur?> ReflechirAsync(string positionHub2, int secondes, int profondeur = NiveauMoteur.ProfondeurMaximale)
         {
             TaskCompletionSource<ReponseMoteur?> cetteDemande = new TaskCompletionSource<ReponseMoteur?>(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (verrou)
@@ -81,7 +82,7 @@ namespace BrunoGUI_Dames
             try
             {
                 Envoie("pos pos=" + positionHub2);          // On envoie la position au format Hub2
-                Envoie("level move-time=" + secondes);      // x secondes pour le coup
+                Envoie("level depth=" + profondeur + " move-time=" + secondes);      // La profondeur est toujours envoyée : Scan garde la limite d'une demande à l'autre
                 Envoie("go think");
             }
             catch (Exception ex) when (ex is IOException || ex is InvalidOperationException)

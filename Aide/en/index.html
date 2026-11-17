@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -91,17 +91,18 @@
 <ul>
     <li><b>Ordinateur</b> (tick box): ticked, the engine plays its answer after each of your moves; unticked, you play two humans. Without an engine on the disk, this box is disabled and human-versus-human play is still possible.</li>
     <li><b>Thinking time</b>: from 1 to 25 seconds per move (5 by default). The longer it is, the stronger the engine plays.</li>
+    <li><b>Niveau</b> (level; the list to the right of the time control, in the <b>Pendule et temps de r&eacute;flexion</b> frame): the engine's strength, from <b>Niveau 1</b> (very weak: it only looks one half-move ahead) to <b>Maximum</b> (the default: full strength). At the low levels the engine answers quickly, without using all its thinking time, and can be beaten; it keeps its opening answers, which are good. <b>Position analysis</b> always runs at full strength. The level is remembered in the preferences.</li>
     <li><span class="bouton">Ordinateur joue</span>: the engine plays a move for the side to move, whichever it is. Handy to make it play White, or to be shown a move.</li>
     <li><span class="bouton">Analyse position</span>: the engine thinks about the displayed position and gives its score (in centipawns) and best continuation, <b>without playing anything</b>. It can be used on any position, including while browsing a game.</li>
     <li><b>Son</b> (sound): ticked, a sound is played when the engine has moved.</li>
 </ul>
 <h3>The clock</h3>
-<p>The <b>Pendule et temps de r&eacute;flexion</b> (clock and thinking time) frame contains, on the left, the list that chooses the clock's <b>time control</b>. By default it is <b>Sans pendule</b> (no clock): the game has no time limit and the two frames at the top right of the window show &laquo;&nbsp;--:--&nbsp;&raquo;. With a time control they show the remaining time of <b>B</b> (White) and <b>N</b> (Black); the side to move is shown in green and turns red under 20 seconds. The time controls come from the FMJD annexes:</p>
+<p>The <b>Pendule et temps de r&eacute;flexion</b> (clock and thinking time) frame contains, on the left, the list that chooses the clock's <b>time control</b>. By default it is <b>Sans pendule</b> (no clock): the game has no time limit and the two frames at the top right of the window show &laquo;&nbsp;--:--&nbsp;&raquo;. With a time control they show the remaining time of <b>B</b> (White) and <b>N</b> (Black); the side to move is shown in green and turns red under 20 seconds. Time controls are written as in chess: &laquo;&nbsp;80 min + 30 s&nbsp;&raquo; means 80 minutes plus 30 seconds gained at each move, &laquo;&nbsp;90+30 min&nbsp;&raquo; means 90 minutes plus 30 minutes added at the 45<sup>th</sup> move. Those starting with <b>FMJD</b> are the official time controls of the World Draughts Federation (its annexes):</p>
 <ul>
     <li><b>1 h 20 + 30 s</b>: the default of FMJD competitions, 1 h 20 per player plus 30 seconds gained at each move;</li>
-    <li><b>90 min/45 coups</b>: 90 minutes for each player's first 45 moves, then 30 more minutes, and 30 seconds gained at each move from the 46<sup>th</sup>;</li>
-    <li><b>2 h/50 coups</b>: the old standard, 2 hours for 50 moves, then 1 more hour for each series of 25 moves (unused time is kept);</li>
-    <li><b>15 min + 5 s</b> (rapid) and <b>5 min + 3 s</b> (blitz): the FMJD defines rapid as 15 to 30 minutes and blitz as 5 to 15 minutes per player; the 5 and 3 seconds gained per move are those of the world championships.</li>
+    <li><b>FMJD 90+30 min +30 s</b>: 90 minutes for each player's first 45 moves, then 30 more minutes, and 30 seconds gained at each move from the 46<sup>th</sup>;</li>
+    <li><b>FMJD 120 + 60 min</b>: the old standard, 2 hours for 50 moves, then 1 more hour for each series of 25 moves (unused time is kept);</li>
+    <li><b>Rapide 15 min + 5 s</b> and <b>Blitz 5 min + 3 s</b>: the FMJD defines rapid as 15 to 30 minutes and blitz as 5 to 15 minutes per player; the 5 and 3 seconds gained per move are those of the world championships.</li>
 </ul>
 <p>The clock starts at the game's <b>first move</b>, which is not counted: time then runs for the side to move, and only for it. When the <b>flag falls</b>, that player loses the game on time, and the result is written as for a win by captures. Against the engine, its thinking time counts on its clock: it never thinks longer than the thinking-time setting, and less when it has little time left. Changing the time control, <span class="bouton">Nouvelle Partie</span>, loading a position or a game reset the clocks; <span class="bouton">Retour Arri&egrave;re</span> keeps the times (a player whose flag had fallen resumes with 30 seconds). Ticking a result yourself stops the clock. Hovering over the times and the list shows a tooltip.</p>
 <div class="note">The engine is Scan 3.1, by Fabien Letouzey. The <span class="bouton">Protocole</span> button opens a window showing what the program and the engine send each other: useful to understand, or to report a problem.</div>

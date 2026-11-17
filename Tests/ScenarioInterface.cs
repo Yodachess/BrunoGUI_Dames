@@ -460,6 +460,24 @@ public static class ScenarioInterface
         Appelle(fenetre, "EnregistrePreferences");
         verifie("Interface : « Sans pendule » est écrit aussi (pas de cadence au prochain lancement)", Preferences.Lire(fichierPreferences).CadenceId == null, "");
 
+        // ═══════════════ Force du moteur : la liste des niveaux ═══════════════
+        ComboBox niveaux = (ComboBox)Trouve("ComboNiveau");
+        bool parDefautMaximum = niveaux.Items.Count == 6 && niveaux.SelectedIndex == 5 && (string)niveaux.SelectedItem! == "Maximum";
+        niveaux.SelectedIndex = 1;
+        Appelle(fenetre, "EnregistrePreferences");
+        bool ecrit = Preferences.Lire(fichierPreferences).Niveau == 2;
+        niveaux.SelectedIndex = 5;
+        Appelle(fenetre, "EnregistrePreferences");
+        verifie("Interface : la force du moteur est une liste de 6 niveaux (Maximum au départ), le niveau choisi est écrit dans les préférences",
+                parDefautMaximum && ecrit && Preferences.Lire(fichierPreferences).Niveau == 6, $"{niveaux.Items.Count} niveaux, par défaut : {parDefautMaximum}");
+        Preferences voulu = new Preferences { Niveau = 3 };
+        voulu.Ecrire(fichierPreferences);
+        Appelle(fenetre, "ChargePreferences");
+        Appelle(fenetre, "AppliquePreferences");
+        verifie("Interface : le niveau des préférences est appliqué à la liste", niveaux.SelectedIndex == 2, niveaux.SelectedIndex.ToString());
+        niveaux.SelectedIndex = 5;
+        Appelle(fenetre, "EnregistrePreferences");
+
         // ═══════════════ Retour arrière après une partie décidée ═══════════════
         RetourApresPartieDecidee();
         ParcoursAuClavier();
@@ -482,6 +500,27 @@ public static class ScenarioInterface
                 repondu && fenetre.CouleurAuTrait == Couleur.Blanc && affichee.VersFen() == session().DernierePosition.VersFen(), $"{string.Join(" ", session().CoupsPdn)}");
         verifie("Interface + Scan : la pendule a compté le coup du moteur (noirs : 1 coup, 5:00 + 3 s puisque l'horloge simulée n'a pas bougé) ; les blancs sont au trait",
                 pendule()?.CoupsJoues(Couleur.Noir) == 1 && temps("LabelPenduleNoir") == "N 05:03" && pendule()?.Trait == Couleur.Blanc, $"{temps("LabelPenduleNoir")}, noirs : {pendule()?.CoupsJoues(Couleur.Noir)} coup(s)");
+
+        // Niveau 1 : le moteur répond tout de suite malgré 8 secondes de réflexion permises
+        ((TrackBar)Trouve("trackBarTempsReflexion")).Value = 8;
+        ((ComboBox)Trouve("ComboNiveau")).SelectedIndex = 0;
+        Nouvelle(0);
+        for (int i = 0; i < 40 && (i < 10 || ReglesDames.CoupsLegaux(session().DernierePosition).Count < 6 || ReglesDames.CoupsLegaux(session().DernierePosition)[0].Prises.Count > 0); i++)
+        {   // Au moins dix demi-coups entre humains, sans prise forcée : hors du livre d'ouvertures, où le moteur répondrait tout de suite à tout niveau
+            List<Coup> choix = ReglesDames.CoupsLegaux(session().DernierePosition);
+            Joue(choix[choix.Count / 2].Depart, choix[choix.Count / 2].Arrivee);
+        }
+        ((CheckBox)Trouve("OrdinateurBosse")).Checked = true;
+        int coupsAvant = session().CoupsPdn.Count;
+        System.Diagnostics.Stopwatch chronoFaible = System.Diagnostics.Stopwatch.StartNew();
+        List<Coup> coupsHumain = ReglesDames.CoupsLegaux(session().DernierePosition);
+        Joue(coupsHumain[0].Depart, coupsHumain[0].Arrivee, attendCoups: false);
+        bool repondFaible = Attendre(() => session().CoupsPdn.Count == coupsAvant + 2 && !Champ<bool>(fenetre, "jeuMoteurEnCours"), 30000);
+        long msFaible = chronoFaible.ElapsedMilliseconds;
+        verifie("Interface + Scan : au niveau 1, le moteur répond en moins de 3 s alors que 8 s sont permises",
+                repondFaible && msFaible < 3000, $"{string.Join(" ", session().CoupsPdn)} en {msFaible} ms");
+        ((ComboBox)Trouve("ComboNiveau")).SelectedIndex = 5;
+        ((TrackBar)Trouve("trackBarTempsReflexion")).Value = 1;
 
         // Le drapeau du moteur tombe pendant qu'il réfléchit : il perd, son coup n'est pas joué
         Nouvelle(5, avecMoteur: true);

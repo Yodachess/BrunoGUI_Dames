@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -45,7 +45,7 @@ namespace BrunoGUI_Dames
             comboCadence.SelectedIndex = 0;
             comboCadence.SelectedIndexChanged += ComboCadence_SelectedIndexChanged;
             groupBox1.Controls.Add(comboCadence);
-            new ToolTip().SetToolTip(comboCadence, "Cadence de la pendule (cadences de la FMJD). Le premier coup n'est pas décompté.");
+            MetAJourInfobulleCadence();
             minuteriePendule.Tick += MinuteriePendule_Tick;
             minuteriePendule.Start();
             MetAJourAffichagePendule();
@@ -62,6 +62,14 @@ namespace BrunoGUI_Dames
         }
 
         // --- L'Id de la cadence choisie (écrit dans les préférences), ou null ---
+        private readonly ToolTip infobulleCadence = new ToolTip { AutoPopDelay = 20000 };
+        private void MetAJourInfobulleCadence()
+        {   // --- Explique la cadence choisie : « base + temps ajouté (+ gain par coup) », FMJD = cadence officielle ---
+            string explication = "Cadence de la pendule, écrite comme aux échecs : « 80 min + 30 s » = 80 minutes, plus 30 secondes gagnées à chaque coup ; « 90+30 min » = 90 minutes, plus 30 minutes au 45e coup. FMJD : cadence officielle de la Fédération Mondiale du Jeu de Dames. Le premier coup n'est pas décompté.";
+            if (comboCadence.SelectedIndex > 0)
+                explication = Cadence.Officielles[comboCadence.SelectedIndex - 1].Nom + "\n\n" + explication;
+            infobulleCadence.SetToolTip(comboCadence, explication);
+        }
         private string? CadenceChoisieId => comboCadence.SelectedIndex > 0 ? Cadence.Officielles[comboCadence.SelectedIndex - 1].Id : null;
         private void SelectionneCadence(string? id)
         {
@@ -73,6 +81,7 @@ namespace BrunoGUI_Dames
         }
         private void ComboCadence_SelectedIndexChanged(object? sender, EventArgs e)
         {   // --- Une autre cadence : la pendule repart à zéro (elle attend le prochain coup) ---
+            MetAJourInfobulleCadence();
             pendule = comboCadence.SelectedIndex > 0 ? new Pendule(Cadence.Officielles[comboCadence.SelectedIndex - 1], ReglagesDeTest.HorlogePendule) : null;
             ReinitialisePendule();
         }
