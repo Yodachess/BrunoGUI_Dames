@@ -7,7 +7,7 @@ Application WinForms en C# 14 sous .NET 10 (Visual Studio 2022), composants Kryp
 
 Pour le moteur, je me suis tourné vers le logiciel de dames **Scan 3.1** de Fabien Letouzey (Fruit, Seipan, ...), dont je connais la qualité.
 Scan utilise le protocole Hub2, proche du protocole UCI des échecs (github.com/rhalbersma/scan).
-Scan 3.1 est un logiciel libre sous licence **GNU GPL version 3** (voir `Dames_Scan31_FabienLetouzey\license.txt` et `readme.txt`) : il est redistribué avec ce programme, qui est lui aussi sous GPL 3.0 ou ultérieure. Le code source de Scan est dans `Dames_Scan31_FabienLetouzey\src` du dépôt (l'archive publiée ne contient pas ce dossier, pour rester légère) et chez l'auteur : github.com/rhalbersma/scan.
+Scan 3.1 est un logiciel libre sous licence **GNU GPL version 3** (voir `Dames_Scan31_FabienLetouzey\license.txt` et `readme.txt`) : il est redistribué avec ce programme, qui est lui aussi sous GPL 3.0 ou ultérieure. Le code source de Scan est dans `Dames_Scan31_FabienLetouzey\src` du dépôt (l'archive publiée ne contient pas ce dossier, pour rester légère) et chez l'auteur : github.com/rhalbersma/scan. Le dossier `Dames_Scan31_FabienLetouzey` (exécutables, sources et données) est la copie exacte de ce dépôt (commit « Scan 3.1 by Fabien Letouzey », 2019-07-06).
 
 ## Installation
 
@@ -84,7 +84,7 @@ WinForms application written in C# 14 on .NET 10 (Visual Studio 2022), with Kryp
 
 Knowing the quality of Fabien Letouzey's software (Fruit, Seipan, ...), I chose his draughts engine **Scan 3.1**.
 Scan uses the Hub2 protocol, which is similar to the UCI protocol in chess (github.com/rhalbersma/scan).
-Scan 3.1 is free software under the **GNU GPL version 3** (see `Dames_Scan31_FabienLetouzey\license.txt` and `readme.txt`): it is redistributed with this program, which is also under GPL 3.0 or later. Scan's source code is in `Dames_Scan31_FabienLetouzey\src` in the repository (the published archive does not contain that folder, to stay light) and at the author's: github.com/rhalbersma/scan.
+Scan 3.1 is free software under the **GNU GPL version 3** (see `Dames_Scan31_FabienLetouzey\license.txt` and `readme.txt`): it is redistributed with this program, which is also under GPL 3.0 or later. Scan's source code is in `Dames_Scan31_FabienLetouzey\src` in the repository (the published archive does not contain that folder, to stay light) and at the author's: github.com/rhalbersma/scan. The `Dames_Scan31_FabienLetouzey` folder (executables, sources and data) is an exact copy of that repository (commit "Scan 3.1 by Fabien Letouzey", 2019-07-06).
 
 ## Installation
 
