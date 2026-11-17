@@ -226,9 +226,18 @@ namespace BrunoGUI_Dames
                 BoutonAide_Click(this, EventArgs.Empty);
                 return true;
             }
-            if (ToucheParcours(keyData))
+            if (ToucheParcours(keyData) || ToucheRaccourci(keyData))
                 return true;
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+        // --- Vrai quand le focus est dans une zone de saisie, une liste ou un curseur, où les touches ont leur propre rôle ---
+        private bool EstEnSaisie()
+        {
+            Control? actif = ActiveControl;
+            while (actif is ContainerControl conteneur && conteneur.ActiveControl != null)
+                actif = conteneur.ActiveControl;
+            string typeActif = actif?.GetType().Name ?? "";
+            return typeActif.Contains("TextBox") || typeActif.Contains("ComboBox") || typeActif.Contains("TrackBar") || typeActif.Contains("UpDown");
         }
         // --- Le parcours au clavier, comme les boutons : ← Préc., → Suiv., Début, Fin. Rend vrai si la touche a servi. Sans effet quand les flèches ont un autre rôle : saisie d'un nom, liste ou curseur
         // qui ont le focus, pièce en main, lecture en cours ou boutons bloqués ---
@@ -236,11 +245,7 @@ namespace BrunoGUI_Dames
         {
             if (touche != Keys.Left && touche != Keys.Right && touche != Keys.Home && touche != Keys.End)
                 return false;
-            Control? actif = ActiveControl;
-            while (actif is ContainerControl conteneur && conteneur.ActiveControl != null)
-                actif = conteneur.ActiveControl;
-            string typeActif = actif?.GetType().Name ?? "";
-            if (typeActif.Contains("TextBox") || typeActif.Contains("ComboBox") || typeActif.Contains("TrackBar") || typeActif.Contains("UpDown"))
+            if (EstEnSaisie())
                 return false;
             if (!groupParcoursPartie.Enabled || lecture != null || pieceEnMain)
                 return false;

@@ -1,4 +1,4 @@
-// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -463,6 +463,7 @@ public static class ScenarioInterface
         // ═══════════════ Retour arrière après une partie décidée ═══════════════
         RetourApresPartieDecidee();
         ParcoursAuClavier();
+        RaccourcisEtImage();
 
         // ═══════════════ Deux fenêtres à la fois ═══════════════
         DeuxFenetres();
@@ -530,6 +531,68 @@ public static class ScenarioInterface
         Nouvelle();
     }
 
+    // Les raccourcis (Ctrl+N, Ctrl+Z, Ctrl+F), le clic droit et l'image du damier
+    private static void RaccourcisEtImage()
+    {
+        Nouvelle();
+        Joue(32, 28);
+        Joue(17, 22);
+        bool Raccourci(Keys k) => AppelleRetour<bool>(fenetre, "ToucheRaccourci", k);
+        bool retour = Raccourci(Keys.Control | Keys.Z) && fenetre.Session.CoupsPdn.Count == 1;
+        bool tourne = Raccourci(Keys.Control | Keys.F) && fenetre.Damier.Orientation.CoteNoir;
+        bool retourne = Raccourci(Keys.Control | Keys.F) && !fenetre.Damier.Orientation.CoteNoir;
+        bool inconnue = !Raccourci(Keys.G) && !Raccourci(Keys.Control | Keys.A);
+        verifie("Interface : Ctrl+Z revient en arrière d'un coup, Ctrl+F tourne le damier (et le remet), les autres touches ne sont pas prises",
+                retour && tourne && retourne && inconnue, $"retour {retour}, tourne {tourne}, retourne {retourne}, inconnue {inconnue}");
+        fenetre.ActiveControl = Trouve("BoxNomJoueurBlanc");
+        bool saisie = !Raccourci(Keys.Control | Keys.F) && !Raccourci(Keys.Control | Keys.Z) && fenetre.Session.CoupsPdn.Count == 1 && !fenetre.Damier.Orientation.CoteNoir;
+        fenetre.ActiveControl = null;
+        verifie("Interface : dans la zone du nom d'un joueur, F et Ctrl+Z gardent leur rôle de saisie", saisie, "");
+        bool nouvelle = Raccourci(Keys.Control | Keys.N) && fenetre.Session.CoupsPdn.Count == 0 && fenetre.Session.Positions.Count == 1;
+        verifie("Interface : Ctrl+N commence une nouvelle partie", nouvelle, $"{fenetre.Session.CoupsPdn.Count} coup(s)");
+        bool viaCommande = AppelleRetour<bool>(fenetre, "ProcessCmdKey", new Message(), Keys.Control | Keys.F) && fenetre.Damier.Orientation.CoteNoir;
+        Raccourci(Keys.Control | Keys.F);
+        verifie("Interface : le raccourci passe par ProcessCmdKey (le chemin de la vraie touche)", viaCommande && !fenetre.Damier.Orientation.CoteNoir, "");
+
+        // Le clic droit n'est pas un clic de jeu
+        PictureBox case32 = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)];
+        Appelle(fenetre, "CaseMouseDown", case32, new MouseEventArgs(MouseButtons.Right, 1, 10, 10, 0));
+        verifie("Interface : un clic droit sur une pièce ne la sélectionne pas", Champ<bool>(fenetre, "clickCaseSource") && ImagePresente(32), "");
+
+        // L'image du damier
+        Joue(32, 28);
+        string dossier = Path.Combine(Path.GetTempPath(), "dames_image_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dossier);
+        try
+        {
+            string png = Path.Combine(dossier, "damier.png");
+            bool ecrit = fenetre.EnregistreImageDamier(png);
+            using (Bitmap lue = new Bitmap(png))
+            {
+                byte[] debut = File.ReadAllBytes(png).Take(4).ToArray();
+                Point centre28 = fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(28)].Location;
+                Color pixelPiece = lue.GetPixel(centre28.X + 30, centre28.Y + 30);
+                Color pixelVide = lue.GetPixel(fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)].Location.X + 5, fenetre.CaseDamier[fenetre.Damier.ObtenirIndicePictureBox(32)].Location.Y + 30);
+                verifie("Interface : l'image du damier est un PNG de 640 × 640 qui montre les pièces (case 28 occupée, case 32 vidée)",
+                        ecrit && debut[1] == (byte)'P' && debut[2] == (byte)'N' && debut[3] == (byte)'G' && lue.Width == 640 && lue.Height == 640 && pixelPiece.ToArgb() != pixelVide.ToArgb(),
+                        $"{lue.Width}x{lue.Height}, pièce {pixelPiece.Name}, vide {pixelVide.Name}");
+            }
+            messages.Clear();
+            bool mauvaisChemin = !fenetre.EnregistreImageDamier(Path.Combine(dossier, "dossier_absent", "damier.png")) && messages.Count == 1 && messages[0].StartsWith("Image du damier");
+            verifie("Interface : une image qu'on ne peut pas écrire est refusée avec un message, sans exception", mauvaisChemin, string.Join(" / ", messages));
+            messages.Clear();
+            bool copie = fenetre.CopieImageDamier();
+            verifie("Interface : l'image se copie dans le presse-papiers (ou, s'il est occupé, un message le dit)", copie ? Clipboard.ContainsImage() : messages.Count == 1, copie ? "copiée" : string.Join(" / ", messages));
+        }
+        finally
+        {
+            try { Directory.Delete(dossier, true); } catch (IOException) { }
+        }
+        ContextMenuStrip? menu = Champ<ContextMenuStrip?>(fenetre, "menuDamier");
+        verifie("Interface : le menu du clic droit (image, copie, tourner) est posé sur le damier et sur chaque case",
+                menu != null && menu.Items.Count == 4 && Trouve("Damier10x10").ContextMenuStrip == menu && fenetre.CaseDamier.All(c => c.ContextMenuStrip == menu), menu?.Items.Count.ToString() ?? "pas de menu");
+        Nouvelle();
+    }
     // Les cases colorées du damier (autres que le fond normal) : numéros Manoury
     private static List<int> CasesColorees() => Enumerable.Range(1, 50).Where(n => { Color c = CouleurCase(n); return c != fenetre.CouleurCaseSombre && c != fenetre.CouleurCaseClaire; }).ToList();
 

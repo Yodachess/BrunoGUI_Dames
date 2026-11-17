@@ -30,6 +30,7 @@ Boutons disponibles :
 * "Ordinateur joue" : lance la réflexion du moteur et joue son coup sur le damier
 * "Retour Arrière" : recule la partie d'un demi-coup
 * "Tourner damier" : fait pivoter le damier de 180° (par défaut, vue côté blancs)
+* Clic droit sur le damier : enregistrer ou copier l'image du damier, tourner le damier. Raccourcis : Ctrl+N (nouvelle partie), Ctrl+Z (retour arrière), Ctrl+E (image), Ctrl+F (tourner)
 * "Analyse position" : lance la réflexion du moteur et donne le résultat SANS jouer le coup sur le damier
 * "Liste des coups" : affiche la liste des coups joués, aux formats PDN, FEN et Hub2
 * "Parcours partie" (Début, Préc., Suiv., Fin) : parcourt la partie coup par coup (au clavier : flèches ← →, touches Début et Fin) ; "Lecture" la déroule avec ses animations (bouton "Pause" pendant la lecture, curseur de vitesse)
@@ -104,6 +105,7 @@ Available buttons:
 * "Ordinateur joue" (Computer plays): starts the engine's calculation and plays its move on the board
 * "Retour Arrière" (Undo): reverts the game by half a move
 * "Tourner damier" (Rotate board): rotates the board by 180° (default: White's perspective)
+* Right-click on the board: save or copy the board image, rotate the board. Shortcuts: Ctrl+N (new game), Ctrl+Z (take back), Ctrl+E (image), Ctrl+F (rotate)
 * "Analyse position" (Analyse position): runs the engine's calculation but does NOT play the move on the board
 * "Liste des coups" (Move list): displays the moves played in PDN, FEN and Hub2 formats
 * "Parcours partie" (Début, Préc., Suiv., Fin): steps through the game move by move (on the keyboard: ← → arrows, Home and End keys); "Lecture" (Play) plays it back with animations ("Pause" while playing, speed slider)

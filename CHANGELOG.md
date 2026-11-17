@@ -4,6 +4,8 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- **Raccourcis clavier** : Ctrl+N (nouvelle partie), Ctrl+Z (retour arrière), Ctrl+F (tourner le damier), Ctrl+E (enregistrer l'image du damier) ; sans effet dans une zone de saisie, pendant la lecture ou quand le bouton est inactif.
+- **Image du damier** : un clic droit sur le damier propose d'enregistrer son image en PNG (640 × 640, pièces, couleurs et repères tels qu'à l'écran), de la copier dans le presse-papiers ou de tourner le damier. Le clic droit ne sélectionne plus de pièce.
 - **Journal des problèmes** : le journal s'appelle désormais `BrunoGUI_Dames.log` (comme celui de BrunoGUI GenII) et note, avec leur niveau (`[ERREUR]`, `[ATTENTION]`, `[INFO]`), les erreurs, les plantages (avec la pile d'appels, y compris dans une tâche d'arrière-plan) et les problèmes ; une ligne `[INFO]` marque chaque démarrage (version, système) ; au-delà de 1 Mo l'ancien journal devient `.log.old`. Toujours pas de coups ni d'échanges avec le moteur.
 - **Correction** : un clic sur une case claire du damier avant de choisir une pièce écrivait une erreur dans le journal ; il est maintenant ignoré.
 

@@ -100,6 +100,7 @@ namespace BrunoGUI_Dames
             TempsReflexion = trackBarTempsReflexion.Value;              // et initialisation du temps de réflexion
 
             CreeDamier();                       // Crée les 100 PictureBox correspondant aux cases SANS afficher de pièce
+            CreeMenuDamier();                   // Le menu du clic droit : image du damier, tourner (BrunoInterfaceGraphiqueDames.Image.cs)
             Damier.InitialiserDamier();  // met la position initiale dans PositionCourante SANS afficher les pièces
             ActiveDamier(true);
             BoxNomJoueurBlanc.Text = NomJoueurBlanc;

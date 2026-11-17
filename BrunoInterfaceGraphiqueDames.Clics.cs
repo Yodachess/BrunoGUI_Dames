@@ -58,6 +58,8 @@ namespace BrunoGUI_Dames
         // ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
         private async void CaseMouseDown(object? sender, MouseEventArgs e)
         {   // --- Gestion de la sélection/déplacement des pièces avec retour à l'origine si mouvement incorrect ---
+            if (e.Button != MouseButtons.Left)
+                return;     // Le clic droit ouvre le menu du damier ; il ne sélectionne ni ne joue
             try
             {   // Le joueur sélectionne la case source ou destination avec la souris
                 if (sender is PictureBox CaseClick)     // Une PictureBox est cliquée
