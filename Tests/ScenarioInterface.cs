@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -484,6 +484,7 @@ public static class ScenarioInterface
         RaccourcisEtImage();
         FlecheAnalyse();
         CaseOrdinateur();
+        LivreOuvertures();
 
         // ═══════════════ Deux fenêtres à la fois ═══════════════
         DeuxFenetres();
@@ -696,6 +697,24 @@ public static class ScenarioInterface
         Joue(32, 28);
         Appelle(fenetre, "BoutonRetourArriere_Click", null, EventArgs.Empty);
         verifie("Interface : « Retour arrière » laisse l'ordinateur actif quand la case est cochée, inactif quand elle est décochée", coche && !fenetre.OrdinateurActif, $"cochée : {coche}, décochée : {!fenetre.OrdinateurActif}");
+        Nouvelle(0);
+        Joue(32, 28);        // L'état que les tests suivants attendent : un coup joué
+    }
+
+    // Le livre d'ouvertures : pendant une analyse, une ligne de score sans profondeur (le livre de Scan) est signalée « (livre d'ouvertures) » à côté du coup suggéré, une vraie recherche ne l'est pas
+    private static void LivreOuvertures()
+    {
+        Nouvelle();
+        FieldInfo analyse = fenetre.GetType().GetField("analyseEnCours", Tous)!;
+        analyse.SetValue(fenetre, true);
+        Appelle(fenetre, "AnalyseLigneMoteur", "info score=-0.02 pv=31-26");
+        string livre = Trouve("LabelCoupJoue").Text;
+        Appelle(fenetre, "AnalyseLigneMoteur", "info depth=9 score=-0.02 nodes=100 time=0.1 nps=1 pv=\"31-26 18-23\"");
+        string recherche = Trouve("LabelCoupJoue").Text;
+        analyse.SetValue(fenetre, false);
+        Appelle(fenetre, "MarqueFleche", new object?[] { null });
+        verifie("Interface : une ligne du livre d'ouvertures est signalée « (livre) » à côté du coup suggéré par l'analyse, une ligne de recherche ne l'est pas",
+                livre == "Coup suggéré par l'analyse : 31-26 (livre)" && recherche == "Coup suggéré par l'analyse : 31-26", $"{livre} | {recherche}");
         Nouvelle(0);
         Joue(32, 28);        // L'état que les tests suivants attendent : un coup joué
     }

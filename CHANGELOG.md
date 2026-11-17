@@ -1,9 +1,10 @@
-﻿# Historique des versions
+# Historique des versions
 
 Une section par version publiée, la plus récente en premier. Les changements qui ne sont pas encore dans une version publiée sont sous « Non publié ».
 
 ## Non publié
 
+- **Livre d'ouvertures visible** : quand Scan répond par un coup de son livre (sans recherche), « (livre) » est écrit en fin de la ligne du coup joué, ou à côté du coup suggéré par l'analyse. Reconnu à sa ligne `info` sans profondeur, constaté avec Scan 3.1 ; pas de case pour le couper (ce réglage ne s'applique qu'au démarrage du moteur).
 - **Flèche du meilleur coup** : pendant « Analyse position », le premier coup de la variation du moteur est dessiné sur le damier par une flèche rouge brique (ligne brisée pour une rafle), qui suit la réflexion et reste jusqu'au prochain changement de position.
 - **Cadences de la pendule** nommées comme aux échecs (« FMJD 80 min + 30 s », « FMJD 90+30 min +30 s », « FMJD 120 + 60 min », « Rapide 15 min + 5 s », « Blitz 5 min + 3 s ») ; « FMJD » marque les cadences officielles ; l'infobulle explique la cadence choisie.
 - **Force du moteur réglable** : une liste « Niveau » (de Niveau 1 à Maximum, le défaut) dans le cadre « Pendule et temps de réflexion » limite la profondeur de recherche de Scan (1, 2, 4, 6, 9 demi-coups, ou aucune limite) ; aux niveaux faibles il répond vite et on peut le battre. L'analyse de position reste à pleine force. Le niveau est retenu dans les préférences (clé `Niveau`).

@@ -22,7 +22,7 @@ namespace BrunoGUI_Dames
     public delegate void AfficheDonneesBrutesDamesScan(string ligne, bool venantDuMoteur);
 
     // --- La réponse du moteur à une demande de coup : Coup est la notation Hub2 (« 32-28 », « 28x19x23 »), vide si le moteur n'a aucun coup à jouer ---
-    public sealed record ReponseMoteur(string Coup, string Suggestion);
+    public sealed record ReponseMoteur(string Coup, string Suggestion, bool DuLivre = false);
 
     public class MoteurDamesScan
     {
@@ -34,6 +34,7 @@ namespace BrunoGUI_Dames
         private readonly object verrou = new object();
         private TaskCompletionSource<ReponseMoteur?>? demande;             // La demande de coup en cours, ou null
         private bool arretVoulu;
+        private bool rechercheVue, livreVu;                                // Pour la demande en cours : une ligne « info depth=… » (une recherche) ou une ligne de score sans profondeur (le livre d'ouvertures) est arrivée
 
         public bool EstDemarre
         {
@@ -78,6 +79,7 @@ namespace BrunoGUI_Dames
             {
                 demande?.TrySetResult(null);        // Une nouvelle demande abandonne la précédente
                 demande = cetteDemande;
+                rechercheVue = livreVu = false;
             }
             try
             {
@@ -159,6 +161,14 @@ namespace BrunoGUI_Dames
             string[] mots = ligne.Split(' ');
             switch (mots[0])
             {
+                case "info":        // « info depth=… » : une recherche ; « info score=… pv=… » sans profondeur : un coup du livre d'ouvertures ; « info pv=… » seul : un coup forcé
+                    LigneMoteurLue lue = LigneMoteur.Lire(ligne);
+                    lock (verrou)
+                    {
+                        if (lue.Profondeur != null) rechercheVue = true;
+                        else if (lue.Score != null) livreVu = true;
+                    }
+                    break;
                 case "done":        // le moteur SCAN propose le meilleur coup : « done move=28-23 ponder=17-22 », ou « done » seul s'il n'a aucun coup
                     string coup = "", suggestion = "";
                     foreach (string mot in mots)
@@ -167,12 +177,14 @@ namespace BrunoGUI_Dames
                         else if (mot.StartsWith("ponder=")) suggestion = mot.Substring("ponder=".Length);
                     }
                     TaskCompletionSource<ReponseMoteur?>? attendante;
+                    bool duLivre;
                     lock (verrou)
                     {
                         attendante = demande;
                         demande = null;
+                        duLivre = livreVu && !rechercheVue;
                     }
-                    attendante?.TrySetResult(new ReponseMoteur(coup, suggestion));
+                    attendante?.TrySetResult(new ReponseMoteur(coup, suggestion, duLivre));
                     break;
                 case "error":
                     Journal.Attention("Moteur : " + ligne);

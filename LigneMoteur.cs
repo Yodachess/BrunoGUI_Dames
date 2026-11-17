@@ -18,14 +18,15 @@ using System.Text.RegularExpressions;
 namespace BrunoGUI_Dames
 {
     // --- Ce qu'une ligne du moteur apporte à l'affichage (les champs absents de la ligne sont null) ---
-    public sealed record LigneMoteurLue(bool EstId, string? Nom, string? Version, string? Auteur, string? Pays, decimal? Score, string? Variation);
+    public sealed record LigneMoteurLue(bool EstId, string? Nom, string? Version, string? Auteur, string? Pays, decimal? Score, string? Variation, int? Profondeur = null);
 
     public static class LigneMoteur
     {
         private static readonly Regex ChampsDeId = new Regex(@"name=(\S+)|version=(\S+)|author=""([^""]+)""|country=(\S+)");
 
         // --- Les informations d'affichage d'une ligne : « id name=Scan version=3.1 author="…" country=… » donne l'identité ;
-        // « info depth=21 score=-0.01 … pv="14x23x19 50-44 …" » donne le score et la variation principale (sans les guillemets) ---
+        // « info depth=21 score=-0.01 … pv="14x23x19 50-44 …" » donne le score, la variation principale (sans les guillemets) et la profondeur ; une ligne « info score=-0.02 pv=31-26 » sans profondeur est celle d'un coup du livre d'ouvertures
+        // (constaté avec Scan 3.1 : une recherche écrit toujours « depth= », le livre jamais ; un coup forcé n'a ni score ni profondeur) ---
         public static LigneMoteurLue Lire(string ligne)
         {
             LigneMoteurLue rien = new LigneMoteurLue(false, null, null, null, null, null, null);
@@ -48,11 +49,14 @@ namespace BrunoGUI_Dames
                 return rien;
             decimal? score = null;
             string? variation = null;
+            int? profondeur = null;
             for (int i = 1; i < mots.Length; i++)
             {
                 string[] nomEtValeur = mots[i].Split('=');
                 if (nomEtValeur[0] == "score" && nomEtValeur.Length > 1 && decimal.TryParse(nomEtValeur[1], NumberStyles.Float, CultureInfo.InvariantCulture, out decimal valeur))
                     score = valeur;
+                else if (nomEtValeur[0] == "depth" && nomEtValeur.Length > 1 && int.TryParse(nomEtValeur[1], NumberStyles.None, CultureInfo.InvariantCulture, out int d))
+                    profondeur = d;
                 else if (nomEtValeur[0] == "pv" && variation == null)
                 {
                     int debut = ligne.IndexOf(" pv", StringComparison.Ordinal) + 4;       // « pv=" » : le texte commence après le guillemet d'ouverture
@@ -60,7 +64,7 @@ namespace BrunoGUI_Dames
                         variation = ligne.Substring(debut).Trim('"');
                 }
             }
-            return new LigneMoteurLue(false, null, null, null, null, score, variation);
+            return new LigneMoteurLue(false, null, null, null, null, score, variation, profondeur);
         }
     }
 }

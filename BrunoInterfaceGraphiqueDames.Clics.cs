@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -224,7 +224,7 @@ namespace BrunoGUI_Dames
             }
             else if (!analyseEnCours && !PartieTerminee)    // On execute les coups si ce n'est pas une analyse (ni une partie finie pendant sa réflexion : drapeau tombé)
             {
-                LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion;
+                LabelCoupJoue.Text = "Coup joué : " + reponse.Coup + " --  Suggéré : " + reponse.Suggestion + (reponse.DuLivre ? " (livre)" : "");     // La mention en dernier : le cadre est étroit, c'est elle qui serait coupée
                 if (EmetUnSon)
                 {
                     JoueSonCoupJoue();       // Son pour dire que le coup est joué

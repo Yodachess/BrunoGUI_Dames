@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -64,7 +64,7 @@ namespace BrunoGUI_Dames
                 if (analyseEnCours)
                 {
                     LabelPrisesPossibles.Text = "Ligne SCAN 3.1 complète : " + variationMoteur;
-                    LabelCoupJoue.Text = "Coup suggéré par l'analyse : " + variationMoteur.Split(' ')[0];
+                    LabelCoupJoue.Text = "Coup suggéré par l'analyse : " + variationMoteur.Split(' ')[0] + (lue.Score != null && lue.Profondeur == null ? " (livre)" : "");
                     MarqueFleche(variationMoteur.Split(' ')[0]);       // Une flèche sur le damier ; elle suit la variation à chaque ligne du moteur
                 }
                 LabelAfficheScan.Text = "Ligne Scan3.1 = " + (variationMoteur.Length > 100 ? variationMoteur.Substring(0, 100) : variationMoteur);     // Limitée pour rester dans le label

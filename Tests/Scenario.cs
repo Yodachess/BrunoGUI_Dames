@@ -1,4 +1,4 @@
-﻿// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
+// ┌▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄┐
 // █ BrunoGUI_Dames - Interface graphique du jeu de Dames en C# WinForms    █
 // █ Copyright (C) 2026 Bruno COURTOIS                                      █
 // █ SPDX-License-Identifier: GPL-3.0-or-later                              █
@@ -768,6 +768,7 @@ public static class Scenario
                     ReponseMoteur? premiere = moteurTest.ReflechirAsync(positionDeDepart.VersHub2(), 1).GetAwaiter().GetResult();
                     Coup? coupBlanc = premiere == null ? null : ReglesDames.TrouverCoup(positionDeDepart, premiere.Coup);
                     Verifie("Moteur : Scan répond à la position initiale par un coup légal", coupBlanc != null, premiere?.Coup ?? "(pas de réponse)");
+                    Verifie("Moteur : à la position initiale, la réponse vient du livre d'ouvertures (aucune recherche), pas dans une position hors du livre", premiere != null && premiere.DuLivre, $"du livre : {premiere?.DuLivre}");
                     Position apres = coupBlanc == null ? positionDeDepart : ReglesDames.Jouer(positionDeDepart, coupBlanc);
                     ReponseMoteur? seconde = moteurTest.ReflechirAsync(apres.VersHub2(), 1).GetAwaiter().GetResult();
                     Coup? coupNoir = seconde == null ? null : ReglesDames.TrouverCoup(apres, seconde.Coup);
@@ -790,6 +791,7 @@ public static class Scenario
                     long msFort = chrono.ElapsedMilliseconds;
                     Verifie("Moteur : puis à pleine force (profondeur maximale) il réfléchit sa seconde : la limite du niveau 1 n'a pas été gardée",
                             fort != null && ReglesDames.TrouverCoup(horsLivre, fort.Coup) != null && msFort >= 800, $"{fort?.Coup} en {msFort} ms");
+                    Verifie("Moteur : hors du livre, la réponse n'est pas marquée « du livre » (niveau 1 comme pleine force)", faible != null && !faible.DuLivre && fort != null && !fort.DuLivre, $"niveau 1 : {faible?.DuLivre}, pleine force : {fort?.DuLivre}");
                 }
                 finally
                 {
@@ -1185,6 +1187,11 @@ public static class Scenario
         Verifie("Ligne du moteur : un « info » sans variation donne seulement le score", scoreSeul.Score == 1.5m && scoreSeul.Variation == null, "");
         LigneMoteurLue scoreIllisible = LigneMoteur.Lire("info depth=3 score=abc nodes=10 pv=\"1-2 3-4\"");
         Verifie("Ligne du moteur : un score illisible est ignoré sans exception, le reste de la ligne est lu", scoreIllisible.Score == null && scoreIllisible.Variation == "1-2 3-4", "");
+        LigneMoteurLue livre = LigneMoteur.Lire("info score=-0.02 pv=31-26");
+        LigneMoteurLue forcee = LigneMoteur.Lire("info pv=33x22x28");
+        Verifie("Ligne du moteur : la profondeur est lue (« depth= ») ; une ligne de score sans profondeur est celle d'un coup du livre d'ouvertures, un coup forcé n'a ni score ni profondeur",
+                analyse.Profondeur == 21 && scoreSeul.Profondeur == 3 && livre.Profondeur == null && livre.Score == -0.02m && livre.Variation == "31-26" && forcee.Profondeur == null && forcee.Score == null,
+                $"{analyse.Profondeur} {livre.Profondeur} {livre.Score} {livre.Variation}");
         Verifie("Ligne du moteur : « done », « error », « pong », une ligne vide ou trop courte ne donnent rien",
                 new[] { "done move=32-28 ponder=17-22", "error message=\"x y\"", "pong", "", " ", "info", "id name=Scan" }
                     .Select(LigneMoteur.Lire).All(l => !l.EstId && l.Score == null && l.Variation == null && l.Nom == null),
