@@ -206,10 +206,15 @@ namespace BrunoGUI_Dames
                 Journal.Info("Langue choisie : " + choix);
             }
         }
-        private void BoutonAide_Click(object sender, EventArgs e)
-        {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur : en anglais si Windows est en anglais, sinon en français (chaque page a un lien vers l'autre) ---
+        // --- La page d'aide à ouvrir : dans la langue de l'affichage (celle du programme, voir Texte), français si la page de cette langue manque ---
+        private static string PageAideChoisie()
+        {
             string PageAide(string langue) => Path.Combine(Application.StartupPath, "Aide", langue, "index.html");
-            string page = PageAide(LangueAide.Choisit(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, langue => File.Exists(PageAide(langue))));
+            return PageAide(LangueAide.Choisit(Texte.Langue, langue => File.Exists(PageAide(langue))));
+        }
+        private void BoutonAide_Click(object sender, EventArgs e)
+        {   // --- Ouvre l'aide (page HTML livrée à côté de l'exe) dans le navigateur, dans la langue de l'affichage (chaque page a un lien vers l'autre) ---
+            string page = PageAideChoisie();
             if (!File.Exists(page))
             {
                 Journal.Attention("Aide introuvable : " + page);

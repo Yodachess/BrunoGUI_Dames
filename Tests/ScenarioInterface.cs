@@ -782,6 +782,8 @@ public static class ScenarioInterface
             verifie("Interface en anglais : les listes (niveaux, cadences) et les cadres de la pendule sont traduits",
                     (string)niveaux.Items[0]! == "Level 1" && (string)niveaux.Items[5]! == "Maximum" && (string)cadences.Items[0]! == "No clock" && (string)cadences.Items[4]! == "Rapid 15 min + 5 s" && Trouve("LabelPenduleBlanc").Text == "W --:--",
                     $"{niveaux.Items[0]} / {cadences.Items[0]} / {cadences.Items[4]} / {Trouve("LabelPenduleBlanc").Text}");
+            string pageAnglaise = AppelleRetour<string>(anglaise, "PageAideChoisie");
+            verifie("Interface en anglais : le bouton « Aide » ouvre l'aide en anglais (la langue du programme, pas celle de Windows)", pageAnglaise.EndsWith(Path.Combine("Aide", "en", "index.html")), pageAnglaise);
             verifie("Interface en anglais : aucun texte n'est resté sans traduction", Texte.ClesManquantes.Count == 0, string.Join(" | ", Texte.ClesManquantes));
             // « À propos » : la langue choisie est retenue dans les préférences (appliquée au prochain démarrage)
             string? texteAPropos = null;
@@ -805,6 +807,8 @@ public static class ScenarioInterface
         Pompe(100);
         Nouvelle();
         FenetreAProposTraduite(fichierAnglais);
+        string pageFrancaise = AppelleRetour<string>(fenetre, "PageAideChoisie");
+        verifie("Interface : en français, le bouton « Aide » ouvre l'aide en français", pageFrancaise.EndsWith(Path.Combine("Aide", "fr", "index.html")), pageFrancaise);
         verifie("Interface : de retour en français, la fenêtre d'origine n'a pas changé de langue", Trouve("NouvellePartie").Text == "Nouvelle Partie" && Texte.Langue == Texte.Francais, Trouve("NouvellePartie").Text);
     }
 

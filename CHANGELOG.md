@@ -4,6 +4,7 @@ Une section par version publiée, la plus récente en premier. Les changements q
 
 ## Non publié
 
+- **Aide dans la langue de l'affichage** : le bouton « Aide (F1) » ouvre l'aide anglaise quand le programme est en anglais (avant, il suivait la langue de Windows, même si on avait choisi l'anglais dans « A propos »).
 - **Affichage en français ou en anglais** : la fenêtre « A propos de BIG » propose la langue (Français / English) ; elle est retenue dans les préférences (clé `Langue`, par défaut celle de Windows) et s'applique au prochain démarrage ; la fenêtre « A propos » elle-même se traduit tout de suite quand on change la langue dans sa liste. Les textes français restent dans les sources (le texte français est la clé de `Texte.T`), l'anglais est dans `Langues\en.tsv` ; un test vérifie qu'aucun texte n'est oublié.
 - **Livre d'ouvertures visible** : quand Scan répond par un coup de son livre (sans recherche), « (livre) » est écrit en fin de la ligne du coup joué, ou à côté du coup suggéré par l'analyse. Reconnu à sa ligne `info` sans profondeur, constaté avec Scan 3.1 ; pas de case pour le couper (ce réglage ne s'applique qu'au démarrage du moteur).
 - **Flèche du meilleur coup** : pendant « Analyse position », le premier coup de la variation du moteur est dessiné sur le damier par une flèche rouge brique (ligne brisée pour une rafle), qui suit la réflexion et reste jusqu'au prochain changement de position.
