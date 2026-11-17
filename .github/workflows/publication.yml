@@ -50,7 +50,9 @@ jobs:
           $scan = "$sortie/Dames_Scan31_FabienLetouzey"
           Remove-Item "$scan/src" -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item "$scan/scan_linux", "$scan/scan_mac" -Force -ErrorAction SilentlyContinue
-          if (-not (Test-Path "$sortie/BrunoGUI_Dames.exe") -or -not (Test-Path "$scan/scan.exe") -or -not (Test-Path "$scan/data") -or -not (Test-Path "$sortie/Aide/fr/index.html")) { throw "Archive incomplète" }
+          # La licence du programme (GPL 3.0 ou ultérieure) accompagne l'archive, comme celle de Scan dans son dossier
+          Copy-Item "LICENSE.txt" $sortie -Force
+          if (-not (Test-Path "$sortie/LICENSE.txt") -or -not (Test-Path "$scan/license.txt") -or -not (Test-Path "$sortie/BrunoGUI_Dames.exe") -or -not (Test-Path "$scan/scan.exe") -or -not (Test-Path "$scan/data") -or -not (Test-Path "$sortie/Aide/fr/index.html")) { throw "Archive incomplète" }
           Compress-Archive -Path "$sortie/*" -DestinationPath "BrunoGUI_Dames-${{ github.ref_name }}.zip"
 
       # Notes de la release : installation, déblocage du zip et avertissement SmartScreen (programme non signé), en français et en anglais
