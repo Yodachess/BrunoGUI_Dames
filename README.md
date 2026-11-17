@@ -1,6 +1,6 @@
 # BrunoGUI Dames
 
-BrunoGUI Dames v1.12 - Copyright 2024-2026 Bruno Courtois - licence GPL 3.0 ou ultérieure (voir LICENSE.txt)
+BrunoGUI Dames v1.13 - Copyright 2024-2026 Bruno Courtois - licence GPL 3.0 ou ultérieure (voir LICENSE.txt)
 
 Interface graphique Windows pour jouer et analyser des parties de **dames internationales** (damier 10x10, notation Manoury).
 Application WinForms en C# 14 sous .NET 10 (Visual Studio 2022), composants Krypton.
@@ -77,7 +77,7 @@ Toute remarque ou signalement d'anomalie est bienvenu (joindre `BrunoGUI_Dames.l
 
 # English version
 
-BrunoGUI Dames v1.12 - Copyright 2024-2026 Bruno Courtois - GPL 3.0 or later license (see LICENSE.txt)
+BrunoGUI Dames v1.13 - Copyright 2024-2026 Bruno Courtois - GPL 3.0 or later license (see LICENSE.txt)
 
 A Windows graphical interface for playing and analysing **international draughts** (10x10 board, Manoury notation).
 WinForms application written in C# 14 on .NET 10 (Visual Studio 2022), with Krypton components.

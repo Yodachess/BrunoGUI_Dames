@@ -195,6 +195,7 @@ namespace BrunoGUI_Dames
             string Message() => T("Version Interface graphique = {0} / Auteur : Bruno Courtois\n", VersionAffichee) +
                              T("Moteur : {0} / Version = {1} / Auteur : {2}\n\n", nomMoteur, versionMoteur, auteurMoteur) +
                              T("Historique :\n") +
+                             T("1.13 : force du moteur réglable, flèche du meilleur coup, livre d'ouvertures visible, affichage en français ou en anglais, raccourcis clavier, image du damier, cadences de la pendule plus claires, journal des problèmes.\n") +
                              T("1.12 : thème bois, repères du dernier coup, lecture animée d'une partie, parcours au clavier, aide en anglais, animations plus vives, état du formulaire par instance.\n") +
                              T("1.11 : pendule (cadences FMJD), mise en page, parcours de partie sécurisé, tests de l'interface.\n") +
                              T("1.10 : règles refaites (prise majoritaire, rafles au choix), PDN complet, nulles, préférences, journal, .NET 10.\n") +
